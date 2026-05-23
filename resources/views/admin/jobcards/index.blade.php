@@ -146,15 +146,15 @@
     {{-- ── Table ── --}}
     <table class="table table-hover align-middle mb-0 w-100" style="font-size:.85rem; table-layout:fixed;">
       <colgroup>
-        <col style="width:10%">  {{-- Order No --}}
-        <col style="width:14%">  {{-- Customer --}}
-        <col style="width:10%">  {{-- Phone --}}
-        <col style="width:19%">  {{-- Job Info --}}
-        <col style="width:9%">   {{-- Date --}}
-        <col style="width:8%">   {{-- Amount --}}
-        <col style="width:10%">  {{-- Assigned --}}
-        <col style="width:13%">  {{-- Status --}}
-        <col style="width:7%">   {{-- Actions --}}
+        <col style="width:9%">   {{-- Order No --}}
+        <col style="width:13%">  {{-- Customer --}}
+        <col style="width:9%">   {{-- Phone --}}
+        <col style="width:15%">  {{-- Job Info --}}
+        <col style="width:8%">   {{-- Date --}}
+        <col style="width:9%">   {{-- Amount --}}
+        <col style="width:12%">  {{-- Assigned --}}
+        <col style="width:14%">  {{-- Status --}}
+        <col style="width:11%">  {{-- Actions --}}
       </colgroup>
       <thead style="background:#f5f5ff;">
         <tr>
@@ -176,7 +176,7 @@
           <th class="sort-th">
             <a href="{{ sortUrl('rupees', $sort, $dir) }}">Amount {!! sortIcon('rupees', $sort, $dir) !!}</a>
           </th>
-          <th>Assigned To</th>
+          <th style="white-space:nowrap;">Assigned To</th>
           <th class="sort-th">
             <a href="{{ sortUrl('status', $sort, $dir) }}">Status {!! sortIcon('status', $sort, $dir) !!}</a>
           </th>
@@ -194,13 +194,13 @@
             <div class="fw-semibold text-truncate">{{ $job->customer_name }}</div>
             <small class="text-muted">{{ $job->customer_id }}</small>
           </td>
-          <td>{{ $job->phone_no }}</td>
+          <td style="white-space:nowrap; font-size:.82rem;">{{ $job->phone_no }}</td>
           <td>
             <div class="fw-semibold text-truncate">{{ $job->device_name }}{{ $job->device_brand ? ' / '.$job->device_brand : '' }}</div>
             <small class="text-muted" style="font-size:.75rem; display:block; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">{{ $job->device_fault }}</small>
           </td>
-          <td><small>{{ $job->date ? $job->date->format('d M Y') : '—' }}</small></td>
-          <td class="fw-semibold">Rs.{{ number_format($job->rupees, 0) }}</td>
+          <td style="white-space:nowrap;"><small>{{ $job->date ? $job->date->format('d M Y') : '—' }}</small></td>
+          <td class="fw-semibold" style="white-space:nowrap;">Rs.{{ number_format($job->rupees, 0) }}</td>
           <td>
             @if($job->employee)
               <span class="badge bg-label-secondary text-truncate" style="max-width:100%;">{{ $job->employee->employee_name ?? $job->employee->name }}</span>
