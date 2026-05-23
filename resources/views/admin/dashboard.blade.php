@@ -43,15 +43,32 @@
     margin: 0;
   }
 
-  /* Coloured borders — forced over Sneat's card styles */
-  .card.border-c1 { border: 2px solid #696cff !important; }
-  .card.border-c2 { border: 2px solid #ffab00 !important; }
-  .card.border-c3 { border: 2px solid #03c3ec !important; }
-  .card.border-c4 { border: 2px solid #71dd37 !important; }
-  .card.border-c5 { border: 2px solid #ff3e1d !important; }
-  .card.border-c6 { border: 2px solid #00ab55 !important; }
-  .card.border-c7 { border: 2px solid #8c57ff !important; }
-  .card.border-c8 { border: 2px solid #ff7d00 !important; }
+  /* Gradient borders using pseudo-element trick */
+  .stat-card {
+    position: relative;
+    border: none !important;
+    background: #fff;
+    z-index: 0;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    padding: 2.5px;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    z-index: -1;
+  }
+  .card.border-c1::before { background: linear-gradient(135deg, #696cff, #a78bfa); }
+  .card.border-c2::before { background: linear-gradient(135deg, #ffab00, #ff6f00); }
+  .card.border-c3::before { background: linear-gradient(135deg, #03c3ec, #0ea5e9); }
+  .card.border-c4::before { background: linear-gradient(135deg, #71dd37, #16a34a); }
+  .card.border-c5::before { background: linear-gradient(135deg, #ff3e1d, #ff6b6b); }
+  .card.border-c6::before { background: linear-gradient(135deg, #00ab55, #34d399); }
+  .card.border-c7::before { background: linear-gradient(135deg, #8c57ff, #c084fc); }
+  .card.border-c8::before { background: linear-gradient(135deg, #ff7d00, #fbbf24); }
 
   .text-c1 { color: #696cff; }
   .text-c2 { color: #ffab00; }
