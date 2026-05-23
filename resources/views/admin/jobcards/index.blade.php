@@ -144,113 +144,90 @@
     </form>
 
     {{-- ── Table ── --}}
-    <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0" style="font-size:.9rem;">
-        <thead style="background:#f5f5ff;">
-          <tr>
-            <th class="sort-th ps-3">
-              <a href="{{ sortUrl('order_no', $sort, $dir) }}">
-                Order No {!! sortIcon('order_no', $sort, $dir) !!}
-              </a>
-            </th>
-            <th class="sort-th">
-              <a href="{{ sortUrl('customer_name', $sort, $dir) }}">
-                Customer {!! sortIcon('customer_name', $sort, $dir) !!}
-              </a>
-            </th>
-            <th class="sort-th">
-              <a href="{{ sortUrl('phone_no', $sort, $dir) }}">
-                Phone {!! sortIcon('phone_no', $sort, $dir) !!}
-              </a>
-            </th>
-            <th class="sort-th">
-              <a href="{{ sortUrl('device_name', $sort, $dir) }}">
-                Device {!! sortIcon('device_name', $sort, $dir) !!}
-              </a>
-            </th>
-            <th>Fault</th>
-            <th class="sort-th">
-              <a href="{{ sortUrl('date', $sort, $dir) }}">
-                Date {!! sortIcon('date', $sort, $dir) !!}
-              </a>
-            </th>
-            <th class="sort-th">
-              <a href="{{ sortUrl('rupees', $sort, $dir) }}">
-                Amount {!! sortIcon('rupees', $sort, $dir) !!}
-              </a>
-            </th>
-            <th>Assigned To</th>
-            <th class="sort-th">
-              <a href="{{ sortUrl('status', $sort, $dir) }}">
-                Status {!! sortIcon('status', $sort, $dir) !!}
-              </a>
-            </th>
-            <th class="text-center">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          @forelse($jobs as $job)
-          @php $b = $badges[$job->status] ?? ['cls'=>'bg-label-secondary','dot'=>'#aaa','icon'=>'bx-circle']; @endphp
-          <tr>
-            <td class="ps-3">
-              <span class="fw-bold text-primary">{{ $job->order_no }}</span>
-            </td>
-            <td>
-              <div class="fw-semibold">{{ $job->customer_name }}</div>
-              <small class="text-muted">{{ $job->customer_id }}</small>
-            </td>
-            <td>{{ $job->phone_no }}</td>
-            <td>
-              <span class="fw-medium">{{ $job->device_name }}</span><br>
-              <small class="text-muted">{{ $job->device_brand }}</small>
-            </td>
-            <td><small class="text-muted">{{ Str::limit($job->device_fault, 22) }}</small></td>
-            <td><small>{{ $job->date ? $job->date->format('d M Y') : '—' }}</small></td>
-            <td class="fw-semibold">Rs.{{ number_format($job->rupees, 0) }}</td>
-            <td>
-              @if($job->employee)
-                <span class="badge bg-label-secondary">{{ $job->employee->employee_name ?? $job->employee->name }}</span>
-              @else
-                <span class="text-muted small">Unassigned</span>
-              @endif
-            </td>
-            <td>
-              <span class="badge {{ $b['cls'] }} d-inline-flex align-items-center gap-1">
-                <i class='bx {{ $b['icon'] }}'></i>
-                {{ $job->status ?: 'Pending' }}
-              </span>
-            </td>
-            <td>
-              <div class="d-flex justify-content-center gap-1">
-                <a href="{{ route('admin.jobcards.show', $job) }}"
-                   class="action-btn btn btn-outline-primary" title="View">
-                  <i class='bx bx-show'></i>
-                </a>
-                <a href="{{ route('admin.jobcards.edit', $job) }}"
-                   class="action-btn btn btn-outline-secondary" title="Edit">
-                  <i class='bx bx-edit'></i>
-                </a>
-                <form action="{{ route('admin.jobcards.destroy', $job) }}" method="POST"
-                      onsubmit="return confirm('Delete this job order?')" style="display:inline;">
-                  @csrf @method('DELETE')
-                  <button type="submit" class="action-btn btn btn-outline-danger" title="Delete">
-                    <i class='bx bx-trash'></i>
-                  </button>
-                </form>
-              </div>
-            </td>
-          </tr>
-          @empty
-          <tr>
-            <td colspan="10" class="text-center py-5 text-muted">
-              <i class='bx bx-inbox' style="font-size:2.5rem; display:block; margin-bottom:8px;"></i>
-              No job orders found.
-            </td>
-          </tr>
-          @endforelse
-        </tbody>
-      </table>
-    </div>
+    <table class="table table-hover align-middle mb-0 w-100" style="font-size:.85rem; table-layout:fixed;">
+      <colgroup>
+        <col style="width:9%">   {{-- Order No --}}
+        <col style="width:15%">  {{-- Customer --}}
+        <col style="width:11%">  {{-- Phone --}}
+        <col style="width:19%">  {{-- Job Info --}}
+        <col style="width:9%">   {{-- Date --}}
+        <col style="width:8%">   {{-- Amount --}}
+        <col style="width:11%">  {{-- Assigned --}}
+        <col style="width:12%">  {{-- Status --}}
+        <col style="width:6%">   {{-- Actions --}}
+      </colgroup>
+      <thead style="background:#f5f5ff;">
+        <tr>
+          <th class="sort-th ps-3">
+            <a href="{{ sortUrl('order_no', $sort, $dir) }}">Order No {!! sortIcon('order_no', $sort, $dir) !!}</a>
+          </th>
+          <th class="sort-th">
+            <a href="{{ sortUrl('customer_name', $sort, $dir) }}">Customer {!! sortIcon('customer_name', $sort, $dir) !!}</a>
+          </th>
+          <th class="sort-th">
+            <a href="{{ sortUrl('phone_no', $sort, $dir) }}">Phone {!! sortIcon('phone_no', $sort, $dir) !!}</a>
+          </th>
+          <th class="sort-th">
+            <a href="{{ sortUrl('device_name', $sort, $dir) }}">Job Info {!! sortIcon('device_name', $sort, $dir) !!}</a>
+          </th>
+          <th class="sort-th">
+            <a href="{{ sortUrl('date', $sort, $dir) }}">Date {!! sortIcon('date', $sort, $dir) !!}</a>
+          </th>
+          <th class="sort-th">
+            <a href="{{ sortUrl('rupees', $sort, $dir) }}">Amount {!! sortIcon('rupees', $sort, $dir) !!}</a>
+          </th>
+          <th>Assigned To</th>
+          <th class="sort-th">
+            <a href="{{ sortUrl('status', $sort, $dir) }}">Status {!! sortIcon('status', $sort, $dir) !!}</a>
+          </th>
+          <th class="text-center" style="white-space:nowrap;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @forelse($jobs as $job)
+        @php $b = $badges[$job->status] ?? ['cls'=>'bg-label-secondary','dot'=>'#aaa','icon'=>'bx-circle']; @endphp
+        <tr>
+          <td class="ps-3">
+            <span class="fw-bold text-primary" style="font-size:.8rem;">{{ $job->order_no }}</span>
+          </td>
+          <td>
+            <div class="fw-semibold text-truncate">{{ $job->customer_name }}</div>
+            <small class="text-muted">{{ $job->customer_id }}</small>
+          </td>
+          <td>{{ $job->phone_no }}</td>
+          <td>
+            <div class="fw-semibold text-truncate">{{ $job->device_name }}{{ $job->device_brand ? ' / '.$job->device_brand : '' }}</div>
+            <small class="text-muted" style="font-size:.75rem; display:block; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">{{ $job->device_fault }}</small>
+          </td>
+          <td><small>{{ $job->date ? $job->date->format('d M Y') : '—' }}</small></td>
+          <td class="fw-semibold">Rs.{{ number_format($job->rupees, 0) }}</td>
+          <td>
+            @if($job->employee)
+              <span class="badge bg-label-secondary text-truncate" style="max-width:100%;">{{ $job->employee->employee_name ?? $job->employee->name }}</span>
+            @else
+              <span class="text-muted small">—</span>
+            @endif
+          </td>
+          <td>
+            <span class="badge {{ $b['cls'] }}" style="font-size:.72rem; white-space:nowrap;">{{ $job->status ?: 'Pending' }}</span>
+          </td>
+          <td>
+            <div class="d-flex justify-content-center gap-1">
+              <a href="{{ route('admin.jobcards.show', $job) }}" class="action-btn btn btn-outline-primary" title="View"><i class='bx bx-show'></i></a>
+              <a href="{{ route('admin.jobcards.edit', $job) }}" class="action-btn btn btn-outline-secondary" title="Edit"><i class='bx bx-edit'></i></a>
+            </div>
+          </td>
+        </tr>
+        @empty
+        <tr>
+          <td colspan="9" class="text-center py-5 text-muted" style="colspan:9">
+            <i class='bx bx-inbox' style="font-size:2.5rem; display:block; margin-bottom:8px;"></i>
+            No job orders found.
+          </td>
+        </tr>
+        @endforelse
+      </tbody>
+    </table>
 
     {{-- ── Pagination ── --}}
     @if($jobs->hasPages())
