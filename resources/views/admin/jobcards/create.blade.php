@@ -760,5 +760,12 @@ document.getElementById('joForm').addEventListener('submit', function () {
   hidden.value = checked.join(', ');
   this.appendChild(hidden);
 });
+
+// Pre-populate brand/fault selects if old('device_name') exists (validation fail repopulation)
+$(document).ready(function() {
+  if ($('#deviceSelect').val()) {
+    $('#deviceSelect').trigger('change');
+  }
+});
 </script>
 @endpush

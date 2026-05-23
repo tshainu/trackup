@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class EmployeeController extends Controller
 {
@@ -32,12 +33,18 @@ class EmployeeController extends Controller
             'user_name'        => 'required|string|unique:employees,user_name|max:50',
             'role'             => 'required|string|max:50',
             'password'         => 'required|string|min:6|confirmed',
+            'photo'            => 'nullable|image|max:2048',
         ]);
 
-        $validated['user_id']     = 'EMP' . str_pad(Employee::count() + 1, 3, '0', STR_PAD_LEFT);
-        $validated['password']    = Hash::make($validated['password']);
-        $validated['status']      = 'active';
-        $validated['registration_no'] = 'REG' . str_pad(Employee::count() + 1, 3, '0', STR_PAD_LEFT);
+        $validated['user_id']          = 'EMP' . str_pad(Employee::count() + 1, 3, '0', STR_PAD_LEFT);
+        $validated['password']         = Hash::make($validated['password']);
+        $validated['status']           = 'active';
+        $validated['registration_no']  = 'REG' . str_pad(Employee::count() + 1, 3, '0', STR_PAD_LEFT);
+
+        if ($request->hasFile('photo')) {
+            $path = $request->file('photo')->store('employees', 'public');
+            $validated['photo'] = $path;
+        }
 
         Employee::create($validated);
 
@@ -61,11 +68,20 @@ class EmployeeController extends Controller
             'email'            => 'nullable|email|max:255',
             'role'             => 'required|string|max:50',
             'status'           => 'required|in:active,inactive',
+            'photo'            => 'nullable|image|max:2048',
         ]);
 
         if ($request->filled('password')) {
             $request->validate(['password' => 'min:6|confirmed']);
             $validated['password'] = Hash::make($request->password);
+        }
+
+        if ($request->hasFile('photo')) {
+            // delete old
+            if ($employee->photo) {
+                Storage::disk('public')->delete($employee->photo);
+            }
+            $validated['photo'] = $request->file('photo')->store('employees', 'public');
         }
 
         $employee->update($validated);
@@ -76,6 +92,9 @@ class EmployeeController extends Controller
 
     public function destroy(Employee $employee)
     {
+        if ($employee->photo) {
+            Storage::disk('public')->delete($employee->photo);
+        }
         $employee->delete();
         return redirect()->route('admin.employees.index')->with('success', 'Employee removed.');
     }
