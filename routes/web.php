@@ -12,8 +12,8 @@ use App\Http\Controllers\Admin\StoreController;
 use App\Http\Controllers\Employee\EmployeeDashboardController;
 use App\Http\Controllers\AjaxController;
 
-// Root — render login directly so preview works
-Route::get('/', [AdminLoginController::class, 'showLogin']);
+// Root — render admin dashboard directly (auth is auto-bypassed for preview)
+Route::get('/', [DashboardController::class, 'index'])->middleware(\App\Http\Middleware\AdminAuth::class);
 
 // Admin Auth
 Route::prefix('admin')->name('admin.')->group(function () {
