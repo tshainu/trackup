@@ -12,8 +12,8 @@ use App\Http\Controllers\Admin\StoreController;
 use App\Http\Controllers\Employee\EmployeeDashboardController;
 use App\Http\Controllers\AjaxController;
 
-// Root redirect
-Route::get('/', fn() => redirect()->route('admin.login'));
+// Root — render login directly so preview works
+Route::get('/', [AdminLoginController::class, 'showLogin']);
 
 // Admin Auth
 Route::prefix('admin')->name('admin.')->group(function () {
