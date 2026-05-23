@@ -129,7 +129,8 @@ class JobCardController extends Controller
             'estimated_delivery' => 'nullable|date',
             'accessories'        => 'nullable|string',
         ]);
-        $validated['need_assistant'] = $request->has('need_assistant') ? 1 : 0;
+        $validated['need_assistant']   = $request->has('need_assistant') ? 1 : 0;
+        $validated['payment_received'] = $request->has('payment_received') ? 1 : 0;
         $validated['priority'] = $request->input('priority', 'Normal');
 
         $jobCard->update($validated);

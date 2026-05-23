@@ -102,20 +102,24 @@
   <div class="card-body pt-0">
 
     {{-- ── Filter Bar ── --}}
-    <form method="GET" class="filter-bar">
+    <form method="GET" id="filterForm" class="filter-bar">
       <div class="row g-2 align-items-end">
         <div class="col-md-4">
           <label class="form-label small fw-semibold mb-1">Search</label>
           <div class="input-group input-group-sm">
-            <span class="input-group-text bg-white"><i class='bx bx-search text-muted'></i></span>
-            <input type="text" name="search" class="form-control"
-              placeholder="Order no, customer, phone, serial…"
-              value="{{ request('search') }}" />
+            <span class="input-group-text bg-white"><i class='bx bx-search text-muted' id="searchIcon"></i></span>
+            <input type="text" name="search" id="liveSearch" class="form-control"
+              placeholder="Order no, name, phone, device…"
+              value="{{ request('search') }}" autocomplete="off" />
+            <button type="button" class="btn btn-outline-secondary" id="clearSearch"
+              style="display:{{ request('search') ? 'flex' : 'none' }};align-items:center;padding:0 8px">
+              <i class='bx bx-x'></i>
+            </button>
           </div>
         </div>
         <div class="col-md-2">
           <label class="form-label small fw-semibold mb-1">Status</label>
-          <select name="status" class="form-select form-select-sm">
+          <select name="status" class="form-select form-select-sm" id="statusFilter">
             <option value="">All Status</option>
             @foreach(['Pending','In Progress','Completed','Not Completed'] as $s)
               <option value="{{ $s }}" {{ request('status') == $s ? 'selected' : '' }}>{{ $s }}</option>
@@ -124,14 +128,13 @@
         </div>
         <div class="col-md-2">
           <label class="form-label small fw-semibold mb-1">Device</label>
-          <select name="device" class="form-select form-select-sm">
+          <select name="device" class="form-select form-select-sm" id="deviceFilter">
             <option value="">All Devices</option>
             @foreach($devices as $d)
               <option value="{{ $d->device_name }}" {{ request('device') == $d->device_name ? 'selected' : '' }}>{{ $d->device_name }}</option>
             @endforeach
           </select>
         </div>
-        {{-- preserve sort params --}}
         @if(request('sort'))<input type="hidden" name="sort" value="{{ request('sort') }}">@endif
         @if(request('dir'))<input type="hidden" name="dir" value="{{ request('dir') }}">@endif
         <div class="col-md-2 d-flex gap-2">
@@ -142,6 +145,12 @@
         </div>
       </div>
     </form>
+
+    {{-- live-search no-results row (hidden by default) --}}
+    <div id="liveNoResults" class="text-center py-4 text-muted" style="display:none!important">
+      <i class='bx bx-search-alt' style="font-size:2rem;display:block;margin-bottom:6px;opacity:.4"></i>
+      No results match "<span id="liveNoResultsQ"></span>"
+    </div>
 
     {{-- ── Table ── --}}
     <table class="table table-hover align-middle mb-0 w-100" style="font-size:.85rem; table-layout:fixed;">
@@ -186,7 +195,7 @@
       <tbody>
         @forelse($jobs as $job)
         @php $b = $badges[$job->status] ?? ['cls'=>'bg-label-secondary','dot'=>'#aaa','icon'=>'bx-circle']; @endphp
-        <tr>
+        <tr class="job-row" data-search="{{ strtolower($job->order_no.' '.$job->customer_name.' '.$job->phone_no.' '.$job->device_name.' '.($job->device_brand ?? '').' '.($job->device_fault ?? '').' '.($job->serial_no ?? '').' '.$job->status) }}">
           <td class="ps-3" style="white-space:nowrap;">
             <span class="fw-bold text-primary" style="font-size:.82rem;">{{ $job->order_no }}</span>
           </td>
@@ -304,6 +313,66 @@
 
 @push('scripts')
 <script>
+/* ── Live Search ── */
+(function () {
+  const input      = document.getElementById('liveSearch');
+  const clearBtn   = document.getElementById('clearSearch');
+  const icon       = document.getElementById('searchIcon');
+  const rows       = document.querySelectorAll('.job-row');
+  const noResults  = document.getElementById('liveNoResults');
+  const noResultsQ = document.getElementById('liveNoResultsQ');
+  const tbody      = document.querySelector('table tbody');
+  let debounceTimer;
+
+  function runFilter() {
+    const q = input.value.trim().toLowerCase();
+
+    // Show/hide clear button
+    clearBtn.style.display = q ? 'flex' : 'none';
+
+    // If empty, show all and reset
+    if (!q) {
+      rows.forEach(r => r.style.display = '');
+      noResults.style.setProperty('display', 'none', 'important');
+      icon.className = 'bx bx-search text-muted';
+      return;
+    }
+
+    icon.className = 'bx bx-loader-alt text-primary bx-spin';
+
+    let visible = 0;
+    rows.forEach(row => {
+      const hay = row.dataset.search || '';
+      const match = q.split(' ').every(word => hay.includes(word));
+      row.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+
+    icon.className = 'bx bx-search text-muted';
+
+    if (visible === 0) {
+      noResultsQ.textContent = input.value.trim();
+      noResults.style.setProperty('display', 'block', 'important');
+    } else {
+      noResults.style.setProperty('display', 'none', 'important');
+    }
+  }
+
+  input.addEventListener('input', function () {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(runFilter, 120);
+  });
+
+  clearBtn.addEventListener('click', function () {
+    input.value = '';
+    runFilter();
+    input.focus();
+  });
+
+  // Run on load in case search is pre-filled from server
+  if (input.value.trim()) runFilter();
+})();
+
 const jobShowBaseUrl = '{{ url("admin/jobcards") }}';
 const jobEditBaseUrl = '{{ url("admin/jobcards") }}';
 

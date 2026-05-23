@@ -122,10 +122,16 @@
             <label class="form-label">Remark</label>
             <textarea name="remark" class="form-control" rows="2">{{ old('remark', $jobCard->remark) }}</textarea>
           </div>
-          <div class="col-12">
-            <div class="form-check">
+          <div class="col-md-6">
+            <div class="form-check mt-2">
               <input class="form-check-input" type="checkbox" name="need_assistant" id="needAssistant" {{ old('need_assistant', $jobCard->need_assistant) ? 'checked' : '' }} />
               <label class="form-check-label" for="needAssistant">Needs Assistant</label>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-check mt-2">
+              <input class="form-check-input" type="checkbox" name="payment_received" id="paymentReceived" {{ old('payment_received', $jobCard->payment_received) ? 'checked' : '' }} />
+              <label class="form-check-label" for="paymentReceived">Payment Received</label>
             </div>
           </div>
         </div>

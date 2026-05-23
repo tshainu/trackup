@@ -8,24 +8,25 @@ class JobCard extends Model
         'order_no','customer_id','customer_name','customer_address','customer_email',
         'customer_nic','customer_dob','phone_no','device_name','device_brand','serial_no',
         'device_age','device_fault','issue','date','rupees','status','priority',
-        'estimated_delivery','accessories','remark','need_assistant','employee_id'
+        'estimated_delivery','accessories','remark','need_assistant','employee_id','payment_received'
     ];
 
-    protected $casts = ['need_assistant' => 'boolean', 'date' => 'date', 'estimated_delivery' => 'date'];
+    protected $casts = ['need_assistant' => 'boolean', 'payment_received' => 'boolean', 'date' => 'date', 'estimated_delivery' => 'date'];
 
     public function employee() { return $this->belongsTo(Employee::class); }
 
     public static function nextOrderNo(): string
     {
         $prefix = date('ym'); // e.g. 2605 for May 2026
+        $prefixLen = strlen($prefix); // 4 chars
         $last = static::where('order_no', 'like', $prefix . '%')
                        ->orderByDesc('id')
                        ->value('order_no');
         if (!$last) {
             $serial = 1;
         } else {
-            preg_match('/(\d+)$/', $last, $m);
-            $serial = isset($m[1]) ? intval($m[1]) + 1 : 1;
+            // Extract only the serial portion after the 4-char prefix
+            $serial = intval(substr($last, $prefixLen)) + 1;
         }
         return $prefix . str_pad($serial, 3, '0', STR_PAD_LEFT);
     }
