@@ -147,13 +147,13 @@
     <table class="table table-hover align-middle mb-0 w-100" style="font-size:.85rem; table-layout:fixed;">
       <colgroup>
         <col style="width:7%">   {{-- Order No --}}
-        <col style="width:13%">  {{-- Customer --}}
+        <col style="width:14%">  {{-- Customer --}}
         <col style="width:10%">  {{-- Phone --}}
-        <col style="width:15%">  {{-- Job Info --}}
+        <col style="width:16%">  {{-- Job Info --}}
         <col style="width:8%">   {{-- Date --}}
         <col style="width:9%">   {{-- Amount --}}
-        <col style="width:12%">  {{-- Assigned --}}
-        <col style="width:14%">  {{-- Status --}}
+        <col style="width:13%">  {{-- Assigned --}}
+        <col style="width:11%">  {{-- Status --}}
         <col style="width:12%">  {{-- Actions --}}
       </colgroup>
       <thead style="background:#f5f5ff;">
@@ -199,7 +199,7 @@
             <div class="fw-semibold text-truncate">{{ $job->device_name }}{{ $job->device_brand ? ' / '.$job->device_brand : '' }}</div>
             <small class="text-muted" style="font-size:.75rem; display:block; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">{{ $job->device_fault }}</small>
           </td>
-          <td style="white-space:nowrap;"><small>{{ $job->date ? $job->date->format('d M Y') : '—' }}</small></td>
+          <td style="white-space:nowrap;"><small>{{ $job->date ? $job->date->format('d.m.Y') : '—' }}</small></td>
           <td class="fw-semibold" style="white-space:nowrap;">Rs.{{ number_format($job->rupees, 0) }}</td>
           <td>
             @if($job->employee)
@@ -209,7 +209,11 @@
             @endif
           </td>
           <td>
-            <span class="badge {{ $b['cls'] }}" style="font-size:.72rem; white-space:nowrap;">{{ $job->status ?: 'Pending' }}</span>
+            @php
+              $short = ['Pending'=>'Pending','In Progress'=>'In Prog.','Completed'=>'Done','Not Completed'=>'Not Done'];
+              $label = $short[$job->status] ?? ($job->status ?: 'Pending');
+            @endphp
+            <span class="badge {{ $b['cls'] }}" style="font-size:.70rem; white-space:nowrap; display:inline-block; width:68px; text-align:center; overflow:hidden; text-overflow:ellipsis; padding:4px 0;">{{ $label }}</span>
           </td>
           <td>
             <div class="d-flex justify-content-center gap-1">
