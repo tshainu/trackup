@@ -67,13 +67,17 @@ class JobCardController extends Controller
             'date'             => 'required|date',
             'rupees'           => 'nullable|numeric|min:0',
             'remark'           => 'nullable|string|max:500',
-            'need_assistant'   => 'nullable|boolean',
-            'employee_id'      => 'nullable|exists:employees,id',
+            'need_assistant'     => 'nullable|boolean',
+            'employee_id'        => 'nullable|exists:employees,id',
+            'priority'           => 'nullable|in:Low,Normal,High,Urgent',
+            'estimated_delivery' => 'nullable|date',
+            'accessories'        => 'nullable|string',
         ]);
 
         $validated['order_no']    = JobCard::nextOrderNo();
         $validated['customer_id'] = JobCard::nextCustomerId();
         $validated['status']      = 'Pending';
+        $validated['priority']    = $request->input('priority', 'Normal');
         $validated['need_assistant'] = $request->has('need_assistant') ? 1 : 0;
 
         JobCard::create($validated);
@@ -82,9 +86,12 @@ class JobCardController extends Controller
                          ->with('success', 'Job order created successfully.');
     }
 
-    public function show(JobCard $jobCard)
+    public function show(Request $request, JobCard $jobCard)
     {
         $jobCard->load('employee');
+        if ($request->expectsJson()) {
+            return response()->json($jobCard);
+        }
         return view('admin.jobcards.show', compact('jobCard'));
     }
 
@@ -116,10 +123,14 @@ class JobCardController extends Controller
             'rupees'           => 'nullable|numeric|min:0',
             'status'           => 'required|in:Pending,In Progress,Completed,Not Completed',
             'remark'           => 'nullable|string|max:500',
-            'need_assistant'   => 'nullable|boolean',
-            'employee_id'      => 'nullable|exists:employees,id',
+            'need_assistant'     => 'nullable|boolean',
+            'employee_id'        => 'nullable|exists:employees,id',
+            'priority'           => 'nullable|in:Low,Normal,High,Urgent',
+            'estimated_delivery' => 'nullable|date',
+            'accessories'        => 'nullable|string',
         ]);
         $validated['need_assistant'] = $request->has('need_assistant') ? 1 : 0;
+        $validated['priority'] = $request->input('priority', 'Normal');
 
         $jobCard->update($validated);
 

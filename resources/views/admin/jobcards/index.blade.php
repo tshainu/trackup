@@ -217,7 +217,7 @@
           </td>
           <td>
             <div class="d-flex justify-content-center gap-1">
-              <a href="{{ route('admin.jobcards.show', $job) }}" class="action-btn btn btn-outline-primary" title="View"><i class='bx bx-show'></i></a>
+              <button type="button" class="action-btn btn btn-outline-primary view-job-btn" title="View" data-id="{{ $job->id }}"><i class='bx bx-show'></i></button>
               <a href="{{ route('admin.jobcards.edit', $job) }}" class="action-btn btn btn-outline-secondary" title="Edit"><i class='bx bx-edit'></i></a>
             </div>
           </td>
@@ -245,4 +245,188 @@
 
   </div>
 </div>
+
+{{-- ══════════════════════════════════════════
+     VIEW JOB ORDER MODAL
+══════════════════════════════════════════ --}}
+<div class="modal fade" id="jobViewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content" style="border:0;border-radius:16px;overflow:hidden">
+      <div id="jvm-header" style="padding:20px 24px;color:#fff;background:linear-gradient(135deg,#696cff,#8c57ff)">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div>
+            <div style="font-size:.7rem;opacity:.75;text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px">Job Order</div>
+            <div id="jvm-order-no" style="font-size:1.4rem;font-weight:800;letter-spacing:1px">#—</div>
+            <div id="jvm-cust-id" style="font-size:.78rem;opacity:.8;margin-top:2px"></div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span id="jvm-status-badge" class="badge" style="font-size:.85rem;padding:6px 14px"></span>
+            <span id="jvm-priority-badge" style="border-radius:20px;padding:4px 12px;font-size:.75rem;font-weight:700;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.15)"></span>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-body p-4" id="jvm-body">
+        <div class="text-center py-5">
+          <div class="spinner-border text-primary" role="status"></div>
+          <div class="mt-2 text-muted small">Loading…</div>
+        </div>
+      </div>
+      <div class="modal-footer border-0" style="background:#f8f8ff;padding:14px 24px">
+        <a id="jvm-edit-btn" href="#" class="btn btn-sm" style="background:linear-gradient(135deg,#696cff,#8c57ff);color:#fff;border-radius:9px;font-weight:600;padding:8px 22px">
+          <i class='bx bx-edit me-1'></i>Edit
+        </a>
+        <a id="jvm-print-btn" href="#" target="_blank" class="btn btn-sm btn-outline-secondary" style="border-radius:9px;font-weight:600">
+          <i class='bx bx-printer me-1'></i>View Full
+        </a>
+        <button type="button" class="btn btn-sm btn-outline-danger ms-auto" style="border-radius:9px" data-bs-dismiss="modal">
+          <i class='bx bx-x me-1'></i>Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 @endsection
+
+@push('styles')
+<style>
+  .jvm-info-row { display:flex; padding:7px 0; border-bottom:1px solid #f0f0f8; }
+  .jvm-info-row:last-child { border-bottom:none; }
+  .jvm-label { width:38%; font-size:.78rem; font-weight:700; color:#999; text-transform:uppercase; letter-spacing:.04em; padding-right:8px; }
+  .jvm-value { flex:1; font-size:.87rem; color:#333; font-weight:500; word-break:break-word; }
+  .jvm-section-head {
+    font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em;
+    color:#696cff; margin-bottom:10px; padding-bottom:8px;
+    border-bottom:2px solid #ebebff; display:flex; align-items:center; gap:7px;
+  }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+const jobShowBaseUrl = '{{ url("admin/jobcards") }}';
+const jobEditBaseUrl = '{{ url("admin/jobcards") }}';
+
+const statusColors = {
+  'Pending':       '#ffab00',
+  'In Progress':   '#03c3ec',
+  'Completed':     '#71dd37',
+  'Not Completed': '#ff3e1d',
+};
+const statusBadgeClass = {
+  'Pending':       'bg-label-warning',
+  'In Progress':   'bg-label-info',
+  'Completed':     'bg-label-success',
+  'Not Completed': 'bg-label-danger',
+};
+const headerGradients = {
+  'Low':    'linear-gradient(135deg,#2d6a09,#71dd37)',
+  'Normal': 'linear-gradient(135deg,#696cff,#8c57ff 60%,#a855f7)',
+  'High':   'linear-gradient(135deg,#7a4800,#ffab00)',
+  'Urgent': 'linear-gradient(135deg,#8a0000,#ff3e1d 60%,#ff7043)',
+};
+
+function fmt(v) { return (v !== null && v !== undefined && v !== '') ? v : '—'; }
+function fmtDate(d) {
+  if (!d) return '—';
+  const s = d.split('T')[0];
+  const parts = s.split('-');
+  if (parts.length === 3) {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${parseInt(parts[2])} ${months[parseInt(parts[1])-1]} ${parts[0]}`;
+  }
+  return d;
+}
+
+document.querySelectorAll('.view-job-btn').forEach(btn => {
+  btn.addEventListener('click', function () { openJobModal(this.dataset.id); });
+});
+
+function openJobModal(id) {
+  const modalEl = document.getElementById('jobViewModal');
+  const modal   = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+  // Reset
+  document.getElementById('jvm-order-no').textContent     = '#—';
+  document.getElementById('jvm-cust-id').textContent       = '';
+  document.getElementById('jvm-status-badge').className    = 'badge';
+  document.getElementById('jvm-status-badge').textContent  = '';
+  document.getElementById('jvm-priority-badge').textContent = '';
+  document.getElementById('jvm-header').style.background   = 'linear-gradient(135deg,#696cff,#8c57ff)';
+  document.getElementById('jvm-body').innerHTML = `
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status"></div>
+      <div class="mt-2 text-muted small">Loading…</div>
+    </div>`;
+
+  modal.show();
+
+  fetch(`${jobShowBaseUrl}/${id}`, {
+    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .then(j => {
+    const priority = j.priority || 'Normal';
+    const status   = j.status   || 'Pending';
+    const sc       = statusBadgeClass[status] || 'bg-secondary';
+    const grad     = headerGradients[priority] || headerGradients['Normal'];
+
+    document.getElementById('jvm-header').style.background = grad;
+    document.getElementById('jvm-order-no').textContent    = '# ' + j.order_no;
+    document.getElementById('jvm-cust-id').textContent     = j.customer_id || '';
+
+    const sb = document.getElementById('jvm-status-badge');
+    sb.className   = 'badge ' + sc;
+    sb.textContent = status;
+
+    const pb = document.getElementById('jvm-priority-badge');
+    pb.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.9);margin-right:5px"></span>${priority} Priority`;
+
+    document.getElementById('jvm-edit-btn').href  = `${jobEditBaseUrl}/${j.id}/edit`;
+    document.getElementById('jvm-print-btn').href = `${jobShowBaseUrl}/${j.id}`;
+
+    const empName    = j.employee ? (j.employee.employee_name || j.employee.name || '—') : '—';
+    const accessories = fmt(j.accessories);
+    const needAss    = j.need_assistant
+      ? `<span class="badge bg-label-warning">Yes</span>`
+      : `<span class="text-muted">No</span>`;
+    const amount = (j.rupees != null)
+      ? 'Rs. ' + parseFloat(j.rupees).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})
+      : '—';
+
+    document.getElementById('jvm-body').innerHTML = `
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="jvm-section-head"><i class='bx bx-user'></i> Customer</div>
+          <div class="jvm-info-row"><div class="jvm-label">Name</div><div class="jvm-value">${fmt(j.customer_name)}</div></div>
+          <div class="jvm-info-row"><div class="jvm-label">Phone</div><div class="jvm-value">${fmt(j.phone_no)}</div></div>
+          <div class="jvm-info-row"><div class="jvm-label">NIC</div><div class="jvm-value">${fmt(j.customer_nic)}</div></div>
+          <div class="jvm-info-row"><div class="jvm-label">Email</div><div class="jvm-value">${fmt(j.customer_email)}</div></div>
+          <div class="jvm-info-row"><div class="jvm-label">Address</div><div class="jvm-value">${fmt(j.customer_address)}</div></div>
+          <div class="jvm-info-row"><div class="jvm-label">Date of Birth</div><div class="jvm-value">${fmt(j.customer_dob)}</div></div>
+          <div class="jvm-info-row"><div class="jvm-label">Received</div><div class="jvm-value">${fmtDate(j.date)}</div></div>
+          <div class="jvm-info-row"><div class="jvm-label">Est. Delivery</div><div class="jvm-value">${fmtDate(j.estimated_delivery)}</div></div>
+        </div>
+        <div class="col-md-6">
+          <div class="jvm-section-head"><i class='bx bx-chip'></i> Device & Repair</div>
+          <div class="jvm-info-row"><div class="jvm-label">Device</div><div class="jvm-value">${fmt(j.device_name)}</div></div>
+          <div class="jvm-info-row"><div class="jvm-label">Brand</div><div class="jvm-value">${fmt(j.device_brand)}</div></div>
+          <div class="jvm-info-row"><div class="jvm-label">Serial / IMEI</div><div class="jvm-value">${fmt(j.serial_no)}</div></div>
+          <div class="jvm-info-row"><div class="jvm-label">Device Age</div><div class="jvm-value">${j.device_age ? j.device_age + ' yrs' : '—'}</div></div>
+          <div class="jvm-info-row"><div class="jvm-label">Fault</div><div class="jvm-value">${fmt(j.device_fault)}</div></div>
+          <div class="jvm-info-row"><div class="jvm-label">Issue</div><div class="jvm-value">${fmt(j.issue)}</div></div>
+          <div class="jvm-info-row"><div class="jvm-label">Amount</div><div class="jvm-value"><strong style="color:#696cff">${amount}</strong></div></div>
+          <div class="jvm-info-row"><div class="jvm-label">Assigned To</div><div class="jvm-value">${empName}</div></div>
+          <div class="jvm-info-row"><div class="jvm-label">Accessories</div><div class="jvm-value">${accessories}</div></div>
+          <div class="jvm-info-row"><div class="jvm-label">Need Assistant</div><div class="jvm-value">${needAss}</div></div>
+          <div class="jvm-info-row"><div class="jvm-label">Remark</div><div class="jvm-value">${fmt(j.remark)}</div></div>
+        </div>
+      </div>`;
+  })
+  .catch(err => {
+    document.getElementById('jvm-body').innerHTML = `<div class="alert alert-danger m-3">Failed to load job order. Please try again.</div>`;
+    console.error(err);
+  });
+}
+</script>
+@endpush
