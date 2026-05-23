@@ -232,6 +232,13 @@
             <div>Devices & Brands</div>
           </a>
         </li>
+        <li class="menu-item {{ Request::routeIs('admin.invoices.*') ? 'active' : '' }}">
+          <a href="{{ route('admin.invoices.index') }}" class="menu-link">
+            <i class="menu-icon tf-icons bx bx-receipt"></i>
+            <div>Invoices</div>
+          </a>
+        </li>
+
         <li class="menu-item {{ Request::routeIs('admin.reports.*') ? 'active' : '' }}">
           <a href="{{ route('admin.reports.index') }}" class="menu-link">
             <i class="menu-icon tf-icons bx bx-bar-chart-alt-2"></i>

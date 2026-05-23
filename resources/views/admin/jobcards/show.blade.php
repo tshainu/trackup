@@ -91,9 +91,12 @@
   </div>
 </div>
 
-<div class="d-flex gap-2 mt-3">
+<div class="d-flex gap-2 mt-3 flex-wrap">
   <a href="{{ route('admin.jobcards.edit', $jobCard) }}" class="btn" style="background:linear-gradient(135deg,#696cff,#8c57ff);color:#fff;border-radius:10px;font-weight:600;padding:8px 24px">
     <i class='bx bx-edit me-1'></i>Edit
+  </a>
+  <a href="{{ route('admin.invoices.show', $jobCard) }}" class="btn btn-outline-primary" style="border-radius:10px;font-weight:600;padding:8px 24px">
+    <i class='bx bx-receipt me-1'></i>{{ $jobCard->invoice_no ? 'View Invoice' : 'Generate Invoice' }}
   </a>
   <a href="{{ route('admin.jobcards.index') }}" class="btn btn-outline-secondary" style="border-radius:10px;font-weight:600;padding:8px 24px">
     <i class='bx bx-arrow-back me-1'></i>Back

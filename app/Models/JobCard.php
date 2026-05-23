@@ -5,29 +5,30 @@ use Illuminate\Database\Eloquent\Model;
 class JobCard extends Model
 {
     protected $fillable = [
-        'order_no','customer_id','customer_name','customer_address','customer_email',
+        'order_no','invoice_no','invoice_date','customer_id','customer_name','customer_address','customer_email',
         'customer_nic','customer_dob','phone_no','device_name','device_brand','serial_no',
-        'device_age','device_fault','issue','date','rupees','status','priority',
+        'device_age','device_fault','issue','date','rupees','discount','paid_amount','status','priority',
         'estimated_delivery','accessories','remark','need_assistant','employee_id','payment_received'
     ];
 
-    protected $casts = ['need_assistant' => 'boolean', 'payment_received' => 'boolean', 'date' => 'date', 'estimated_delivery' => 'date'];
+    protected $casts = [
+        'need_assistant'  => 'boolean',
+        'payment_received'=> 'boolean',
+        'date'            => 'date',
+        'estimated_delivery' => 'date',
+        'invoice_date'    => 'date',
+    ];
 
-    public function employee() { return $this->belongsTo(Employee::class); }
+    public function employee()   { return $this->belongsTo(Employee::class); }
+    public function invoiceItems(){ return $this->hasMany(InvoiceItem::class); }
 
     public static function nextOrderNo(): string
     {
-        $prefix = date('ym'); // e.g. 2605 for May 2026
-        $prefixLen = strlen($prefix); // 4 chars
+        $prefix    = date('ym');
+        $prefixLen = strlen($prefix);
         $last = static::where('order_no', 'like', $prefix . '%')
-                       ->orderByDesc('id')
-                       ->value('order_no');
-        if (!$last) {
-            $serial = 1;
-        } else {
-            // Extract only the serial portion after the 4-char prefix
-            $serial = intval(substr($last, $prefixLen)) + 1;
-        }
+                       ->orderByDesc('id')->value('order_no');
+        $serial = $last ? intval(substr($last, $prefixLen)) + 1 : 1;
         return $prefix . str_pad($serial, 3, '0', STR_PAD_LEFT);
     }
 
@@ -38,5 +39,31 @@ class JobCard extends Model
         preg_match('/(\d+)$/', $last, $m);
         $next = isset($m[1]) ? intval($m[1]) + 1 : 1;
         return 'CUS-' . str_pad($next, 3, '0', STR_PAD_LEFT);
+    }
+
+    public static function nextInvoiceNo(): string
+    {
+        $prefix = 'INV-' . date('Y') . '-';
+        $last = static::where('invoice_no', 'like', $prefix . '%')
+                       ->orderByDesc('id')->value('invoice_no');
+        $serial = $last ? intval(substr($last, strlen($prefix))) + 1 : 1;
+        return $prefix . str_pad($serial, 4, '0', STR_PAD_LEFT);
+    }
+
+    // Computed helpers
+    public function getSubtotalAttribute(): float
+    {
+        $itemsTotal = $this->invoiceItems->sum('total');
+        return $itemsTotal > 0 ? $itemsTotal : (float)$this->rupees;
+    }
+
+    public function getGrandTotalAttribute(): float
+    {
+        return max(0, $this->subtotal - (float)$this->discount);
+    }
+
+    public function getBalanceAttribute(): float
+    {
+        return max(0, $this->grand_total - (float)$this->paid_amount);
     }
 }

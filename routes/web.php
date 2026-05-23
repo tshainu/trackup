@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\DeviceController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\StoreController;
 use App\Http\Controllers\Admin\NotificationController;
+use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Employee\EmployeeDashboardController;
 use App\Http\Controllers\AjaxController;
 
@@ -59,6 +60,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Store Settings
         Route::get('/store',  [StoreController::class, 'edit'])->name('store.edit');
         Route::put('/store',  [StoreController::class, 'update'])->name('store.update');
+
+        // Invoices
+        Route::get('/invoices',                        [InvoiceController::class, 'index'])->name('invoices.index');
+        Route::get('/invoices/{jobCard}',              [InvoiceController::class, 'show'])->name('invoices.show');
+        Route::put('/invoices/{jobCard}',              [InvoiceController::class, 'update'])->name('invoices.update');
+        Route::patch('/invoices/{jobCard}/mark-paid',  [InvoiceController::class, 'markPaid'])->name('invoices.markPaid');
 
         // Notifications
         Route::get('/notifications',                             [NotificationController::class, 'index'])->name('notifications.index');
