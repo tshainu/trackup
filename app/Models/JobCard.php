@@ -17,11 +17,17 @@ class JobCard extends Model
 
     public static function nextOrderNo(): string
     {
-        $last = static::orderByDesc('id')->value('order_no');
-        if (!$last) return 'ORD-' . date('Y') . '-001';
-        preg_match('/(\d+)$/', $last, $m);
-        $next = isset($m[1]) ? intval($m[1]) + 1 : 1;
-        return 'ORD-' . date('Y') . '-' . str_pad($next, 3, '0', STR_PAD_LEFT);
+        $prefix = date('ym'); // e.g. 2605 for May 2026
+        $last = static::where('order_no', 'like', $prefix . '%')
+                       ->orderByDesc('id')
+                       ->value('order_no');
+        if (!$last) {
+            $serial = 1;
+        } else {
+            preg_match('/(\d+)$/', $last, $m);
+            $serial = isset($m[1]) ? intval($m[1]) + 1 : 1;
+        }
+        return $prefix . str_pad($serial, 3, '0', STR_PAD_LEFT);
     }
 
     public static function nextCustomerId(): string
