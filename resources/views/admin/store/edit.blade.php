@@ -17,7 +17,7 @@
 <div class="row">
     <div class="col-md-8">
         <div class="card shadow-sm">
-            <div class="card-header bg-dark text-white">
+            <div class="card-header">
                 <h5 class="mb-0">Business Information</h5>
             </div>
             <div class="card-body">
@@ -88,7 +88,7 @@
 
     <div class="col-md-4">
         <div class="card shadow-sm">
-            <div class="card-header bg-secondary text-white">
+            <div class="card-header">
                 <h5 class="mb-0">Current Info</h5>
             </div>
             <div class="card-body">

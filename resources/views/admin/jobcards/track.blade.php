@@ -57,7 +57,7 @@
           <h5 class="mb-0">{{ $job->order_no }}</h5>
           <small class="text-muted">{{ $job->customer_id }}</small>
         </div>
-        @php $sc = ['Pending'=>'badge-pending','In Progress'=>'badge-progress','Completed'=>'badge-completed','Not Completed'=>'badge-not-completed']; @endphp
+        @php $sc = ['Pending'=>'bg-label-warning','In Progress'=>'bg-label-info','Completed'=>'bg-label-success','Not Completed'=>'bg-label-danger']; @endphp
         <span class="badge fs-6 {{ $sc[$job->status] ?? 'bg-secondary' }}">{{ $job->status ?: 'Pending' }}</span>
       </div>
       <div class="card-body">

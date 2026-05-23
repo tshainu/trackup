@@ -78,7 +78,7 @@
               @endif
             </td>
             <td>
-              @php $sc = ['Pending'=>'badge-pending','In Progress'=>'badge-progress','Completed'=>'badge-completed','Not Completed'=>'badge-not-completed']; @endphp
+              @php $sc = ['Pending'=>'bg-label-warning','In Progress'=>'bg-label-info','Completed'=>'bg-label-success','Not Completed'=>'bg-label-danger']; @endphp
               <span class="badge {{ $sc[$job->status] ?? 'bg-secondary' }}">{{ $job->status ?: 'Pending' }}</span>
             </td>
             <td>

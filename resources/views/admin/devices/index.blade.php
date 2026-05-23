@@ -24,8 +24,8 @@
     {{-- Add Device Type --}}
     <div class="col-md-4 mb-4">
         <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Add Device Type</h5>
+            <div class="card-header">
+                <span class="card-header-title"><i class="ti ti-device-laptop me-1"></i> Add Device Type</span>
             </div>
             <div class="card-body">
                 <form action="{{ route('admin.devices.store') }}" method="POST">
@@ -45,8 +45,8 @@
     {{-- Device Types List --}}
     <div class="col-md-8 mb-4">
         <div class="card shadow-sm">
-            <div class="card-header bg-dark text-white">
-                <h5 class="mb-0">Device Types</h5>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="card-header-title"><i class="ti ti-list me-1"></i> Device Types</span>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -68,7 +68,7 @@
                                 <td>
                                     @if($device->brands->count())
                                         @foreach($device->brands as $brand)
-                                            <span class="badge bg-info text-dark me-1 mb-1">
+                                            <span class="badge bg-label-info me-1 mb-1">
                                                 {{ $brand->device_brand }}
                                                 <form action="{{ route('admin.devices.brands.destroy', $brand->id) }}" method="POST" class="d-inline">
                                                     @csrf @method('DELETE')
@@ -83,7 +83,7 @@
                                 <td>
                                     @if($device->faults->count())
                                         @foreach($device->faults as $fault)
-                                            <span class="badge bg-warning text-dark me-1 mb-1">
+                                            <span class="badge bg-label-warning me-1 mb-1">
                                                 {{ $fault->device_fault }}
                                                 <form action="{{ route('admin.devices.faults.destroy', $fault->id) }}" method="POST" class="d-inline">
                                                     @csrf @method('DELETE')

@@ -29,35 +29,55 @@
 
 {{-- Summary Stats --}}
 <div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card text-center shadow-sm border-primary">
-            <div class="card-body">
-                <div class="fs-1 fw-bold text-primary">{{ $summary['total'] }}</div>
-                <div class="text-muted">Total Jobs</div>
+    <div class="col-6 col-xl-3">
+        <div class="card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="avatar avatar-lg flex-shrink-0" style="background-color:#e7e4ff;">
+                    <i class='bx bx-clipboard fs-3' style="color:#696cff;"></i>
+                </div>
+                <div>
+                    <p class="mb-0 text-muted small">Total Jobs</p>
+                    <h4 class="mb-0">{{ $summary['total'] }}</h4>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-center shadow-sm border-warning">
-            <div class="card-body">
-                <div class="fs-1 fw-bold text-warning">{{ $summary['pending'] }}</div>
-                <div class="text-muted">Pending</div>
+    <div class="col-6 col-xl-3">
+        <div class="card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="avatar avatar-lg flex-shrink-0" style="background-color:#fff3cd;">
+                    <i class='bx bx-time fs-3' style="color:#ffab00;"></i>
+                </div>
+                <div>
+                    <p class="mb-0 text-muted small">Pending</p>
+                    <h4 class="mb-0">{{ $summary['pending'] }}</h4>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-center shadow-sm border-success">
-            <div class="card-body">
-                <div class="fs-1 fw-bold text-success">{{ $summary['completed'] }}</div>
-                <div class="text-muted">Completed</div>
+    <div class="col-6 col-xl-3">
+        <div class="card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="avatar avatar-lg flex-shrink-0" style="background-color:#d4edda;">
+                    <i class='bx bx-check-circle fs-3' style="color:#71dd37;"></i>
+                </div>
+                <div>
+                    <p class="mb-0 text-muted small">Completed</p>
+                    <h4 class="mb-0">{{ $summary['completed'] }}</h4>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-center shadow-sm border-info">
-            <div class="card-body">
-                <div class="fs-1 fw-bold text-info">Rs. {{ number_format($summary['revenue'], 2) }}</div>
-                <div class="text-muted">Revenue</div>
+    <div class="col-6 col-xl-3">
+        <div class="card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="avatar avatar-lg flex-shrink-0" style="background-color:#e3d9fd;">
+                    <i class='bx bx-money fs-3' style="color:#8c57ff;"></i>
+                </div>
+                <div>
+                    <p class="mb-0 text-muted small">Revenue</p>
+                    <h4 class="mb-0">Rs.{{ number_format($summary['revenue'], 0) }}</h4>
+                </div>
             </div>
         </div>
     </div>
@@ -67,7 +87,7 @@
     {{-- By Device --}}
     <div class="col-md-6">
         <div class="card shadow-sm">
-            <div class="card-header bg-dark text-white">
+            <div class="card-header">
                 <h5 class="mb-0">Jobs by Device Type</h5>
             </div>
             <div class="card-body p-0">
@@ -93,7 +113,7 @@
     {{-- By Status --}}
     <div class="col-md-6">
         <div class="card shadow-sm">
-            <div class="card-header bg-dark text-white">
+            <div class="card-header">
                 <h5 class="mb-0">Jobs by Status</h5>
             </div>
             <div class="card-body p-0">
@@ -125,7 +145,7 @@
 
 {{-- Jobs Table --}}
 <div class="card shadow-sm">
-    <div class="card-header bg-dark text-white d-flex justify-content-between">
+    <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Job Cards
             <small class="fw-normal">({{ $from }} → {{ $to }})</small>
         </h5>

@@ -46,7 +46,7 @@
           <tr><th>Assigned To</th><td>{{ $jobCard->employee->employee_name ?? '—' }}</td></tr>
           <tr><th>Need Assistant</th><td>{{ $jobCard->need_assistant ? '<span class="badge bg-warning text-dark">Yes</span>' : 'No' }}</td></tr>
           <tr><th>Status</th><td>
-            @php $sc = ['Pending'=>'badge-pending','In Progress'=>'badge-progress','Completed'=>'badge-completed','Not Completed'=>'badge-not-completed']; @endphp
+            @php $sc = ['Pending'=>'bg-label-warning','In Progress'=>'bg-label-info','Completed'=>'bg-label-success','Not Completed'=>'bg-label-danger']; @endphp
             <span class="badge {{ $sc[$jobCard->status] ?? 'bg-secondary' }}">{{ $jobCard->status ?: 'Pending' }}</span>
           </td></tr>
           <tr><th>Remark</th><td>{{ $jobCard->remark ?: '—' }}</td></tr>
