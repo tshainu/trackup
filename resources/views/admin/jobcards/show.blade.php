@@ -1,8 +1,8 @@
 @extends('layouts.admin')
-@section('title', 'Job Card - ' . $jobCard->order_no)
-@section('page-title', 'Job Card Details')
+@section('title', 'Job Order - ' . $jobCard->order_no)
+@section('page-title', 'Job Order Details')
 @section('breadcrumb')
-  <li class="breadcrumb-item"><a href="{{ route('admin.jobcards.index') }}">Job Cards</a></li>
+  <li class="breadcrumb-item"><a href="{{ route('admin.jobcards.index') }}">Job Orders</a></li>
   <li class="breadcrumb-item active">{{ $jobCard->order_no }}</li>
 @endsection
 

@@ -1,8 +1,8 @@
 @extends('layouts.admin')
-@section('title', 'New Job Card')
-@section('page-title', 'New Job Card')
+@section('title', 'New Job Order')
+@section('page-title', 'New Job Order')
 @section('breadcrumb')
-  <li class="breadcrumb-item"><a href="{{ route('admin.jobcards.index') }}">Job Cards</a></li>
+  <li class="breadcrumb-item"><a href="{{ route('admin.jobcards.index') }}">Job Orders</a></li>
   <li class="breadcrumb-item active">New</li>
 @endsection
 
@@ -134,7 +134,7 @@
 
 <div class="mt-3 d-flex gap-2">
   <button type="submit" class="btn" style="background:#7c4dff;color:#fff;padding:.5rem 2rem">
-    <i class='bx bx-save me-1'></i> Save Job Card
+    <i class='bx bx-save me-1'></i> Save Job Order
   </button>
   <a href="{{ route('admin.jobcards.index') }}" class="btn btn-outline-secondary" style="padding:.5rem 2rem">Cancel</a>
 </div>

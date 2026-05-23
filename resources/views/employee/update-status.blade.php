@@ -12,7 +12,7 @@
         {{-- Job Summary --}}
         <div class="card shadow-sm mb-4">
             <div class="card-header">
-                <h5 class="mb-0">Job Card: <code class="text-white">{{ $jobCard->order_no }}</code></h5>
+                <h5 class="mb-0">Job Order: <code class="text-white">{{ $jobCard->order_no }}</code></h5>
             </div>
             <div class="card-body">
                 <div class="row g-3">

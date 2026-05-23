@@ -23,9 +23,25 @@ class DashboardController extends Controller
 
         $recentJobs = JobCard::with('employee')->latest()->take(10)->get();
         $monthlyData = $this->getMonthlyData();
+        $chartData = $this->getLast7DaysData();
         $store = StoreInfo::first();
 
-        return view('admin.dashboard', compact('stats', 'recentJobs', 'monthlyData', 'store'));
+        return view('admin.dashboard', compact('stats', 'recentJobs', 'monthlyData', 'chartData', 'store'));
+    }
+
+    private function getLast7DaysData(): array
+    {
+        $data = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i)->toDateString();
+            $data[] = [
+                'total'     => JobCard::whereDate('created_at', $date)->count(),
+                'completed' => JobCard::where('status', 'Completed')->whereDate('created_at', $date)->count(),
+                'pending'   => JobCard::where('status', 'Pending')->whereDate('created_at', $date)->count(),
+                'revenue'   => (float) JobCard::where('status', 'Completed')->whereDate('created_at', $date)->sum('rupees'),
+            ];
+        }
+        return $data;
     }
 
     private function getMonthlyData(): array

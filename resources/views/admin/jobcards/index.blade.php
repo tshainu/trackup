@@ -1,14 +1,14 @@
 @extends('layouts.admin')
-@section('title', 'Job Cards')
-@section('page-title', 'Job Cards')
-@section('breadcrumb')<li class="breadcrumb-item active">Job Cards</li>@endsection
+@section('title', 'Job Orders')
+@section('page-title', 'Job Orders')
+@section('breadcrumb')<li class="breadcrumb-item active">Job Orders</li>@endsection
 
 @section('content')
 <div class="card">
   <div class="card-header d-flex justify-content-between align-items-center py-3">
-    <span><i class='bx bx-list-ul me-1'></i> All Job Cards</span>
+    <span><i class='bx bx-list-ul me-1'></i> All Job Orders</span>
     <a href="{{ route('admin.jobcards.create') }}" class="btn btn-sm" style="background:#7c4dff;color:#fff">
-      <i class='bx bx-plus'></i> New Job Card
+      <i class='bx bx-plus'></i> New Job Order
     </a>
   </div>
   <div class="card-body">
@@ -85,7 +85,7 @@
               <div class="d-flex gap-1">
                 <a href="{{ route('admin.jobcards.show', $job) }}" class="btn btn-sm btn-outline-primary py-0" title="View"><i class='bx bx-eye'></i></a>
                 <a href="{{ route('admin.jobcards.edit', $job) }}" class="btn btn-sm btn-outline-secondary py-0" title="Edit"><i class='bx bx-edit'></i></a>
-                <form action="{{ route('admin.jobcards.destroy', $job) }}" method="POST" onsubmit="return confirm('Delete this job card?')">
+                <form action="{{ route('admin.jobcards.destroy', $job) }}" method="POST" onsubmit="return confirm('Delete this job order?')">
                   @csrf @method('DELETE')
                   <button type="submit" class="btn btn-sm btn-outline-danger py-0" title="Delete"><i class='bx bx-trash'></i></button>
                 </form>

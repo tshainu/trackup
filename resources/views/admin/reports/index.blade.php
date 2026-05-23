@@ -146,7 +146,7 @@
 {{-- Jobs Table --}}
 <div class="card shadow-sm">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Job Cards
+        <h5 class="mb-0">Job Orders
             <small class="fw-normal">({{ $from }} → {{ $to }})</small>
         </h5>
         <span class="badge bg-light text-dark">{{ $jobs->count() }} records</span>
@@ -187,7 +187,7 @@
                         <td><a href="{{ route('admin.jobcards.show', $job->id) }}" class="btn btn-sm btn-outline-primary">View</a></td>
                     </tr>
                     @empty
-                    <tr><td colspan="9" class="text-center text-muted py-4">No job cards found for this period.</td></tr>
+                    <tr><td colspan="9" class="text-center text-muted py-4">No job orders found for this period.</td></tr>
                     @endforelse
                 </tbody>
             </table>

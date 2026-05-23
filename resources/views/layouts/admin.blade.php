@@ -26,6 +26,7 @@
     <!-- Vendors CSS -->
     <link rel="stylesheet" href="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
     @yield('extra_css')
+    @stack('styles')
     <!-- Helpers -->
     <script src="/assets/vendor/js/helpers.js"></script>
     <script src="/assets/js/config.js"></script>
@@ -91,21 +92,21 @@
               </a>
             </li>
 
-            <!-- Job Cards -->
+            <!-- Job Orders -->
             <li class="menu-item {{ request()->routeIs('admin.jobcards*') ? 'active open' : '' }}">
               <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="menu-icon tf-icons bx bx-clipboard"></i>
-                <div>Job Cards</div>
+                <div>Job Orders</div>
               </a>
               <ul class="menu-sub">
                 <li class="menu-item {{ request()->routeIs('admin.jobcards.index') ? 'active' : '' }}">
                   <a href="{{ route('admin.jobcards.index') }}" class="menu-link">
-                    <div>All Job Cards</div>
+                    <div>All Job Orders</div>
                   </a>
                 </li>
                 <li class="menu-item {{ request()->routeIs('admin.jobcards.create') ? 'active' : '' }}">
                   <a href="{{ route('admin.jobcards.create') }}" class="menu-link">
-                    <div>New Job Card</div>
+                    <div>New Job Order</div>
                   </a>
                 </li>
                 <li class="menu-item {{ request()->routeIs('admin.jobcards.track') ? 'active' : '' }}">
@@ -287,5 +288,6 @@
     <!-- Main JS -->
     <script src="/assets/js/main.js"></script>
     @yield('extra_js')
+    @stack('scripts')
   </body>
 </html>

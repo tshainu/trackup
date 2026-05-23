@@ -46,7 +46,7 @@
     <!-- Results -->
     @if($search && !$job)
       <div class="alert alert-warning">
-        <i class='bx bx-error me-1'></i> No job card found for "<strong>{{ $search }}</strong>"
+        <i class='bx bx-error me-1'></i> No job order found for "<strong>{{ $search }}</strong>"
       </div>
     @endif
 

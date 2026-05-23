@@ -75,7 +75,7 @@ class JobCardController extends Controller
         JobCard::create($validated);
 
         return redirect()->route('admin.jobcards.index')
-                         ->with('success', 'Job card created successfully.');
+                         ->with('success', 'Job order created successfully.');
     }
 
     public function show(JobCard $jobCard)
@@ -120,14 +120,14 @@ class JobCardController extends Controller
         $jobCard->update($validated);
 
         return redirect()->route('admin.jobcards.index')
-                         ->with('success', 'Job card updated successfully.');
+                         ->with('success', 'Job order updated successfully.');
     }
 
     public function destroy(JobCard $jobCard)
     {
         $jobCard->delete();
         return redirect()->route('admin.jobcards.index')
-                         ->with('success', 'Job card deleted.');
+                         ->with('success', 'Job order deleted.');
     }
 
     public function track(Request $request)
