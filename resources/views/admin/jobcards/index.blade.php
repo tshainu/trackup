@@ -146,15 +146,15 @@
     {{-- ── Table ── --}}
     <table class="table table-hover align-middle mb-0 w-100" style="font-size:.85rem; table-layout:fixed;">
       <colgroup>
-        <col style="width:9%">   {{-- Order No --}}
-        <col style="width:15%">  {{-- Customer --}}
-        <col style="width:11%">  {{-- Phone --}}
+        <col style="width:10%">  {{-- Order No --}}
+        <col style="width:14%">  {{-- Customer --}}
+        <col style="width:10%">  {{-- Phone --}}
         <col style="width:19%">  {{-- Job Info --}}
         <col style="width:9%">   {{-- Date --}}
         <col style="width:8%">   {{-- Amount --}}
-        <col style="width:11%">  {{-- Assigned --}}
-        <col style="width:12%">  {{-- Status --}}
-        <col style="width:6%">   {{-- Actions --}}
+        <col style="width:10%">  {{-- Assigned --}}
+        <col style="width:13%">  {{-- Status --}}
+        <col style="width:7%">   {{-- Actions --}}
       </colgroup>
       <thead style="background:#f5f5ff;">
         <tr>
@@ -187,8 +187,8 @@
         @forelse($jobs as $job)
         @php $b = $badges[$job->status] ?? ['cls'=>'bg-label-secondary','dot'=>'#aaa','icon'=>'bx-circle']; @endphp
         <tr>
-          <td class="ps-3">
-            <span class="fw-bold text-primary" style="font-size:.8rem;">{{ $job->order_no }}</span>
+          <td class="ps-3" style="white-space:nowrap;">
+            <span class="fw-bold text-primary" style="font-size:.82rem;">{{ $job->order_no }}</span>
           </td>
           <td>
             <div class="fw-semibold text-truncate">{{ $job->customer_name }}</div>
