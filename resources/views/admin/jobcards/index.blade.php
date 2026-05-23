@@ -146,15 +146,15 @@
     {{-- ── Table ── --}}
     <table class="table table-hover align-middle mb-0 w-100" style="font-size:.85rem; table-layout:fixed;">
       <colgroup>
-        <col style="width:9%">   {{-- Order No --}}
+        <col style="width:7%">   {{-- Order No --}}
         <col style="width:13%">  {{-- Customer --}}
-        <col style="width:9%">   {{-- Phone --}}
+        <col style="width:10%">  {{-- Phone --}}
         <col style="width:15%">  {{-- Job Info --}}
         <col style="width:8%">   {{-- Date --}}
         <col style="width:9%">   {{-- Amount --}}
         <col style="width:12%">  {{-- Assigned --}}
         <col style="width:14%">  {{-- Status --}}
-        <col style="width:11%">  {{-- Actions --}}
+        <col style="width:12%">  {{-- Actions --}}
       </colgroup>
       <thead style="background:#f5f5ff;">
         <tr>
