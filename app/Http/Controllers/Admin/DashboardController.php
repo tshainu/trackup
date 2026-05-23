@@ -26,7 +26,16 @@ class DashboardController extends Controller
         $chartData = $this->getLast7DaysData();
         $store = StoreInfo::first();
 
-        return view('admin.dashboard', compact('stats', 'recentJobs', 'monthlyData', 'chartData', 'store'));
+        // Today's delivery list — jobs created or updated today (any status)
+        $todayDeliveries = JobCard::with('employee')
+            ->where(function($q) {
+                $q->whereDate('created_at', today())
+                  ->orWhereDate('updated_at', today());
+            })
+            ->latest('updated_at')
+            ->get();
+
+        return view('admin.dashboard', compact('stats', 'recentJobs', 'monthlyData', 'chartData', 'store', 'todayDeliveries'));
     }
 
     private function getLast7DaysData(): array

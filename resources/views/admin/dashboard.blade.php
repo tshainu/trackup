@@ -279,6 +279,95 @@
   </div>
 </div>
 
+{{-- ── Today's Delivery List ────────────────────────────────────── --}}
+<div class="card mt-4" style="border-radius:16px; border:0; box-shadow:0 2px 12px rgba(0,0,0,0.07);">
+  <div class="card-header d-flex justify-content-between align-items-center bg-white border-0 pt-4">
+    <div>
+      <h5 class="mb-0 fw-bold">
+        <i class='bx bx-package me-1' style="color:#03c3ec;"></i>
+        Today's Delivery List
+      </h5>
+      <small class="text-muted">{{ now()->format('l, d M Y') }}</small>
+    </div>
+    <span class="badge bg-label-info fs-6">{{ $todayDeliveries->count() }} orders</span>
+  </div>
+
+  @if($todayDeliveries->isEmpty())
+    <div class="card-body text-center py-5">
+      <i class='bx bx-inbox' style="font-size:3rem; color:#c8c9ca;"></i>
+      <p class="text-muted mt-2 mb-0">No deliveries scheduled for today.</p>
+    </div>
+  @else
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Order No</th>
+          <th>Customer</th>
+          <th>Phone</th>
+          <th>Device</th>
+          <th>Amount</th>
+          <th>Assigned To</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        @foreach($todayDeliveries as $i => $job)
+        @php
+          $badges = [
+            'Pending'       => ['class' => 'bg-label-warning',  'icon' => 'bx-time-five',      'dot' => '#ffab00'],
+            'In Progress'   => ['class' => 'bg-label-info',     'icon' => 'bx-loader-alt',     'dot' => '#03c3ec'],
+            'Completed'     => ['class' => 'bg-label-success',  'icon' => 'bx-check-circle',   'dot' => '#71dd37'],
+            'Not Completed' => ['class' => 'bg-label-danger',   'icon' => 'bx-x-circle',       'dot' => '#ff3e1d'],
+          ];
+          $b = $badges[$job->status] ?? ['class' => 'bg-label-secondary', 'icon' => 'bx-circle', 'dot' => '#aaa'];
+        @endphp
+        <tr>
+          <td class="text-muted small">{{ $i + 1 }}</td>
+          <td><span class="fw-semibold text-primary">{{ $job->order_no }}</span></td>
+          <td>
+            <div class="fw-semibold">{{ $job->customer_name }}</div>
+            @if($job->customer_address)
+              <small class="text-muted"><i class='bx bx-map-pin'></i> {{ Str::limit($job->customer_address, 30) }}</small>
+            @endif
+          </td>
+          <td><small>{{ $job->phone_no }}</small></td>
+          <td>
+            <span class="fw-medium">{{ $job->device_name }}</span><br>
+            <small class="text-muted">{{ $job->device_brand }}</small>
+          </td>
+          <td class="fw-semibold">Rs.{{ number_format($job->rupees, 0) }}</td>
+          <td>
+            @if($job->employee)
+              <span class="badge bg-label-secondary">{{ $job->employee->name }}</span>
+            @else
+              <span class="text-muted small">—</span>
+            @endif
+          </td>
+          <td>
+            <span class="badge {{ $b['class'] }} d-inline-flex align-items-center gap-1">
+              <i class='bx {{ $b['icon'] }}'></i>
+              {{ $job->status ?: 'Pending' }}
+            </span>
+          </td>
+          <td>
+            <a href="{{ route('admin.jobcards.show', $job) }}" class="btn btn-sm btn-icon btn-outline-primary me-1" title="View">
+              <i class='bx bx-show'></i>
+            </a>
+            <a href="{{ route('admin.jobcards.edit', $job) }}" class="btn btn-sm btn-icon btn-outline-secondary" title="Edit">
+              <i class='bx bx-edit'></i>
+            </a>
+          </td>
+        </tr>
+        @endforeach
+      </tbody>
+    </table>
+  </div>
+  @endif
+</div>
+
 @endsection
 
 @push('scripts')
