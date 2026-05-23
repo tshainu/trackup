@@ -63,6 +63,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Invoices
         Route::get('/invoices',                        [InvoiceController::class, 'index'])->name('invoices.index');
+        Route::get('/invoices/search',                 [InvoiceController::class, 'search'])->name('invoices.search');
         Route::get('/invoices/{jobCard}',              [InvoiceController::class, 'show'])->name('invoices.show');
         Route::put('/invoices/{jobCard}',              [InvoiceController::class, 'update'])->name('invoices.update');
         Route::patch('/invoices/{jobCard}/mark-paid',  [InvoiceController::class, 'markPaid'])->name('invoices.markPaid');

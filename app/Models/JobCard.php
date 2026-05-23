@@ -51,10 +51,11 @@ class JobCard extends Model
     }
 
     // Computed helpers
+    // subtotal = service charge (rupees) + all line items
     public function getSubtotalAttribute(): float
     {
-        $itemsTotal = $this->invoiceItems->sum('total');
-        return $itemsTotal > 0 ? $itemsTotal : (float)$this->rupees;
+        $itemsTotal = (float)$this->invoiceItems->sum('total');
+        return (float)$this->rupees + $itemsTotal;
     }
 
     public function getGrandTotalAttribute(): float

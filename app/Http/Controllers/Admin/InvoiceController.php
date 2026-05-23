@@ -34,6 +34,51 @@ class InvoiceController extends Controller
         return view('admin.invoices.index', compact('results', 'query'));
     }
 
+    /** Live search JSON endpoint */
+    public function search(Request $request)
+    {
+        $query = trim($request->input('q', ''));
+
+        if ($query === '') {
+            return response()->json(['count' => 0, 'results' => []]);
+        }
+
+        $results = JobCard::with('invoiceItems')
+            ->where(function ($q) use ($query) {
+                $q->where('order_no',       'like', "%$query%")
+                  ->orWhere('invoice_no',   'like', "%$query%")
+                  ->orWhere('customer_nic', 'like', "%$query%")
+                  ->orWhere('phone_no',     'like', "%$query%")
+                  ->orWhere('customer_name','like', "%$query%")
+                  ->orWhere('device_name',  'like', "%$query%")
+                  ->orWhere('device_brand', 'like', "%$query%");
+            })
+            ->orderByDesc('id')
+            ->limit(30)
+            ->get();
+
+        return response()->json([
+            'count'   => $results->count(),
+            'results' => $results->map(fn($job) => [
+                'order_no'      => $job->order_no,
+                'invoice_no'    => $job->invoice_no,
+                'customer_name' => $job->customer_name,
+                'customer_nic'  => $job->customer_nic,
+                'phone_no'      => $job->phone_no,
+                'device_name'   => $job->device_name,
+                'device_brand'  => $job->device_brand,
+                'date'          => $job->date?->format('d M Y'),
+                'status'        => $job->status,
+                'grand_total'   => number_format($job->grand_total, 2),
+                'balance'       => number_format($job->balance, 2),
+                'pay_status'    => (float)$job->paid_amount >= $job->grand_total && $job->grand_total > 0
+                                    ? 'paid'
+                                    : ((float)$job->paid_amount > 0 ? 'partial' : 'unpaid'),
+                'url'           => route('admin.invoices.show', $job),
+            ]),
+        ]);
+    }
+
     /** Show / generate invoice for a job card */
     public function show(JobCard $jobCard)
     {

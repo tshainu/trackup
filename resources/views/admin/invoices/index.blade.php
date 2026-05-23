@@ -102,13 +102,18 @@
   </div>
 </div>
 
-{{-- Results --}}
+{{-- Results Meta (updated live by JS) --}}
+<div id="resultsMeta" class="d-flex align-items-center justify-content-between mb-3">
 @if($query !== '')
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <div style="font-size:.82rem;color:#888">
-      <strong style="color:#333">{{ $results->count() }}</strong> result{{ $results->count() !== 1 ? 's' : '' }} for <strong>"{{ $query }}"</strong>
-    </div>
+  <div style="font-size:.82rem;color:#888">
+    <strong style="color:#333">{{ $results->count() }}</strong> result{{ $results->count() !== 1 ? 's' : '' }} for <strong>"{{ $query }}"</strong>
   </div>
+@endif
+</div>
+
+{{-- Results (swapped live by JS) --}}
+<div id="resultsArea">
+@if($query !== '')
 
   @if($results->isEmpty())
     <div class="card" style="border-radius:16px;border:0;box-shadow:0 2px 12px rgba(0,0,0,.06)">
@@ -171,7 +176,10 @@
     </div>
   @endif
 
-@else
+@endif
+</div>{{-- #resultsArea --}}
+
+@if($query === '')
   {{-- Default state: show recent invoices --}}
   @php
     $recent = \App\Models\JobCard::with('invoiceItems')
@@ -281,18 +289,130 @@
   </div>
   @endif
 
-@endif
+@endif {{-- $query === '' --}}
 @endsection
 
 @push('scripts')
 <script>
-// Live search on enter
-document.getElementById('searchInput').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') document.getElementById('searchForm').submit();
+let searchTimer = null;
+const searchInput = document.getElementById('searchInput');
+const resultsArea = document.getElementById('resultsArea');
+
+// Live search with debounce
+searchInput.addEventListener('input', function() {
+  clearTimeout(searchTimer);
+  const q = this.value.trim();
+  if (q.length === 0) {
+    // Clear results area without full reload
+    resultsArea.innerHTML = '';
+    updateResultsMeta('', 0);
+    return;
+  }
+  if (q.length < 2) return; // min 2 chars
+  searchTimer = setTimeout(() => doSearch(q), 280);
 });
+
+searchInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    clearTimeout(searchTimer);
+    doSearch(this.value.trim());
+  }
+  if (e.key === 'Escape') {
+    this.value = '';
+    resultsArea.innerHTML = '';
+    updateResultsMeta('', -1);
+  }
+});
+
 function appendSearch(val) {
-  document.getElementById('searchInput').value = val;
-  document.getElementById('searchForm').submit();
+  searchInput.value = val;
+  searchInput.focus();
+  doSearch(val);
+}
+
+function updateResultsMeta(q, count) {
+  const meta = document.getElementById('resultsMeta');
+  if (!meta) return;
+  if (count < 0) { meta.innerHTML = ''; return; }
+  if (q === '') { meta.innerHTML = ''; return; }
+  meta.innerHTML = `<strong style="color:#333">${count}</strong> result${count !== 1 ? 's' : ''} for <strong>"${escHtml(q)}"</strong>`;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function doSearch(q) {
+  if (!q) return;
+  // Show spinner
+  resultsArea.innerHTML = `
+    <div class="text-center py-4" style="color:#aaa">
+      <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+      Searching…
+    </div>`;
+  updateResultsMeta(q, '?');
+
+  try {
+    const resp = await fetch(`{{ route('admin.invoices.search') }}?q=${encodeURIComponent(q)}`, {
+      headers: {'Accept':'application/json', 'X-Requested-With':'XMLHttpRequest'}
+    });
+    const data = await resp.json();
+    updateResultsMeta(q, data.count);
+    renderResults(data.results);
+  } catch(e) {
+    resultsArea.innerHTML = '<div class="text-center py-4 text-danger">Search failed. Try again.</div>';
+  }
+}
+
+function renderResults(results) {
+  if (!results.length) {
+    resultsArea.innerHTML = `
+      <div class="card" style="border-radius:16px;border:0;box-shadow:0 2px 12px rgba(0,0,0,.06)">
+        <div class="empty-state">
+          <i class='bx bx-search-alt'></i>
+          <div style="font-size:1.1rem;font-weight:700;color:#555;margin-bottom:8px">No records found</div>
+          <p style="font-size:.85rem">Try a different order no., NIC, phone or device name</p>
+        </div>
+      </div>`;
+    return;
+  }
+
+  let html = '<div class="d-flex flex-column gap-2">';
+  results.forEach(job => {
+    const payClass = job.pay_status === 'paid' ? 'badge-paid' : job.pay_status === 'partial' ? 'badge-partial' : 'badge-unpaid';
+    const payLabel = job.pay_status === 'paid' ? '✓ Paid' : job.pay_status === 'partial' ? `⚡ Partial · Rs.${job.balance} due` : '● Unpaid';
+    const scMap = {Pending:'warning','In Progress':'info',Completed:'success','Not Completed':'danger'};
+    const sc = scMap[job.status] || 'secondary';
+    const invBadge = job.invoice_no
+      ? `<span style="font-size:.75rem;font-weight:500;color:#aaa;margin-left:8px">${escHtml(job.invoice_no)}</span>`
+      : `<span style="font-size:.73rem;color:#d0a020;margin-left:8px;font-weight:600">No Invoice Yet</span>`;
+    const nicSpan = job.customer_nic ? `<span><i class='bx bx-id-card'></i> ${escHtml(job.customer_nic)}</span>` : '';
+    const deviceSpan = job.device_name ? `<span><i class='bx bx-chip'></i> ${escHtml(job.device_name)}${job.device_brand ? ' · '+escHtml(job.device_brand) : ''}</span>` : '';
+
+    html += `
+      <a href="${job.url}" class="result-card">
+        <div class="result-icon"><i class='bx bx-file-blank'></i></div>
+        <div style="flex:1;min-width:0">
+          <div class="result-order">${escHtml(job.order_no)} ${invBadge}</div>
+          <div class="result-customer">${escHtml(job.customer_name)}</div>
+          <div class="result-meta">
+            <span><i class='bx bx-phone'></i> ${escHtml(job.phone_no)}</span>
+            ${nicSpan}
+            ${deviceSpan}
+            <span><i class='bx bx-calendar'></i> ${job.date}</span>
+          </div>
+        </div>
+        <div class="result-right">
+          <div class="result-amount">Rs. ${job.grand_total}</div>
+          <div class="result-status"><span class="${payClass}">${payLabel}</span></div>
+          <div style="margin-top:6px"><span class="badge bg-label-${sc}" style="font-size:.72rem">${escHtml(job.status)}</span></div>
+        </div>
+        <div style="flex-shrink:0;color:#696cff"><i class='bx bx-chevron-right' style="font-size:1.4rem"></i></div>
+      </a>`;
+  });
+  html += '</div>';
+  resultsArea.innerHTML = html;
 }
 </script>
 @endpush
