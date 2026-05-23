@@ -31,9 +31,13 @@ class JobCardController extends Controller
             $query->where('device_name', $request->device);
         }
 
-        $jobs = $query->latest()->paginate(20)->withQueryString();
+        $sortable = ['order_no','customer_name','phone_no','device_name','date','rupees','status'];
+        $sort  = in_array($request->sort, $sortable) ? $request->sort : 'id';
+        $dir   = $request->dir === 'asc' ? 'asc' : 'desc';
+
+        $jobs = $query->orderBy($sort, $dir)->paginate(20)->withQueryString();
         $devices = DeviceList::all();
-        return view('admin.jobcards.index', compact('jobs', 'devices'));
+        return view('admin.jobcards.index', compact('jobs', 'devices', 'sort', 'dir'));
     }
 
     public function create()
