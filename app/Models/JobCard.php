@@ -7,7 +7,7 @@ class JobCard extends Model
     protected $fillable = [
         'order_no','invoice_no','invoice_date','customer_id','customer_name','customer_address','customer_email',
         'customer_nic','customer_dob','phone_no','device_name','device_brand','serial_no',
-        'device_age','device_fault','issue','date','rupees','advance_amount','discount','paid_amount','payment_status','status','priority',
+        'device_age','device_fault','item_description','issue','date','rupees','advance_amount','discount','paid_amount','payment_status','status','priority',
         'estimated_delivery','accessories','remark','need_assistant','employee_id','payment_received',
         'cancelled_reason','cancelled_at'
     ];

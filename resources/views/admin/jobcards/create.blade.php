@@ -429,6 +429,16 @@
             </div>
           </div>
 
+          {{-- Item Description --}}
+          <div class="col-12">
+            <label for="itemDescArea" class="form-label d-flex justify-content-between">
+              Item Description
+              <span class="char-count"><span id="itemDescCnt">0</span>/500</span>
+            </label>
+            <textarea name="item_description" id="itemDescArea" class="form-control" rows="2"
+              maxlength="500" placeholder="Physical description of the item (color, model, condition, markings...)">{{ old('item_description') }}</textarea>
+          </div>
+
           <div class="col-md-6">
             <label for="serial_no" class="form-label">Serial / IMEI No</label>
             <input type="text" name="serial_no" id="serial_no" class="form-control"
@@ -506,15 +516,17 @@
           <div class="col-12">
             <label class="form-label d-block">Accessories Received</label>
             <div class="acc-grid" id="accGrid">
+              {{-- Populated dynamically when device is selected; fallback static list shown initially --}}
+              @php $oldAccs = old('accessories_list', []); @endphp
               @foreach(['Charger','Remote','Cover/Case','Battery','Power Cable','Earphones','Memory Card','Stylus','Other'] as $acc)
-              <label class="acc-item">
+              <label class="acc-item acc-static" data-value="{{ $acc }}">
                 <input type="checkbox" name="accessories_list[]" value="{{ $acc }}"
-                  {{ in_array($acc, old('accessories_list', [])) ? 'checked' : '' }} />
+                  {{ in_array($acc, $oldAccs) ? 'checked' : '' }} />
                 <span class="acc-label-inner">{{ $acc }}</span>
               </label>
               @endforeach
               {{-- Add button inside grid --}}
-              <div class="acc-add-btn" onclick="openAccAdd()">
+              <div class="acc-add-btn" id="accAddBtnGrid" onclick="openAccAdd()">
                 <i class='bx bx-plus'></i> Add
               </div>
             </div>
@@ -601,8 +613,9 @@
 
 @push('scripts')
 <script>
-const brandsUrl = '{{ route("ajax.brands") }}';
-const faultsUrl = '{{ route("ajax.faults") }}';
+const brandsUrl      = '{{ route("ajax.brands") }}';
+const faultsUrl      = '{{ route("ajax.faults") }}';
+const accessoriesUrl = '{{ route("ajax.accessories") }}';
 
 // Auto-focus
 document.getElementById('firstFocus')?.focus();
@@ -623,8 +636,9 @@ function initCounter(textareaId, counterId) {
   ct.textContent = ta.value.length;
   ta.addEventListener('input', () => ct.textContent = ta.value.length);
 }
-initCounter('issueArea', 'issueCnt');
-initCounter('remarkArea', 'remarkCnt');
+initCounter('issueArea',    'issueCnt');
+initCounter('remarkArea',   'remarkCnt');
+initCounter('itemDescArea', 'itemDescCnt');
 
 // ── Device Age Drag Slider ──
 (function () {
@@ -672,7 +686,7 @@ initCounter('remarkArea', 'remarkCnt');
   updateAge(range.value); // init
 })();
 
-// ── Device → Brand + Fault ──
+// ── Device → Brand + Fault + Accessories ──
 $('#deviceSelect').on('change', function () {
   const device = $(this).val();
   $('#brandSelect').html('<option value="">Loading...</option>');
@@ -680,6 +694,7 @@ $('#deviceSelect').on('change', function () {
   if (!device) {
     $('#brandSelect').html('<option value="">-- Select Brand --</option>');
     $('#faultSelect').html('<option value="">-- Select Fault --</option>');
+    resetAccessoriesGrid([]);
     return;
   }
   $.getJSON(brandsUrl, { device_name: device }, function (data) {
@@ -692,7 +707,33 @@ $('#deviceSelect').on('change', function () {
     data.forEach(f => { opts += `<option value="${f.device_fault}">${f.device_fault}</option>`; });
     $('#faultSelect').html(opts);
   });
+  $.getJSON(accessoriesUrl, { device_name: device }, function (data) {
+    resetAccessoriesGrid(data.map(a => a.accessory_name));
+  });
 });
+
+function resetAccessoriesGrid(dbAccs) {
+  const grid   = document.getElementById('accGrid');
+  const addBtn = document.getElementById('accAddBtnGrid');
+  // remove all dynamic acc items (not static or add-btn)
+  grid.querySelectorAll('.acc-item-dynamic').forEach(el => el.remove());
+  // show/hide static items
+  const hasDb = dbAccs.length > 0;
+  grid.querySelectorAll('.acc-static').forEach(el => {
+    el.style.display = hasDb ? 'none' : '';
+  });
+  // inject db accessories
+  dbAccs.forEach(name => {
+    const label = document.createElement('label');
+    label.className = 'acc-item acc-item-dynamic';
+    label.innerHTML = `<input type="checkbox" name="accessories_list[]" value="${escHtmlJ(name)}" /><span class="acc-label-inner">${escHtmlJ(name)}</span>`;
+    grid.insertBefore(label, addBtn);
+  });
+}
+
+function escHtmlJ(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
 // ── Quick-Add (Device Type / Brand / Fault) ──
 let _qaTarget = null; // { label, inputId, selectId, fieldName }

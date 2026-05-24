@@ -5,13 +5,14 @@ use App\Http\Controllers\Controller;
 use App\Models\DeviceList;
 use App\Models\DeviceBrand;
 use App\Models\DeviceFault;
+use App\Models\DeviceAccessory;
 use Illuminate\Http\Request;
 
 class DeviceController extends Controller
 {
     public function index()
     {
-        $devices = DeviceList::with(['brands','faults'])->get();
+        $devices = DeviceList::with(['brands','faults','accessories'])->get();
         return view('admin.devices.index', compact('devices'));
     }
 
@@ -76,5 +77,27 @@ class DeviceController extends Controller
         $fault->delete();
         if (request()->expectsJson()) return response()->json(['ok' => true]);
         return back()->with('success', 'Fault deleted.');
+    }
+
+    // Accessories
+    public function storeAccessory(Request $request)
+    {
+        $request->validate([
+            'device_list_id'  => 'required|exists:device_lists,id',
+            'accessory_name'  => 'required|string|max:100',
+        ]);
+        $acc = DeviceAccessory::create($request->only('device_list_id', 'accessory_name'));
+
+        if ($request->expectsJson()) {
+            return response()->json(['id' => $acc->id, 'accessory_name' => $acc->accessory_name]);
+        }
+        return back()->with('success', 'Accessory added.');
+    }
+
+    public function destroyAccessory(DeviceAccessory $accessory)
+    {
+        $accessory->delete();
+        if (request()->expectsJson()) return response()->json(['ok' => true]);
+        return back()->with('success', 'Accessory deleted.');
     }
 }

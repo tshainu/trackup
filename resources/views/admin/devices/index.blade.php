@@ -105,6 +105,9 @@
 .brand-add-btn:hover { background:#e3f2fd; }
 .fault-add-btn { color:#e65100; }
 .fault-add-btn:hover { background:#fff3e0; }
+.dv-tag-accessory { background:#e8f5e9;color:#2e7d32; }
+.acc-add-btn-tag { color:#2e7d32; }
+.acc-add-btn-tag:hover { background:#e8f5e9; }
 
 .dv-item-del-btn {
   background:none;border:1.5px solid #ffcdd2;color:#c62828;
@@ -175,7 +178,7 @@
         <div>
           <div class="dv-device-name">{{ $device->device_name }}</div>
           <div class="dv-device-counts" id="counts-{{ $device->id }}">
-            {{ $device->brands->count() }} brand(s) &nbsp;·&nbsp; {{ $device->faults->count() }} fault(s)
+            {{ $device->brands->count() }} brand(s) &nbsp;·&nbsp; {{ $device->faults->count() }} fault(s) &nbsp;·&nbsp; {{ $device->accessories->count() }} accessory(s)
           </div>
         </div>
       </div>
@@ -191,7 +194,7 @@
     <div class="dv-item-body">
       <div class="row g-3">
         {{-- Brands --}}
-        <div class="col-md-6">
+        <div class="col-md-4">
           <div class="dv-section-label"><i class='bx bx-purchase-tag me-1'></i>Brands</div>
           <div class="dv-tags-row" id="brands-{{ $device->id }}">
             @foreach($device->brands as $brand)
@@ -213,7 +216,7 @@
           </div>
         </div>
         {{-- Faults --}}
-        <div class="col-md-6">
+        <div class="col-md-4">
           <div class="dv-section-label"><i class='bx bx-error-circle me-1'></i>Fault Types</div>
           <div class="dv-tags-row" id="faults-{{ $device->id }}">
             @foreach($device->faults as $fault)
@@ -232,6 +235,28 @@
             <input type="text" id="fault-input-{{ $device->id }}" placeholder="Add fault..." maxlength="100"
                    onkeydown="if(event.key==='Enter'){event.preventDefault();addFault({{ $device->id }})}" />
             <button type="button" class="add-tag-btn fault-add-btn" onclick="addFault({{ $device->id }})">+ Add</button>
+          </div>
+        </div>
+        {{-- Accessories --}}
+        <div class="col-md-4">
+          <div class="dv-section-label"><i class='bx bx-package me-1'></i>Accessories Received</div>
+          <div class="dv-tags-row" id="accessories-{{ $device->id }}">
+            @foreach($device->accessories as $acc)
+            <span class="dv-tag dv-tag-accessory" id="acc-tag-{{ $acc->id }}">
+              {{ $acc->accessory_name }}
+              <button type="button" class="rm-btn" onclick="deleteAccessory({{ $acc->id }}, {{ $device->id }})" title="Remove">
+                <i class='bx bx-x'></i>
+              </button>
+            </span>
+            @endforeach
+            @if($device->accessories->count() === 0)
+            <span class="text-muted" style="font-size:.78rem" id="accessories-empty-{{ $device->id }}">No accessories yet</span>
+            @endif
+          </div>
+          <div class="dv-inline-add">
+            <input type="text" id="acc-input-{{ $device->id }}" placeholder="Add accessory..." maxlength="100"
+                   onkeydown="if(event.key==='Enter'){event.preventDefault();addAccessory({{ $device->id }})}" />
+            <button type="button" class="add-tag-btn acc-add-btn-tag" onclick="addAccessory({{ $device->id }})">+ Add</button>
           </div>
         </div>
       </div>
@@ -255,12 +280,14 @@
 <script>
 const csrf = '{{ csrf_token() }}';
 const routes = {
-  deviceStore:   '{{ route("admin.devices.store") }}',
-  brandStore:    '{{ route("admin.devices.brands.store") }}',
-  faultStore:    '{{ route("admin.devices.faults.store") }}',
-  brandDestroy:  '/admin/devices/brands/',
-  faultDestroy:  '/admin/devices/faults/',
-  deviceDestroy: '/admin/devices/',
+  deviceStore:     '{{ route("admin.devices.store") }}',
+  brandStore:      '{{ route("admin.devices.brands.store") }}',
+  faultStore:      '{{ route("admin.devices.faults.store") }}',
+  accessoryStore:  '{{ route("admin.devices.accessories.store") }}',
+  brandDestroy:    '/admin/devices/brands/',
+  faultDestroy:    '/admin/devices/faults/',
+  accessoryDestroy:'/admin/devices/accessories/',
+  deviceDestroy:   '/admin/devices/',
 };
 
 function toast(msg, isError=false) {
@@ -313,7 +340,7 @@ function appendDeviceCard(id, name) {
         <div class="dv-device-ico"><i class='bx bx-chip'></i></div>
         <div>
           <div class="dv-device-name">${escHtml(name)}</div>
-          <div class="dv-device-counts" id="counts-${id}">0 brand(s) · 0 fault(s)</div>
+          <div class="dv-device-counts" id="counts-${id}">0 brand(s) · 0 fault(s) · 0 accessory(s)</div>
         </div>
       </div>
       <div class="d-flex align-items-center" style="gap:10px">
@@ -323,7 +350,7 @@ function appendDeviceCard(id, name) {
     </div>
     <div class="dv-item-body">
       <div class="row g-3">
-        <div class="col-md-6">
+        <div class="col-md-4">
           <div class="dv-section-label"><i class='bx bx-purchase-tag me-1'></i>Brands</div>
           <div class="dv-tags-row" id="brands-${id}">
             <span class="text-muted" style="font-size:.78rem" id="brands-empty-${id}">No brands yet</span>
@@ -334,7 +361,7 @@ function appendDeviceCard(id, name) {
             <button type="button" class="add-tag-btn brand-add-btn" onclick="addBrand(${id})">+ Add</button>
           </div>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
           <div class="dv-section-label"><i class='bx bx-error-circle me-1'></i>Fault Types</div>
           <div class="dv-tags-row" id="faults-${id}">
             <span class="text-muted" style="font-size:.78rem" id="faults-empty-${id}">No faults yet</span>
@@ -343,6 +370,17 @@ function appendDeviceCard(id, name) {
             <input type="text" id="fault-input-${id}" placeholder="Add fault..." maxlength="100"
                    onkeydown="if(event.key==='Enter'){event.preventDefault();addFault(${id})}" />
             <button type="button" class="add-tag-btn fault-add-btn" onclick="addFault(${id})">+ Add</button>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="dv-section-label"><i class='bx bx-package me-1'></i>Accessories Received</div>
+          <div class="dv-tags-row" id="accessories-${id}">
+            <span class="text-muted" style="font-size:.78rem" id="accessories-empty-${id}">No accessories yet</span>
+          </div>
+          <div class="dv-inline-add">
+            <input type="text" id="acc-input-${id}" placeholder="Add accessory..." maxlength="100"
+                   onkeydown="if(event.key==='Enter'){event.preventDefault();addAccessory(${id})}" />
+            <button type="button" class="add-tag-btn acc-add-btn-tag" onclick="addAccessory(${id})">+ Add</button>
           </div>
         </div>
       </div>
@@ -456,11 +494,58 @@ async function deleteFault(faultId, deviceId) {
   } catch(e) { toast('Network error', true); }
 }
 
+// ── Add Accessory ──
+async function addAccessory(deviceId) {
+  const input = document.getElementById('acc-input-'+deviceId);
+  const name  = input.value.trim();
+  if (!name) { input.focus(); return; }
+
+  try {
+    const res = await fetch('{{ route("admin.devices.accessories.store") }}', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-CSRF-TOKEN':csrf,'Accept':'application/json'},
+      body: JSON.stringify({device_list_id: deviceId, accessory_name: name})
+    });
+    if (!res.ok) { toast('Error adding accessory', true); return; }
+    const data = await res.json();
+    input.value = '';
+    document.getElementById('accessories-empty-'+deviceId)?.remove();
+    const tag = `<span class="dv-tag dv-tag-accessory" id="acc-tag-${data.id}">
+      ${escHtml(name)}
+      <button type="button" class="rm-btn" onclick="deleteAccessory(${data.id},${deviceId})" title="Remove"><i class='bx bx-x'></i></button>
+    </span>`;
+    document.getElementById('accessories-'+deviceId).insertAdjacentHTML('beforeend', tag);
+    updateCounts(deviceId);
+    toast('Accessory "'+name+'" added!');
+  } catch(e) { toast('Network error', true); }
+}
+
+// ── Delete Accessory ──
+async function deleteAccessory(accId, deviceId) {
+  if (!confirm('Remove this accessory?')) return;
+  try {
+    const res = await fetch('/admin/devices/accessories/'+accId, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-CSRF-TOKEN':csrf,'Accept':'application/json'},
+      body: JSON.stringify({_method:'DELETE'})
+    });
+    if (!res.ok) { toast('Error removing accessory', true); return; }
+    document.getElementById('acc-tag-'+accId)?.remove();
+    const tagsRow = document.getElementById('accessories-'+deviceId);
+    if (!tagsRow.querySelector('.dv-tag-accessory')) {
+      tagsRow.insertAdjacentHTML('afterbegin','<span class="text-muted" style="font-size:.78rem" id="accessories-empty-'+deviceId+'">No accessories yet</span>');
+    }
+    updateCounts(deviceId);
+    toast('Accessory removed');
+  } catch(e) { toast('Network error', true); }
+}
+
 function updateCounts(deviceId) {
   const brands = document.getElementById('brands-'+deviceId)?.querySelectorAll('.dv-tag-brand').length || 0;
   const faults = document.getElementById('faults-'+deviceId)?.querySelectorAll('.dv-tag-fault').length || 0;
+  const accs   = document.getElementById('accessories-'+deviceId)?.querySelectorAll('.dv-tag-accessory').length || 0;
   const el = document.getElementById('counts-'+deviceId);
-  if (el) el.textContent = brands+' brand(s) · '+faults+' fault(s)';
+  if (el) el.textContent = brands+' brand(s) · '+faults+' fault(s) · '+accs+' accessory(s)';
 }
 
 function escHtml(s) {

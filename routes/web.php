@@ -55,9 +55,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/devices',                  [DeviceController::class, 'storeDevice'])->name('devices.store');
         Route::post('/devices/brands',           [DeviceController::class, 'storeBrand'])->name('devices.brands.store');
         Route::delete('/devices/brands/{brand}', [DeviceController::class, 'destroyBrand'])->name('devices.brands.destroy');
-        Route::post('/devices/faults',           [DeviceController::class, 'storeFault'])->name('devices.faults.store');
-        Route::delete('/devices/faults/{fault}', [DeviceController::class, 'destroyFault'])->name('devices.faults.destroy');
-        Route::delete('/devices/{device}',       [DeviceController::class, 'destroyDevice'])->name('devices.destroy');
+        Route::post('/devices/faults',                    [DeviceController::class, 'storeFault'])->name('devices.faults.store');
+        Route::delete('/devices/faults/{fault}',          [DeviceController::class, 'destroyFault'])->name('devices.faults.destroy');
+        Route::post('/devices/accessories',               [DeviceController::class, 'storeAccessory'])->name('devices.accessories.store');
+        Route::delete('/devices/accessories/{accessory}', [DeviceController::class, 'destroyAccessory'])->name('devices.accessories.destroy');
+        Route::delete('/devices/{device}',                [DeviceController::class, 'destroyDevice'])->name('devices.destroy');
 
         // Reports
         Route::get('/reports',            [ReportController::class, 'index'])->name('reports.index');
@@ -97,5 +99,6 @@ Route::prefix('employee')->name('employee.')->group(function () {
 });
 
 // Ajax endpoints
-Route::get('/ajax/brands', [AjaxController::class, 'brands'])->name('ajax.brands');
-Route::get('/ajax/faults', [AjaxController::class, 'faults'])->name('ajax.faults');
+Route::get('/ajax/brands',      [AjaxController::class, 'brands'])->name('ajax.brands');
+Route::get('/ajax/faults',      [AjaxController::class, 'faults'])->name('ajax.faults');
+Route::get('/ajax/accessories', [AjaxController::class, 'accessories'])->name('ajax.accessories');

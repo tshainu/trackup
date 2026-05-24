@@ -80,6 +80,9 @@
         <div class="info-row"><div class="info-label">Serial / IMEI</div><div class="info-value">{{ $jobCard->serial_no ?: '—' }}</div></div>
         <div class="info-row"><div class="info-label">Device Age</div><div class="info-value">{{ $jobCard->device_age ? $jobCard->device_age . ' yrs' : '—' }}</div></div>
         <div class="info-row"><div class="info-label">Fault</div><div class="info-value">{{ $jobCard->device_fault ?: '—' }}</div></div>
+        @if($jobCard->item_description)
+        <div class="info-row"><div class="info-label">Item Description</div><div class="info-value">{{ $jobCard->item_description }}</div></div>
+        @endif
         <div class="info-row"><div class="info-label">Issue</div><div class="info-value">{{ $jobCard->issue ?: '—' }}</div></div>
         <div class="info-row"><div class="info-label">Est. Cost</div><div class="info-value"><strong style="color:#696cff">Rs. {{ number_format($jobCard->rupees ?? 0, 2) }}</strong></div></div>
         @if((float)$jobCard->advance_amount > 0)
