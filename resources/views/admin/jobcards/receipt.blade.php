@@ -201,11 +201,35 @@
 
     /* Print media */
     @media print {
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
       body { background: #fff; padding: 0; }
       .receipt-wrap { box-shadow: none; border-radius: 0; max-width: 100%; }
       .print-bar { display: none !important; }
-      .receipt-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .status-pill, .pill-full, .pill-partial { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+      /* Darken all text for thermal printing */
+      body, .info-val, .info-label, .total-row, .items-table td, .items-table th {
+        color: #000 !important;
+        -webkit-text-stroke: 0.4px #000;
+        font-weight: 600 !important;
+      }
+      .info-label { color: #333 !important; }
+      .section-title { color: #000 !important; border-bottom-color: #000 !important; }
+      .totals { border-top-color: #000 !important; }
+      .total-row.total-grand { border-top-color: #000 !important; color: #000 !important; }
+      .total-row.total-paid { color: #000 !important; }
+      .total-row.total-balance { color: #000 !important; }
+      .items-table tbody td { border-bottom-color: #999 !important; }
+      .items-table thead th { border-bottom-color: #000 !important; color: #000 !important; }
+      .receipt-footer .thank-you { color: #000 !important; }
+      .receipt-footer .footer-note,
+      .receipt-footer .print-date { color: #333 !important; }
+      .receipt-header { background: #000 !important; }
+      .receipt-header * { color: #fff !important; }
+      .partial-banner { border-color: #000 !important; color: #000 !important; background: #f5f5f5 !important; }
+
+      /* Thicker borders for thermal */
+      .receipt-footer { border-top: 2px solid #000 !important; }
+      .totals .total-row.total-grand { border-top: 2.5px solid #000 !important; }
     }
 
     @media (max-width: 480px) {
