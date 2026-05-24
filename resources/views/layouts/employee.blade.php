@@ -99,6 +99,14 @@
               </a>
             </li>
 
+            <!-- Field Jobs -->
+            <li class="menu-item {{ request()->routeIs('employee.field-jobs*') ? 'active' : '' }}">
+              <a href="{{ route('employee.field-jobs') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-map-pin"></i>
+                <div>Field Jobs</div>
+              </a>
+            </li>
+
           </ul>
         </aside>
         <!-- / Menu -->

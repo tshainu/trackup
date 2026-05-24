@@ -35,15 +35,67 @@ class AjaxController extends Controller
     /**
      * Customer lookup by phone — searches customers table first,
      * then falls back to job_cards for legacy records.
+     * Returns array of matches when ?multi=1, single match otherwise.
      */
     public function customerLookup(Request $request)
     {
         $phone = trim($request->get('phone', ''));
-        if (strlen($phone) < 3) {
-            return response()->json(['found' => false]);
+        $multi = $request->boolean('multi', false);
+
+        if (strlen($phone) < 2) {
+            return $multi ? response()->json([]) : response()->json(['found' => false]);
         }
 
-        // 1) Check shared customers table
+        if ($multi) {
+            // Return up to 8 matches from both sources, deduplicated by phone
+            $results = [];
+            $seenPhones = [];
+
+            // 1) customers table
+            $customers = Customer::where('phone', 'like', "%{$phone}%")
+                                  ->orderBy('name')->limit(6)->get();
+            foreach ($customers as $c) {
+                $key = preg_replace('/\D/', '', $c->phone);
+                if (!in_array($key, $seenPhones)) {
+                    $seenPhones[] = $key;
+                    $results[] = [
+                        'source'  => 'customers',
+                        'name'    => $c->name,
+                        'phone'   => $c->phone,
+                        'email'   => $c->email ?? '',
+                        'nic'     => $c->nic ?? '',
+                        'address' => $c->address ?? '',
+                        'dob'     => '',
+                    ];
+                }
+            }
+
+            // 2) job_cards (legacy / additional)
+            $jobs = JobCard::where('phone_no', 'like', "%{$phone}%")
+                            ->select('customer_name','phone_no','customer_email','customer_nic','customer_address','customer_dob')
+                            ->orderByDesc('id')
+                            ->limit(10)->get();
+            foreach ($jobs as $j) {
+                $key = preg_replace('/\D/', '', $j->phone_no ?? '');
+                if ($key && !in_array($key, $seenPhones)) {
+                    $seenPhones[] = $key;
+                    $results[] = [
+                        'source'  => 'job_cards',
+                        'name'    => $j->customer_name ?? '',
+                        'phone'   => $j->phone_no ?? '',
+                        'email'   => $j->customer_email ?? '',
+                        'nic'     => $j->customer_nic ?? '',
+                        'address' => $j->customer_address ?? '',
+                        'dob'     => $j->customer_dob ?? '',
+                    ];
+                }
+                if (count($results) >= 8) break;
+            }
+
+            return response()->json($results);
+        }
+
+        // Single-match mode (legacy behaviour for field complaints, etc.)
         $customer = Customer::where('phone', 'like', "%{$phone}%")->first();
         if ($customer) {
             return response()->json([
@@ -62,7 +114,6 @@ class AjaxController extends Controller
             ]);
         }
 
-        // 2) Fallback: check job_cards (legacy data)
         $job = JobCard::where('phone_no', 'like', "%{$phone}%")
                       ->orderByDesc('id')->first();
         if ($job) {

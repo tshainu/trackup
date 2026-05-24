@@ -3,158 +3,320 @@
 
 @push('styles')
 <style>
-@media print {
+  .invoice-card {
+    border-radius: 16px;
+    border: 0;
+    box-shadow: 0 4px 32px rgba(105,108,255,.12);
+    overflow: hidden;
+  }
+  .invoice-header {
+    background: linear-gradient(135deg, #696cff 0%, #5a67f2 60%, #8c57ff 100%);
+    padding: 2rem 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .invoice-header::before {
+    content: '';
+    position: absolute;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.06);
+    top: -100px; right: -60px;
+    pointer-events: none;
+  }
+  .invoice-header::after {
+    content: '';
+    position: absolute;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.04);
+    bottom: -80px; left: 30px;
+    pointer-events: none;
+  }
+  .invoice-header * { position: relative; z-index: 1; }
+
+  .invoice-body { padding: 2rem 2.5rem; }
+
+  .section-label {
+    font-size: .68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #a1acb8;
+    margin-bottom: .5rem;
+  }
+
+  .invoice-table th {
+    background: #f4f4ff;
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #697a8d;
+    border-top: 0;
+    padding: .75rem 1rem;
+  }
+  .invoice-table td { padding: .75rem 1rem; vertical-align: middle; font-size: .88rem; }
+  .invoice-table tbody tr:last-child td { border-bottom: 0; }
+
+  .totals-table td { padding: .4rem 0; font-size: .875rem; }
+  .totals-table .grand-total td {
+    font-size: 1.05rem;
+    font-weight: 700;
+    border-top: 2px solid #e0e0e0;
+    padding-top: .6rem;
+  }
+  .totals-table .balance-due td { color: #ff3e1d; font-weight: 700; }
+  .totals-table .balance-ok  td { color: #28a745; font-weight: 600; }
+  .totals-table .paid-row    td { color: #28a745; }
+
+  .status-pill {
+    display: inline-block;
+    padding: .25rem .9rem;
+    border-radius: 20px;
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+
+  .invoice-footer {
+    background: #f8f8fc;
+    border-top: 1px solid #ebebf5;
+    padding: 1.25rem 2.5rem;
+    text-align: center;
+  }
+
+  @media print {
     body * { visibility: hidden; }
     #invoicePrint, #invoicePrint * { visibility: visible; }
     #invoicePrint { position: absolute; inset: 0; }
     .no-print { display: none !important; }
-}
+  }
 </style>
 @endpush
 
 @section('content')
-@php $fc = $fieldComplaint; @endphp
+@php
+  $fc    = $fieldComplaint;
+  $store = \App\Models\StoreInfo::first();
+  $isPaid = $fc->balance <= 0;
+@endphp
 
-<div class="max-w-2xl mx-auto px-4 py-6">
-    <div class="no-print flex items-center justify-between mb-5">
-        <a href="{{ route('admin.field-complaints.show', $fc) }}" class="text-gray-400 hover:text-gray-600 flex items-center gap-1 text-sm">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-            Back
-        </a>
-        <button onclick="window.print()"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-            Print Invoice
-        </button>
+<div class="container-xxl flex-grow-1 container-p-y">
+
+  {{-- Toolbar --}}
+  <div class="no-print d-flex align-items-center justify-content-between mb-4">
+    <a href="{{ route('admin.field-complaints.show', $fc) }}"
+       class="btn btn-icon btn-sm btn-outline-secondary" style="border-radius:10px;">
+      <i class="bx bx-chevron-left"></i>
+    </a>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge {{ $isPaid ? 'bg-label-success' : 'bg-label-danger' }} px-3 py-2" style="font-size:.8rem;">
+        {{ $isPaid ? 'Paid' : 'Balance Due: Rs. '.number_format($fc->balance,2) }}
+      </span>
+      <button onclick="window.print()"
+              class="btn btn-primary fw-semibold"
+              style="border-radius:10px;background:linear-gradient(135deg,#696cff,#8c57ff);border:0;box-shadow:0 4px 12px rgba(105,108,255,.4);">
+        <i class="bx bx-printer me-1"></i>Print Invoice
+      </button>
     </div>
+  </div>
 
-    <div id="invoicePrint" class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        {{-- Header --}}
-        @php $store = \App\Models\StoreInfo::first(); @endphp
-        <div class="bg-indigo-700 text-white px-8 py-6">
-            <div class="flex justify-between items-start">
-                <div>
-                    <h1 class="text-2xl font-bold">{{ $store?->name ?? config('app.name') }}</h1>
-                    <p class="text-indigo-200 text-sm mt-1">{{ $store?->address ?? '' }}</p>
-                    <p class="text-indigo-200 text-sm">{{ $store?->phone ?? '' }}</p>
-                </div>
-                <div class="text-right">
-                    <div class="text-xs text-indigo-300 uppercase tracking-widest mb-1">Field Service Invoice</div>
-                    <div class="text-2xl font-bold font-mono">{{ $fc->invoice_no ?? $fc->complaint_no }}</div>
-                    <div class="text-indigo-200 text-sm mt-1">{{ $fc->invoice_date?->format('d M Y') ?? now()->format('d M Y') }}</div>
-                </div>
-            </div>
-        </div>
+  <div id="invoicePrint" class="row justify-content-center">
+    <div class="col-xl-8 col-lg-10">
+      <div class="invoice-card card">
 
-        <div class="px-8 py-6 space-y-6">
-            {{-- Bill to / complaint ref --}}
-            <div class="grid grid-cols-2 gap-6">
-                <div>
-                    <div class="text-xs text-gray-400 uppercase tracking-wide mb-1">Bill To</div>
-                    <div class="font-bold text-gray-900 text-lg">{{ $fc->customer_name }}</div>
-                    <div class="text-gray-600 text-sm">{{ $fc->phone_no }}</div>
-                    @if($fc->address)<div class="text-gray-600 text-sm mt-1">{{ $fc->address }}</div>@endif
-                    @if($fc->gps_lat && $fc->gps_lng)
-                    <a href="{{ $fc->googleMapsUrl() }}" target="_blank" class="inline-flex items-center gap-1 text-xs text-emerald-600 mt-1">
-                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
-                        {{ $fc->gps_label ?? 'Site Location' }}
-                    </a>
-                    @endif
-                </div>
-                <div class="text-right">
-                    <div class="text-xs text-gray-400 uppercase tracking-wide mb-1">Complaint Ref</div>
-                    <div class="font-mono font-semibold text-indigo-600">{{ $fc->complaint_no }}</div>
-                    <div class="text-sm text-gray-600 mt-1">{{ $fc->service_type_name ?: 'Field Service' }}</div>
-                    @if($fc->assignedEmployee)
-                    <div class="text-sm text-gray-500 mt-0.5">Tech: {{ $fc->assignedEmployee->employee_name }}</div>
-                    @endif
-                    @if($fc->scheduled_date)
-                    <div class="text-sm text-gray-500 mt-0.5">Visit: {{ $fc->scheduled_date->format('d M Y') }}</div>
-                    @endif
-                </div>
-            </div>
-
-            {{-- Items table --}}
+        {{-- Gradient Header --}}
+        <div class="invoice-header">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
             <div>
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="bg-gray-50 border-y border-gray-200">
-                            <th class="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase">#</th>
-                            <th class="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase">Description</th>
-                            <th class="px-3 py-2.5 text-right text-xs font-semibold text-gray-500 uppercase">Qty</th>
-                            <th class="px-3 py-2.5 text-right text-xs font-semibold text-gray-500 uppercase">Unit</th>
-                            <th class="px-3 py-2.5 text-right text-xs font-semibold text-gray-500 uppercase">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        {{-- Service charge as first row --}}
-                        <tr>
-                            <td class="px-3 py-2.5 text-gray-500">1</td>
-                            <td class="px-3 py-2.5 font-medium text-gray-800">{{ $fc->service_type_name ?? 'Service Charge' }}</td>
-                            <td class="px-3 py-2.5 text-right">1</td>
-                            <td class="px-3 py-2.5 text-right font-mono">{{ number_format($fc->service_charge,2) }}</td>
-                            <td class="px-3 py-2.5 text-right font-mono">{{ number_format($fc->service_charge,2) }}</td>
-                        </tr>
-                        @foreach($fc->items as $i => $item)
-                        <tr>
-                            <td class="px-3 py-2.5 text-gray-500">{{ $i+2 }}</td>
-                            <td class="px-3 py-2.5 text-gray-700">{{ $item->description }}</td>
-                            <td class="px-3 py-2.5 text-right">{{ $item->qty }}</td>
-                            <td class="px-3 py-2.5 text-right font-mono">{{ number_format($item->unit_price,2) }}</td>
-                            <td class="px-3 py-2.5 text-right font-mono">{{ number_format($item->total,2) }}</td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+              @if($store?->logo)
+              <img src="{{ asset('storage/'.$store->logo) }}" alt="Logo"
+                   style="height:44px;margin-bottom:10px;border-radius:8px;background:rgba(255,255,255,.15);padding:3px;">
+              @endif
+              <div class="text-white fw-bold" style="font-size:1.3rem;line-height:1.2;">
+                {{ $store?->store_name ?? config('app.name') }}
+              </div>
+              @if($store?->store_address)
+              <div class="text-white small mt-1" style="opacity:.8;">{{ $store->store_address }}</div>
+              @endif
+              @if($store?->phone_no1)
+              <div class="text-white small" style="opacity:.8;">{{ $store->phone_no1 }}</div>
+              @endif
             </div>
-
-            {{-- Totals --}}
-            <div class="flex justify-end">
-                <div class="w-64 space-y-2 text-sm">
-                    <div class="flex justify-between text-gray-600">
-                        <span>Subtotal</span>
-                        <span class="font-mono">Rs. {{ number_format($fc->subtotal,2) }}</span>
-                    </div>
-                    @if($fc->discount > 0)
-                    <div class="flex justify-between text-gray-500">
-                        <span>Discount</span>
-                        <span class="font-mono text-red-500">− Rs. {{ number_format($fc->discount,2) }}</span>
-                    </div>
-                    @endif
-                    <div class="flex justify-between font-bold text-gray-900 border-t border-gray-300 pt-2">
-                        <span>Total</span>
-                        <span class="font-mono">Rs. {{ number_format($fc->grand_total,2) }}</span>
-                    </div>
-                    <div class="flex justify-between text-green-700">
-                        <span>Paid</span>
-                        <span class="font-mono">Rs. {{ number_format($fc->paid_amount,2) }}</span>
-                    </div>
-                    <div class="flex justify-between {{ $fc->balance > 0 ? 'text-red-600 font-bold' : 'text-green-600' }} border-t border-gray-200 pt-2">
-                        <span>Balance Due</span>
-                        <span class="font-mono">Rs. {{ number_format($fc->balance,2) }}</span>
-                    </div>
-                </div>
+            <div class="text-end">
+              <div class="text-white mb-2" style="font-size:.65rem;text-transform:uppercase;letter-spacing:.15em;opacity:.7;">
+                Field Service Invoice
+              </div>
+              <div class="text-white font-monospace fw-bold" style="font-size:1.5rem;letter-spacing:.05em;">
+                {{ $fc->invoice_no ?? $fc->complaint_no }}
+              </div>
+              <div class="text-white small mt-1" style="opacity:.8;">
+                {{ $fc->invoice_date?->format('d M Y') ?? now()->format('d M Y') }}
+              </div>
+              <div class="mt-2">
+                <span class="status-pill {{ $isPaid ? '' : '' }}"
+                      style="background:{{ $isPaid ? 'rgba(40,167,69,.3)' : 'rgba(255,62,29,.3)' }};
+                             color:#fff;border:1px solid rgba(255,255,255,.3);">
+                  {{ $isPaid ? 'PAID' : 'UNPAID' }}
+                </span>
+              </div>
             </div>
-
-            {{-- Payment history --}}
-            @if($fc->paymentLogs->isNotEmpty())
-            <div class="border-t border-gray-100 pt-4">
-                <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Payment History</div>
-                @foreach($fc->paymentLogs as $pl)
-                <div class="flex justify-between text-xs text-gray-500">
-                    <span>{{ $pl->paid_at->format('d M Y') }} — {{ $pl->note ?: 'Payment' }}</span>
-                    <span class="font-mono">Rs. {{ number_format($pl->amount,2) }}</span>
-                </div>
-                @endforeach
-            </div>
-            @endif
-
-            {{-- Footer --}}
-            <div class="border-t border-gray-100 pt-4 text-center text-xs text-gray-400">
-                <p>Thank you for choosing {{ $store?->name ?? config('app.name') }}</p>
-                @if($store?->email)<p class="mt-1">{{ $store->email }}</p>@endif
-            </div>
+          </div>
         </div>
+
+        <div class="invoice-body">
+
+          {{-- Bill To + Ref --}}
+          <div class="row mb-4">
+            <div class="col-sm-6 mb-3 mb-sm-0">
+              <div class="section-label">Bill To</div>
+              <div class="fw-bold" style="font-size:1.05rem;">{{ $fc->customer_name }}</div>
+              <div class="text-muted small mt-1">
+                <i class="bx bx-phone-call me-1"></i>{{ $fc->phone_no }}
+              </div>
+              @if($fc->address)
+              <div class="text-muted small">
+                <i class="bx bx-map me-1"></i>{{ $fc->address }}
+              </div>
+              @endif
+              @if($fc->gps_lat && $fc->gps_lng)
+              <a href="{{ $fc->googleMapsUrl() }}" target="_blank"
+                 class="small text-success d-inline-flex align-items-center gap-1 mt-1">
+                <i class="bx bxs-map-pin"></i>{{ $fc->gps_label ?? 'View on Maps' }}
+              </a>
+              @endif
+            </div>
+            <div class="col-sm-6">
+              <div class="section-label">Service Details</div>
+              <div class="d-flex flex-column gap-1" style="font-size:.85rem;">
+                <div class="d-flex justify-content-between">
+                  <span class="text-muted">Complaint #</span>
+                  <span class="fw-semibold font-monospace text-primary">{{ $fc->complaint_no }}</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                  <span class="text-muted">Service Type</span>
+                  <span class="fw-semibold">{{ $fc->service_type_name ?: 'Field Service' }}</span>
+                </div>
+                @if($fc->assignedEmployee)
+                <div class="d-flex justify-content-between">
+                  <span class="text-muted">Technician</span>
+                  <span class="fw-semibold">{{ $fc->assignedEmployee->employee_name }}</span>
+                </div>
+                @endif
+                @if($fc->scheduled_date)
+                <div class="d-flex justify-content-between">
+                  <span class="text-muted">Visit Date</span>
+                  <span class="fw-semibold">{{ $fc->scheduled_date->format('d M Y') }}</span>
+                </div>
+                @endif
+              </div>
+            </div>
+          </div>
+
+          {{-- Divider --}}
+          <hr style="border-color:#ebebf5;margin:1.5rem 0;">
+
+          {{-- Items Table --}}
+          <div class="table-responsive mb-4">
+            <table class="table invoice-table" style="border:1px solid #ebebf5;border-radius:10px;overflow:hidden;">
+              <thead>
+                <tr>
+                  <th style="width:36px;">#</th>
+                  <th>Description</th>
+                  <th class="text-center" style="width:60px;">Qty</th>
+                  <th class="text-end" style="width:110px;">Unit Price</th>
+                  <th class="text-end" style="width:120px;">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="text-muted">1</td>
+                  <td>
+                    <div class="fw-semibold">{{ $fc->service_type_name ?? 'Service Charge' }}</div>
+                    @if($fc->description)
+                    <div class="text-muted small">{{ Str::limit($fc->description, 80) }}</div>
+                    @endif
+                  </td>
+                  <td class="text-center">1</td>
+                  <td class="text-end font-monospace">{{ number_format($fc->service_charge,2) }}</td>
+                  <td class="text-end font-monospace fw-semibold">{{ number_format($fc->service_charge,2) }}</td>
+                </tr>
+                @foreach($fc->items as $i => $item)
+                <tr>
+                  <td class="text-muted">{{ $i+2 }}</td>
+                  <td class="fw-semibold">{{ $item->description }}</td>
+                  <td class="text-center">{{ $item->qty }}</td>
+                  <td class="text-end font-monospace">{{ number_format($item->unit_price,2) }}</td>
+                  <td class="text-end font-monospace fw-semibold">{{ number_format($item->total,2) }}</td>
+                </tr>
+                @endforeach
+              </tbody>
+            </table>
+          </div>
+
+          {{-- Totals --}}
+          <div class="d-flex justify-content-end mb-4">
+            <div style="min-width:280px;">
+              <table class="table totals-table table-borderless mb-0">
+                <tr>
+                  <td class="text-muted">Subtotal</td>
+                  <td class="text-end font-monospace">Rs. {{ number_format($fc->subtotal,2) }}</td>
+                </tr>
+                @if($fc->discount > 0)
+                <tr class="text-danger">
+                  <td>Discount</td>
+                  <td class="text-end font-monospace">− Rs. {{ number_format($fc->discount,2) }}</td>
+                </tr>
+                @endif
+                <tr class="grand-total">
+                  <td>Grand Total</td>
+                  <td class="text-end font-monospace">Rs. {{ number_format($fc->grand_total,2) }}</td>
+                </tr>
+                <tr class="paid-row">
+                  <td><i class="bx bx-check-circle me-1"></i>Paid</td>
+                  <td class="text-end font-monospace">Rs. {{ number_format($fc->paid_amount,2) }}</td>
+                </tr>
+                <tr class="{{ $fc->balance > 0 ? 'balance-due' : 'balance-ok' }}">
+                  <td><strong>Balance Due</strong></td>
+                  <td class="text-end font-monospace"><strong>Rs. {{ number_format($fc->balance,2) }}</strong></td>
+                </tr>
+              </table>
+            </div>
+          </div>
+
+          {{-- Payment History --}}
+          @if($fc->paymentLogs->isNotEmpty())
+          <div class="p-3 rounded-3 mb-4" style="background:#f8f8fc;border:1px solid #ebebf5;">
+            <div class="section-label">Payment History</div>
+            @foreach($fc->paymentLogs as $pl)
+            <div class="d-flex justify-content-between align-items-center py-1 border-bottom" style="font-size:.83rem;">
+              <span class="text-muted">
+                <i class="bx bx-calendar me-1"></i>{{ $pl->paid_at->format('d M Y') }}
+                @if($pl->note) &bull; {{ $pl->note }}@endif
+              </span>
+              <span class="font-monospace fw-semibold text-success">Rs. {{ number_format($pl->amount,2) }}</span>
+            </div>
+            @endforeach
+          </div>
+          @endif
+
+        </div>
+
+        {{-- Footer --}}
+        <div class="invoice-footer">
+          <p class="text-muted small mb-1">
+            Thank you for choosing <strong>{{ $store?->store_name ?? config('app.name') }}</strong>
+          </p>
+          <p class="text-muted small mb-0">
+            @if($store?->phone_no1) {{ $store->phone_no1 }} @endif
+            @if($store?->phone_no1 && $store?->store_address) &bull; @endif
+            @if($store?->store_address) {{ $store->store_address }} @endif
+          </p>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
 @endsection

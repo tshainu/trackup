@@ -131,7 +131,8 @@
   $paymentLogs       = $jobCard->paymentLogs ?? collect();
   $advance           = (float)($jobCard->advance_amount ?? 0);
   $logsSum           = (float)$paymentLogs->sum('amount');
-  // Advance is not logged if: advance > 0 AND (logsSum + advance ≈ paid)
+  // Advance is shown separately if it was paid at booking but not yet in payment_logs
+  // paid_amount already includes advance, so check if logs don't account for it yet
   $advanceNotLogged  = $advance > 0 && abs(($logsSum + $advance) - $paid) < 0.01;
 @endphp
 

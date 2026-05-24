@@ -72,28 +72,31 @@ class FieldComplaintController extends Controller
     public function create()
     {
         $serviceTypes = ServiceType::where('active', true)->orderBy('name')->get();
-        return view('admin.field-complaints.create', compact('serviceTypes'));
+        $employees    = Employee::where('status', 'active')->orderBy('employee_name')->get();
+        return view('admin.field-complaints.create', compact('serviceTypes', 'employees'));
     }
 
     // ── Store ─────────────────────────────────────────────────────────────────
     public function store(Request $request)
     {
         $request->validate([
-            'customer_name'   => 'required|string|max:150',
-            'phone_no'        => 'required|string|max:20',
-            'address'         => 'nullable|string',
-            'location_notes'  => 'nullable|string',
-            'gps_raw'         => 'nullable|string',
-            'gps_lat'         => 'nullable|numeric',
-            'gps_lng'         => 'nullable|numeric',
-            'gps_label'       => 'nullable|string|max:100',
-            'service_type_id' => 'nullable|exists:service_types,id',
-            'description'     => 'nullable|string',
-            'priority'        => 'required|in:Low,Normal,High,Urgent',
-            'scheduled_date'  => 'nullable|date',
-            'advance_amount'  => 'nullable|numeric|min:0',
-            'remark'          => 'nullable|string',
-            'customer_db_id'  => 'nullable|exists:customers,id',
+            'customer_name'        => 'required|string|max:150',
+            'phone_no'             => 'required|string|max:20',
+            'address'              => 'nullable|string',
+            'location_notes'       => 'nullable|string',
+            'gps_raw'              => 'nullable|string',
+            'gps_lat'              => 'nullable|numeric',
+            'gps_lng'              => 'nullable|numeric',
+            'gps_label'            => 'nullable|string|max:100',
+            'service_type_id'      => 'nullable|exists:service_types,id',
+            'description'          => 'nullable|string',
+            'priority'             => 'required|in:Low,Normal,High,Urgent',
+            'scheduled_date'       => 'nullable|date',
+            'advance_amount'       => 'nullable|numeric|min:0',
+            'remark'               => 'nullable|string',
+            'customer_db_id'       => 'nullable|exists:customers,id',
+            'assigned_to'          => 'nullable|exists:employees,id',
+            'assign_scheduled_date'=> 'nullable|date',
         ]);
 
         $advance     = (float)($request->advance_amount ?? 0);
@@ -136,6 +139,17 @@ class FieldComplaintController extends Controller
             ]));
         }
 
+        // Resolve assigned employee
+        $assignedEmployee = null;
+        $scheduledDate    = $request->scheduled_date;
+        if ($request->filled('assigned_to')) {
+            $assignedEmployee = Employee::find($request->assigned_to);
+            // If separate assign_scheduled_date given, use it
+            if ($request->filled('assign_scheduled_date')) {
+                $scheduledDate = $request->assign_scheduled_date;
+            }
+        }
+
         $complaint = FieldComplaint::create([
             'complaint_no'      => FieldComplaint::nextComplaintNo(),
             'customer_db_id'    => $customer->id,
@@ -150,13 +164,15 @@ class FieldComplaintController extends Controller
             'service_type_name' => $serviceType?->name,
             'description'       => $request->description,
             'priority'          => $request->priority,
-            'scheduled_date'    => $request->scheduled_date,
+            'scheduled_date'    => $scheduledDate,
             'advance_amount'    => $advance,
             'paid_amount'       => $advance,
             'payment_status'    => $advance > 0 ? 'partial' : 'unpaid',
             'service_charge'    => $serviceType?->base_charge ?? 0,
             'remark'            => $request->remark,
-            'status'            => 'Pending',
+            'status'            => $assignedEmployee ? 'Assigned' : 'Pending',
+            'assigned_to'       => $assignedEmployee?->id,
+            'assigned_at'       => $assignedEmployee ? now() : null,
         ]);
 
         // SMS: notify customer of new field complaint
@@ -169,15 +185,34 @@ class FieldComplaintController extends Controller
             \Illuminate\Support\Facades\Log::warning('[SMS] field_complaint_created failed: ' . $e->getMessage());
         }
 
+        // SMS: notify assigned staff member
+        if ($assignedEmployee && $assignedEmployee->phone_no_1) {
+            try {
+                (new SmsService())->sendTemplate('field_complaint_assigned', $assignedEmployee->phone_no_1, [
+                    'employee_name'  => $assignedEmployee->employee_name,
+                    'complaint_no'   => $complaint->complaint_no,
+                    'customer_name'  => $complaint->customer_name,
+                    'address'        => $complaint->address ?? 'N/A',
+                    'scheduled_date' => $complaint->scheduled_date ?? 'TBD',
+                ]);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('[SMS] field_complaint_assigned failed: ' . $e->getMessage());
+            }
+        }
+
+        $successMsg = $assignedEmployee
+            ? "Complaint {$complaint->complaint_no} logged and assigned to {$assignedEmployee->employee_name}."
+            : "Complaint {$complaint->complaint_no} logged successfully.";
+
         return redirect()->route('admin.field-complaints.show', $complaint)
-            ->with('success', "Complaint {$complaint->complaint_no} logged successfully.");
+            ->with('success', $successMsg);
     }
 
     // ── Show ──────────────────────────────────────────────────────────────────
     public function show(FieldComplaint $fieldComplaint)
     {
         $fieldComplaint->load(['serviceType','assignedEmployee','items','paymentLogs']);
-        $fieldStaff   = Employee::where('type','outbound')->where('status','Active')->orderBy('employee_name')->get();
+        $fieldStaff   = Employee::where('type','outbound')->where('status','active')->orderBy('employee_name')->get();
         $serviceTypes = ServiceType::where('active', true)->orderBy('name')->get();
         return view('admin.field-complaints.show', compact('fieldComplaint','fieldStaff','serviceTypes'));
     }

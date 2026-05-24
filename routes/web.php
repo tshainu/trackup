@@ -124,6 +124,13 @@ Route::prefix('employee')->name('employee.')->group(function () {
         Route::get('/jobs',                            [EmployeeDashboardController::class, 'myJobs'])->name('jobs');
         Route::get('/jobs/{jobCard}/status',           [EmployeeDashboardController::class, 'updateStatus'])->name('jobs.status');
         Route::put('/jobs/{jobCard}/status',           [EmployeeDashboardController::class, 'saveStatus'])->name('jobs.status.save');
+        Route::post('/jobs/{jobCard}/accept',          [EmployeeDashboardController::class, 'acceptJob'])->name('jobs.accept');
+
+        // Field service jobs for employee
+        Route::get('/field-jobs',                                          [EmployeeDashboardController::class, 'fieldJobs'])->name('field-jobs');
+        Route::post('/field-jobs/{fieldComplaint}/accept',                 [EmployeeDashboardController::class, 'acceptFieldJob'])->name('field-jobs.accept');
+        Route::get('/field-jobs/{fieldComplaint}/complete',                [EmployeeDashboardController::class, 'completeFieldJobForm'])->name('field-jobs.complete');
+        Route::post('/field-jobs/{fieldComplaint}/complete',               [EmployeeDashboardController::class, 'completeFieldJob'])->name('field-jobs.complete.save');
     });
 });
 
@@ -132,3 +139,11 @@ Route::get('/ajax/brands',            [AjaxController::class, 'brands'])->name('
 Route::get('/ajax/faults',            [AjaxController::class, 'faults'])->name('ajax.faults');
 Route::get('/ajax/accessories',       [AjaxController::class, 'accessories'])->name('ajax.accessories');
 Route::get('/ajax/customer-lookup',   [AjaxController::class, 'customerLookup'])->name('ajax.customer-lookup');
+
+// Mobile PWA app - catch all for SPA routing
+Route::get('/mobile', function () {
+    return response()->file(public_path('mobile/index.html'));
+});
+Route::get('/mobile/{any}', function () {
+    return response()->file(public_path('mobile/index.html'));
+})->where('any', '.*');

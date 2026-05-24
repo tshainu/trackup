@@ -62,6 +62,21 @@
             </div>
         </div>
     </div>
+    @if($stats['field_assigned'] > 0)
+    <div class="col-6 col-xl-3">
+        <div class="card" style="border-left:3px solid #8c57ff;">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="avatar avatar-lg flex-shrink-0" style="background-color:#f0ebff;">
+                    <i class='bx bx-map-pin fs-3' style="color:#8c57ff;"></i>
+                </div>
+                <div>
+                    <p class="mb-0 text-muted small">Field Jobs</p>
+                    <h4 class="mb-0">{{ $stats['field_assigned'] }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>
 
 {{-- Recent Jobs --}}
@@ -100,10 +115,22 @@
                         </td>
                         <td>{{ $job->date ? $job->date->format('d M Y') : $job->created_at->format('d M Y') }}</td>
                         <td>
-                            @if($job->status !== 'Completed')
-                                <a href="{{ route('employee.jobs.status', $job->id) }}" class="btn btn-sm btn-primary">Update</a>
-                            @else
+                            @if($job->status === 'Pending')
+                                <form method="POST" action="{{ route('employee.jobs.accept', $job) }}" class="d-inline">
+                                    @csrf
+                                    <button class="btn btn-sm btn-primary fw-semibold" style="border-radius:8px;">
+                                        <i class="bx bx-check me-1"></i>Accept
+                                    </button>
+                                </form>
+                            @elseif($job->status === 'In Progress')
+                                <a href="{{ route('employee.jobs.status', $job) }}"
+                                   class="btn btn-sm btn-success fw-semibold" style="border-radius:8px;">
+                                    <i class="bx bx-flag me-1"></i>Complete
+                                </a>
+                            @elseif($job->status === 'Completed')
                                 <span class="text-muted small">Done</span>
+                            @else
+                                <a href="{{ route('employee.jobs.status', $job) }}" class="btn btn-sm btn-outline-secondary" style="border-radius:8px;">Update</a>
                             @endif
                         </td>
                     </tr>
@@ -117,4 +144,64 @@
         </div>
     </div>
 </div>
+
+{{-- Field Service Jobs --}}
+@if($myFieldJobs->isNotEmpty())
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center"
+         style="background:linear-gradient(135deg,#f0ebff,#e8e0ff);">
+        <span class="fw-semibold" style="color:#8c57ff;">
+            <i class='bx bx-map-pin me-1'></i> Field Service Jobs
+        </span>
+        <a href="{{ route('employee.field-jobs') }}" class="btn btn-sm btn-outline-secondary" style="border-radius:8px;">View All</a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Complaint #</th>
+                        <th>Customer</th>
+                        <th>Service</th>
+                        <th>Scheduled</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($myFieldJobs as $fj)
+                    @php
+                        $sc = ['Assigned'=>'bg-label-info','In Progress'=>'bg-label-primary','Completed'=>'bg-label-success'];
+                        $bc = $sc[$fj->status] ?? 'bg-label-secondary';
+                    @endphp
+                    <tr>
+                        <td class="font-monospace fw-semibold text-primary">{{ $fj->complaint_no }}</td>
+                        <td>{{ $fj->customer_name }}<br><small class="text-muted">{{ $fj->phone_no }}</small></td>
+                        <td>{{ $fj->service_type_name ?: '—' }}</td>
+                        <td>{{ $fj->scheduled_date?->format('d M Y') ?? '—' }}</td>
+                        <td><span class="badge {{ $bc }}">{{ $fj->status }}</span></td>
+                        <td>
+                            @if($fj->status === 'Assigned')
+                                <form method="POST" action="{{ route('employee.field-jobs.accept', $fj) }}" class="d-inline">
+                                    @csrf
+                                    <button class="btn btn-sm btn-primary fw-semibold" style="border-radius:8px;">
+                                        <i class="bx bx-check me-1"></i>Accept
+                                    </button>
+                                </form>
+                            @elseif($fj->status === 'In Progress')
+                                <a href="{{ route('employee.field-jobs.complete', $fj) }}"
+                                   class="btn btn-sm btn-success fw-semibold" style="border-radius:8px;">
+                                    <i class="bx bx-flag me-1"></i>Complete
+                                </a>
+                            @endif
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+@endif
+
 @endsection
