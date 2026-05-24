@@ -203,7 +203,7 @@
   $accList = $jobCard->accessories
     ? array_map('trim', explode(',', $jobCard->accessories))
     : [];
-  $defaultAccs = ['Charger','Remote','Cover/Case','Battery','Power Cable','Earphones','Memory Card','Stylus','Other'];
+  $defaultAccs = \App\Models\DeviceAccessory::orderBy('accessory_name')->pluck('accessory_name')->toArray();
   $extraAccs   = array_diff($accList, $defaultAccs);
 @endphp
 
@@ -645,7 +645,6 @@ $('#deviceSelect').on('change', function () {
   if (!device) {
     $('#brandSelect').html('<option value="">-- Select Brand --</option>');
     $('#faultSelect').html('<option value="">-- Select Fault --</option>');
-    resetAccessoriesGrid([]);
     return;
   }
   const selBrand = '{{ old("device_brand", $jobCard->device_brand) }}';
@@ -660,9 +659,7 @@ $('#deviceSelect').on('change', function () {
     data.forEach(f => { o += `<option value="${f.device_fault}" ${f.device_fault===selFault?'selected':''}>${f.device_fault}</option>`; });
     $('#faultSelect').html(o);
   });
-  $.getJSON(accessoriesUrl, { device_name: device }, function (data) {
-    resetAccessoriesGrid(data.map(a => a.accessory_name));
-  });
+  // Accessories are global — no reload on device change
 });
 
 // Already-checked accessories from current job card

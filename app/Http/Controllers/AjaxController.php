@@ -3,8 +3,8 @@ namespace App\Http\Controllers;
 
 use App\Models\DeviceList;
 use App\Models\DeviceBrand;
-use App\Models\DeviceFault;
 use App\Models\DeviceAccessory;
+use App\Models\DeviceFault;
 use Illuminate\Http\Request;
 
 class AjaxController extends Controller
@@ -25,8 +25,8 @@ class AjaxController extends Controller
 
     public function accessories(Request $request)
     {
-        $device = DeviceList::where('device_name', $request->device_name)->first();
-        if (!$device) return response()->json([]);
-        return response()->json($device->accessories()->select('id','accessory_name')->get());
+        return response()->json(
+            DeviceAccessory::orderBy('accessory_name')->select('id','accessory_name')->get()
+        );
     }
 }

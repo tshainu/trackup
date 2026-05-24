@@ -516,13 +516,12 @@
           <div class="col-12">
             <label class="form-label d-block">Accessories Received</label>
             <div class="acc-grid" id="accGrid">
-              {{-- Populated dynamically when device is selected; fallback static list shown initially --}}
               @php $oldAccs = old('accessories_list', []); @endphp
-              @foreach(['Charger','Remote','Cover/Case','Battery','Power Cable','Earphones','Memory Card','Stylus','Other'] as $acc)
-              <label class="acc-item acc-static" data-value="{{ $acc }}">
-                <input type="checkbox" name="accessories_list[]" value="{{ $acc }}"
-                  {{ in_array($acc, $oldAccs) ? 'checked' : '' }} />
-                <span class="acc-label-inner">{{ $acc }}</span>
+              @foreach(\App\Models\DeviceAccessory::orderBy('accessory_name')->get() as $acc)
+              <label class="acc-item acc-static" data-value="{{ $acc->accessory_name }}">
+                <input type="checkbox" name="accessories_list[]" value="{{ $acc->accessory_name }}"
+                  {{ in_array($acc->accessory_name, $oldAccs) ? 'checked' : '' }} />
+                <span class="acc-label-inner">{{ $acc->accessory_name }}</span>
               </label>
               @endforeach
               {{-- Add button inside grid --}}
@@ -694,7 +693,6 @@ $('#deviceSelect').on('change', function () {
   if (!device) {
     $('#brandSelect').html('<option value="">-- Select Brand --</option>');
     $('#faultSelect').html('<option value="">-- Select Fault --</option>');
-    resetAccessoriesGrid([]);
     return;
   }
   $.getJSON(brandsUrl, { device_name: device }, function (data) {
@@ -707,9 +705,7 @@ $('#deviceSelect').on('change', function () {
     data.forEach(f => { opts += `<option value="${f.device_fault}">${f.device_fault}</option>`; });
     $('#faultSelect').html(opts);
   });
-  $.getJSON(accessoriesUrl, { device_name: device }, function (data) {
-    resetAccessoriesGrid(data.map(a => a.accessory_name));
-  });
+  // Accessories are global — no reload needed on device change
 });
 
 function resetAccessoriesGrid(dbAccs) {
