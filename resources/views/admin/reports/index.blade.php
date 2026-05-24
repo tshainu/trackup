@@ -92,6 +92,23 @@
 .pay-partial    { background: #fef3c7; color: #92400e; border-radius: 20px; padding: 3px 10px; font-size: .7rem; font-weight: 700; }
 .pay-unpaid     { background: #fee2e2; color: #991b1b; border-radius: 20px; padding: 3px 10px; font-size: .7rem; font-weight: 700; }
 
+/* ── Export bar ── */
+.rpt-export-bar {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 12px; justify-content: flex-end;
+}
+.rpt-export-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 16px; border-radius: 10px; font-size: .78rem; font-weight: 700;
+  text-decoration: none; border: 1.5px solid transparent;
+  transition: all .15s; white-space: nowrap;
+}
+.rpt-export-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.12); }
+.rpt-export-excel { background: #e8f5e9; color: #1b5e20; border-color: #a5d6a7; }
+.rpt-export-excel:hover { background: #1b5e20; color: #fff; }
+.rpt-export-pdf   { background: #fce4ec; color: #880e4f; border-color: #f48fb1; }
+.rpt-export-pdf:hover   { background: #880e4f; color: #fff; }
+
 /* ── Empty state ── */
 .rpt-empty { text-align: center; padding: 50px 20px; color: #bbb; }
 .rpt-empty i { font-size: 3.5rem; display: block; margin-bottom: 12px; color: #d8d8ff; }
@@ -171,6 +188,19 @@
   </div>
 </div>
 @endif
+
+{{-- Export Bar --}}
+<div class="rpt-export-bar no-print">
+  <span style="font-size:.78rem;color:#888;font-weight:600;"><i class='bx bx-download me-1'></i>Export:</span>
+  <a href="{{ route('admin.reports.export.excel', request()->query()) }}"
+     class="rpt-export-btn rpt-export-excel" title="Download Excel">
+    <i class='bx bx-spreadsheet'></i> Excel
+  </a>
+  <a href="{{ route('admin.reports.export.pdf', request()->query()) }}"
+     class="rpt-export-btn rpt-export-pdf" title="Download PDF">
+    <i class='bx bxs-file-pdf'></i> PDF
+  </a>
+</div>
 
 {{-- Report Tabs --}}
 <div class="rpt-tabs no-print">

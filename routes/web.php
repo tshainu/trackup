@@ -60,7 +60,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/devices/{device}',       [DeviceController::class, 'destroyDevice'])->name('devices.destroy');
 
         // Reports
-        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports',            [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/export/excel',[ReportController::class, 'exportExcel'])->name('reports.export.excel');
+        Route::get('/reports/export/pdf',  [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
 
         // Store Settings
         Route::get('/store',  [StoreController::class, 'edit'])->name('store.edit');
