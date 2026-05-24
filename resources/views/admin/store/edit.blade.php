@@ -1,7 +1,40 @@
 @extends('layouts.admin')
 @section('title', 'Store Settings')
 @section('page-title', 'Store Settings')
-@section('breadcrumb')<li class="breadcrumb-item active">Store Settings</li>@endsection
+@section('breadcrumb')<li class="breadcrumb-item active">Store Settings</li>@push('scripts')
+<script>
+  // Live logo preview
+  const logoInput = document.getElementById('logoInput');
+  const logoPreview = document.getElementById('logoPreview');
+  const logoPlaceholder = document.getElementById('logoPlaceholder');
+
+  if (logoInput) {
+    logoInput.addEventListener('change', function () {
+      const file = this.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          logoPreview.src = e.target.result;
+          logoPreview.style.display = 'block';
+          if (logoPlaceholder) logoPlaceholder.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  // Remove logo checkbox — dim preview
+  const removeLogo = document.getElementById('removeLogo');
+  if (removeLogo) {
+    removeLogo.addEventListener('change', function () {
+      if (logoPreview) {
+        logoPreview.style.opacity = this.checked ? '0.3' : '1';
+      }
+    });
+  }
+</script>
+@endpush
+@endsection
 
 @push('styles')
 <style>
@@ -90,8 +123,35 @@
   <div class="col-lg-8">
     <div class="card store-form-card">
       <div class="card-body">
-        <form action="{{ route('admin.store.update') }}" method="POST">
+        <form action="{{ route('admin.store.update') }}" method="POST" enctype="multipart/form-data">
           @csrf @method('PUT')
+
+          {{-- Logo --}}
+          <div class="ss-section"><i class='bx bx-image'></i> Store Logo</div>
+          <div class="row g-3 align-items-center mb-2">
+            <div class="col-auto">
+              <div id="logoPreviewWrap" style="width:80px;height:80px;border-radius:14px;border:2px dashed #c8c9ff;background:#f8f8ff;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                @if($store->logo)
+                  <img id="logoPreview" src="{{ asset('storage/'.$store->logo) }}" alt="logo" style="width:100%;height:100%;object-fit:contain;" />
+                @else
+                  <img id="logoPreview" src="" alt="" style="width:100%;height:100%;object-fit:contain;display:none;" />
+                  <i id="logoPlaceholder" class="bx bx-store" style="font-size:2rem;color:#c0c0ff;"></i>
+                @endif
+              </div>
+            </div>
+            <div class="col">
+              <label class="form-label mb-1">Upload Logo</label>
+              <input type="file" name="logo" id="logoInput" class="form-control" accept="image/*"
+                     style="border-radius:10px;" />
+              <div class="mt-1" style="font-size:.75rem;color:#aaa;">PNG, JPG, SVG, WEBP · max 2MB · Shown in top navigation bar</div>
+              @if($store->logo)
+                <label class="mt-2 d-flex align-items-center gap-2" style="cursor:pointer;font-size:.8rem;color:#e55;">
+                  <input type="checkbox" name="remove_logo" value="1" id="removeLogo" />
+                  Remove current logo
+                </label>
+              @endif
+            </div>
+          </div>
 
           {{-- Business Info --}}
           <div class="ss-section"><i class='bx bx-building'></i> Business Information</div>
@@ -177,6 +237,13 @@
         <i class='bx bx-info-circle me-1'></i>Current Info
       </div>
       @if($store->store_name ?? false)
+      {{-- Logo preview in info panel --}}
+      @if($store->logo)
+      <div class="text-center mb-3">
+        <img src="{{ asset('storage/'.$store->logo) }}" alt="logo"
+             style="max-height:60px;max-width:100%;object-fit:contain;border-radius:10px;" />
+      </div>
+      @endif
       <div class="si-row">
         <div class="si-ico"><i class='bx bx-store'></i></div>
         <div>
@@ -230,4 +297,37 @@
   </div>
 
 </div>
+@push('scripts')
+<script>
+  // Live logo preview
+  const logoInput = document.getElementById('logoInput');
+  const logoPreview = document.getElementById('logoPreview');
+  const logoPlaceholder = document.getElementById('logoPlaceholder');
+
+  if (logoInput) {
+    logoInput.addEventListener('change', function () {
+      const file = this.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          logoPreview.src = e.target.result;
+          logoPreview.style.display = 'block';
+          if (logoPlaceholder) logoPlaceholder.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  // Remove logo checkbox — dim preview
+  const removeLogo = document.getElementById('removeLogo');
+  if (removeLogo) {
+    removeLogo.addEventListener('change', function () {
+      if (logoPreview) {
+        logoPreview.style.opacity = this.checked ? '0.3' : '1';
+      }
+    });
+  }
+</script>
+@endpush
 @endsection

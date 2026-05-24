@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
   <title>@yield('title', 'Dashboard') | TrackUp</title>
-  <link rel="icon" type="image/x-icon" href="/assets/img/favicon/favicon.ico" />
+  <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet" />
@@ -135,6 +135,42 @@
       text-align: center;
     }
     .notif-footer a { font-size: 0.82rem; color: #696cff; text-decoration: none; font-weight: 600; }
+    /* ── Notification item with action buttons ── */
+    .notif-item-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 1.2rem;
+      border-bottom: 1px solid #f5f5f5;
+    }
+    .notif-item-row .notif-item-body { flex: 1; min-width: 0; }
+    .notif-item-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .notif-action-btn {
+      border: none;
+      border-radius: 7px;
+      padding: 4px 9px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      transition: opacity .15s, transform .1s;
+      white-space: nowrap;
+    }
+    .notif-action-btn:hover { opacity: .85; transform: translateY(-1px); }
+    .notif-action-btn:active { transform: scale(.95); }
+    .notif-done  { background: #28a74520; color: #1e7e34; }
+    .notif-done:hover { background: #28a74535; }
+    .notif-pay   { background: #696cff20; color: #696cff; }
+    .notif-pay:hover { background: #696cff35; }
+    .notif-close { background: #f0f0f0; color: #888; padding: 4px 7px; }
+    .notif-close:hover { background: #ffe0e0; color: #e55; }
     /* ── Sidebar badge ── */
     .menu-item .notif-sidebar-badge {
       display: inline-flex;
@@ -206,6 +242,12 @@
             <li class="menu-item {{ Request::routeIs('admin.jobcards.track') ? 'active' : '' }}">
               <a href="{{ route('admin.jobcards.track') }}" class="menu-link">
                 <div>Track Device</div>
+              </a>
+            </li>
+            <li class="menu-item {{ Request::routeIs('admin.jobcards.delivered') ? 'active' : '' }}">
+              <a href="{{ route('admin.jobcards.delivered') }}" class="menu-link">
+                <i class='menu-icon tf-icons bx bx-package'></i>
+                <div>Delivered Orders</div>
               </a>
             </li>
           </ul>
@@ -281,11 +323,26 @@
         </div>
 
         <div class="navbar-nav-right d-flex align-items-center w-100" id="navbar-collapse">
-          {{-- Page title breadcrumb --}}
-          <div class="me-auto">
-            <span class="fw-semibold text-muted" style="font-size:.85rem;">
-              @yield('breadcrumb', '')
-            </span>
+          {{-- Store logo + name + greeting --}}
+          <div class="me-auto d-flex align-items-center gap-3">
+            {{-- Store logo --}}
+            @if(isset($storeInfo) && $storeInfo && $storeInfo->logo)
+              <img src="{{ asset('storage/'.$storeInfo->logo) }}"
+                   alt="logo"
+                   style="height:38px;width:38px;object-fit:contain;border-radius:10px;border:1.5px solid #ebebff;background:#fafafe;padding:3px;">
+            @else
+              <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#696cff,#8c57ff);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.1rem;flex-shrink:0;">
+                <i class="bx bx-store"></i>
+              </div>
+            @endif
+            <div>
+              <div style="font-size:.92rem;font-weight:700;color:#2d2d3a;line-height:1.2;">
+                {{ isset($storeInfo) && $storeInfo && $storeInfo->store_name ? $storeInfo->store_name : 'TrackUp' }}
+              </div>
+              <div style="font-size:.76rem;color:#a0a0b0;line-height:1;">
+                Hello, <span style="font-weight:600;color:#696cff;">{{ $loggedInName ?? 'User' }}</span>
+              </div>
+            </div>
           </div>
 
           <ul class="navbar-nav flex-row align-items-center ms-auto gap-2">
@@ -330,7 +387,7 @@
                   @if($notifData['needAssistant']->count() > 0)
                     <div class="notif-section-head">Needs Assistance</div>
                     @foreach($notifData['needAssistant'] as $job)
-                      <a href="{{ route('admin.jobcards.edit', $job->id) }}" class="notif-item">
+                      <div class="notif-item notif-item-row" id="notif-assist-{{ $job->id }}">
                         <div class="notif-item-icon icon-danger">
                           <i class="bx bx-help-circle"></i>
                         </div>
@@ -338,7 +395,19 @@
                           <strong>{{ $job->device_name }} — #{{ $job->order_no }}</strong>
                           <span>{{ $job->customer_name }} · Staff requested help</span>
                         </div>
-                      </a>
+                        <div class="notif-item-actions">
+                          <button class="notif-action-btn notif-done"
+                            onclick="notifAction(this,'{{ route('admin.notifications.dismiss-assistant', $job->id) }}','notif-assist-{{ $job->id }}')"
+                            title="Mark Done">
+                            <i class="bx bx-check"></i> Done
+                          </button>
+                          <button class="notif-action-btn notif-close"
+                            onclick="notifAction(this,'{{ route('admin.notifications.dismiss-assistant', $job->id) }}','notif-assist-{{ $job->id }}')"
+                            title="Dismiss">
+                            <i class="bx bx-x"></i>
+                          </button>
+                        </div>
+                      </div>
                     @endforeach
                   @endif
 
@@ -346,7 +415,7 @@
                   @if($notifData['unpaidCompleted']->count() > 0)
                     <div class="notif-section-head">Payment Pending</div>
                     @foreach($notifData['unpaidCompleted'] as $job)
-                      <a href="{{ route('admin.jobcards.edit', $job->id) }}" class="notif-item">
+                      <div class="notif-item notif-item-row" id="notif-pay-{{ $job->id }}">
                         <div class="notif-item-icon icon-success">
                           <i class="bx bx-money"></i>
                         </div>
@@ -354,7 +423,19 @@
                           <strong>{{ $job->device_name }} — #{{ $job->order_no }}</strong>
                           <span>{{ $job->customer_name }} · Rs. {{ number_format($job->rupees) }} due</span>
                         </div>
-                      </a>
+                        <div class="notif-item-actions">
+                          <a class="notif-action-btn notif-pay"
+                            href="{{ route('admin.invoices.show', $job->id) }}?pay=1"
+                            title="Go to payment">
+                            <i class="bx bx-receipt"></i> Pay
+                          </a>
+                          <button class="notif-action-btn notif-close"
+                            onclick="notifDismissOnly('notif-pay-{{ $job->id }}')"
+                            title="Close">
+                            <i class="bx bx-x"></i>
+                          </button>
+                        </div>
+                      </div>
                     @endforeach
                   @endif
 
@@ -433,6 +514,12 @@
               <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
           @endif
+          @if(session('warning'))
+            <div class="alert alert-warning alert-dismissible fade show mb-3" role="alert">
+              <i class="bx bx-info-circle me-1"></i> {{ session('warning') }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          @endif
           @yield('content')
         </div>
         <div class="content-backdrop fade"></div>
@@ -467,6 +554,52 @@
         dropdown.classList.remove('open');
       }
     });
+  }
+</script>
+
+<script>
+  // Send PATCH and fade-remove the notification row
+  function notifAction(btn, url, rowId) {
+    btn.disabled = true;
+    const csrfToken = '{{ csrf_token() }}';
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-CSRF-TOKEN': csrfToken,
+        'X-HTTP-Method-Override': 'PATCH',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({ _method: 'PATCH' })
+    })
+    .then(() => notifFadeRemove(rowId))
+    .catch(() => { btn.disabled = false; });
+  }
+
+  // Just hide locally (X on payment — don't mark paid, just close bell)
+  function notifDismissOnly(rowId) {
+    notifFadeRemove(rowId);
+  }
+
+  function notifFadeRemove(rowId) {
+    const el = document.getElementById(rowId);
+    if (!el) return;
+    el.style.transition = 'opacity .3s, max-height .3s, padding .3s';
+    el.style.overflow = 'hidden';
+    el.style.opacity = '0';
+    el.style.maxHeight = '0';
+    el.style.padding = '0';
+    setTimeout(() => {
+      el.remove();
+      // Update badge count
+      const badge = document.querySelector('.notif-count-badge');
+      if (badge) {
+        const current = parseInt(badge.textContent) || 0;
+        const next = current - 1;
+        if (next <= 0) badge.remove();
+        else badge.textContent = next;
+      }
+    }, 320);
   }
 </script>
 

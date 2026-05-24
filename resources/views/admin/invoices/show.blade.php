@@ -93,7 +93,7 @@
     font-size:10pt;
     color:#000;
     background:#fff;
-    padding:4mm 2mm 8mm;
+    padding:4mm 4mm 8mm 2mm;
   }
   .rp-center { text-align:center; }
   .rp-store-name { font-size:13pt; font-weight:bold; text-transform:uppercase; letter-spacing:1px; }
@@ -120,14 +120,15 @@
 
 @section('content')
 @php
-  $grand     = $jobCard->grand_total;
-  $paid      = (float)$jobCard->paid_amount;
-  $balance   = $jobCard->balance;
-  $subtotal  = $jobCard->subtotal;
-  $itemsSum  = (float)$jobCard->invoiceItems->sum('total');
-  $payStatus = $paid >= $grand && $grand > 0 ? 'paid' : ($paid > 0 ? 'partial' : 'unpaid');
-  $payLabels = ['paid'=>'✓ Fully Paid','partial'=>'⚡ Partially Paid','unpaid'=>'● Payment Pending'];
+  $grand        = $jobCard->grand_total;
+  $paid         = (float)$jobCard->paid_amount;
+  $balance      = $jobCard->balance;
+  $subtotal     = $jobCard->subtotal;
+  $itemsSum     = (float)$jobCard->invoiceItems->sum('total');
+  $payStatus    = $paid >= $grand && $grand > 0 ? 'paid' : ($paid > 0 ? 'partial' : 'unpaid');
+  $payLabels    = ['paid'=>'✓ Fully Paid','partial'=>'⚡ Partially Paid','unpaid'=>'● Payment Pending'];
   $statusColors = ['Pending'=>'warning','In Progress'=>'info','Completed'=>'success','Not Completed'=>'danger'];
+  $paymentLogs  = $jobCard->paymentLogs ?? collect();
 @endphp
 
 <div class="inv-wrap">
@@ -144,13 +145,11 @@
       <i class='bx bx-printer me-1'></i> Print Receipt
     </button>
     @if($payStatus !== 'paid')
-    <form method="POST" action="{{ route('admin.invoices.markPaid', $jobCard) }}" style="display:inline">
-      @csrf @method('PATCH')
-      <button type="submit" class="btn btn-success" style="border-radius:10px"
-              onclick="return confirm('Mark as fully paid?')">
-        <i class='bx bx-check-circle me-1'></i> Mark Paid
-      </button>
-    </form>
+    <button type="button" class="btn btn-success" style="border-radius:10px" id="invoicePayBtn"
+      data-url="{{ route('admin.jobcards.payment', $jobCard) }}"
+      data-post="{{ route('admin.jobcards.completePayment', $jobCard) }}">
+      <i class='bx bx-dollar-circle me-1'></i> Payment
+    </button>
     @endif
     <button onclick="toggleEdit()" class="btn btn-primary ms-auto" id="editToggleBtn" style="border-radius:10px">
       <i class='bx bx-edit me-1'></i> Edit Invoice
@@ -170,20 +169,15 @@
       @csrf @method('PUT')
 
       <div class="row g-3 mb-3">
-        <div class="col-md-4">
+        <div class="col-md-6">
           <label class="form-label fw-semibold" style="font-size:.8rem">Service Charge (Rs.) <span style="color:#aaa;font-weight:400">— base repair fee</span></label>
           <input type="number" name="rupees" step="0.01" min="0" value="{{ $jobCard->rupees }}"
                  class="form-control" style="border-radius:8px" id="rupeesInput" oninput="recalc()">
         </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
           <label class="form-label fw-semibold" style="font-size:.8rem">Discount (Rs.)</label>
           <input type="number" name="discount" step="0.01" min="0" value="{{ $jobCard->discount }}"
                  class="form-control" style="border-radius:8px" id="discountInput" oninput="recalc()">
-        </div>
-        <div class="col-md-4">
-          <label class="form-label fw-semibold" style="font-size:.8rem">Amount Paid (Rs.)</label>
-          <input type="number" name="paid_amount" step="0.01" min="0" value="{{ $jobCard->paid_amount }}"
-                 class="form-control" style="border-radius:8px" id="paidInput" oninput="recalc()">
         </div>
       </div>
 
@@ -197,6 +191,123 @@
           </div>
         </div>
       </div>
+
+      {{-- Payment History (locked / read-only) --}}
+      @if($paymentLogs->count() > 0 || $paid > 0)
+      <div style="margin-bottom:18px">
+        <div class="edit-panel-title mb-2"><i class='bx bx-lock me-1'></i> Payment History <span style="color:#aaa;font-weight:400;font-size:.72rem;text-transform:none;letter-spacing:0">(locked — cannot be edited)</span></div>
+
+        {{-- If no logs yet but paid_amount exists (legacy data before logging) --}}
+        @if($paymentLogs->count() === 0 && $paid > 0)
+        <div class="row g-2 align-items-center mb-2">
+          <div class="col-md-5">
+            <div class="form-control form-control-sm" style="border-radius:7px;background:#f4f4f8;color:#888;border-color:#e0e0f0;cursor:not-allowed">
+              Payment (Legacy)
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-control form-control-sm" style="border-radius:7px;background:#f4f4f8;color:#888;border-color:#e0e0f0;cursor:not-allowed;text-align:right">
+              Rs. {{ number_format($paid, 2) }}
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-control form-control-sm" style="border-radius:7px;background:#f4f4f8;color:#aaa;border-color:#e0e0f0;cursor:not-allowed">
+              —
+            </div>
+          </div>
+          <div class="col-md-1 text-center">
+            <i class='bx bx-lock' style="color:#ccc;font-size:1rem"></i>
+          </div>
+        </div>
+        @else
+        @foreach($paymentLogs as $log)
+        <div class="row g-2 align-items-center mb-2">
+          <div class="col-md-5">
+            <div class="form-control form-control-sm" style="border-radius:7px;background:#f4f4f8;color:#555;border-color:#e0e0f0;cursor:not-allowed">
+              {{ $log->note ?? 'Payment' }}
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-control form-control-sm" style="border-radius:7px;background:#f4f4f8;color:#333;font-weight:700;border-color:#e0e0f0;cursor:not-allowed;text-align:right">
+              Rs. {{ number_format($log->amount, 2) }}
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-control form-control-sm" style="border-radius:7px;background:#f4f4f8;color:#aaa;border-color:#e0e0f0;cursor:not-allowed;font-size:.78rem">
+              {{ $log->paid_at->format('d M Y, h:i A') }}
+            </div>
+          </div>
+          <div class="col-md-1 text-center">
+            <i class='bx bx-lock' style="color:#ccc;font-size:1rem"></i>
+          </div>
+        </div>
+        @endforeach
+        @endif
+
+        {{-- + Add New Payment row (only if balance > 0) --}}
+        @if($balance > 0)
+        <div id="newPaymentRow" style="border:1.5px dashed #696cff;border-radius:10px;padding:12px 14px;margin-top:8px;background:#fafaff">
+          <div style="font-size:.76rem;font-weight:700;color:#696cff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">
+            <i class='bx bx-plus-circle me-1'></i> New Payment Entry
+          </div>
+          <div class="row g-2 align-items-end">
+            <div class="col-md-5">
+              <label style="font-size:.73rem;color:#888;font-weight:600">Note <span style="font-weight:400">(optional)</span></label>
+              <input type="text" id="newPayNote" placeholder="e.g. Advance, Final payment…"
+                     class="form-control form-control-sm" style="border-radius:7px">
+            </div>
+            <div class="col-md-4">
+              <label style="font-size:.73rem;color:#888;font-weight:600">Amount (Rs.) <span style="color:#ff3e1d">*</span></label>
+              <input type="number" id="newPayAmount" step="0.01" min="0.01"
+                     max="{{ $balance }}" value="{{ number_format($balance, 2, '.', '') }}"
+                     placeholder="0.00" class="form-control form-control-sm" style="border-radius:7px">
+              <div style="font-size:.71rem;color:#aaa;margin-top:3px">Balance due: Rs. {{ number_format($balance, 2) }}</div>
+            </div>
+            <div class="col-md-3">
+              <button type="button" id="saveNewPayBtn" onclick="saveNewPayment()"
+                      class="btn btn-success btn-sm w-100" style="border-radius:7px;font-weight:600">
+                <i class='bx bx-check me-1'></i> Record Payment
+              </button>
+            </div>
+          </div>
+        </div>
+        @else
+        <div style="background:#d1fae5;border-radius:10px;padding:10px 14px;font-size:.82rem;color:#065f46;font-weight:600;margin-top:6px">
+          <i class='bx bx-check-circle me-1'></i> Fully paid — no balance remaining.
+        </div>
+        @endif
+      </div>
+      @else
+      {{-- No payments yet — show the + new payment row --}}
+      <div style="margin-bottom:18px">
+        <div class="edit-panel-title mb-2"><i class='bx bx-dollar-circle me-1'></i> Payments</div>
+        <div id="newPaymentRow" style="border:1.5px dashed #696cff;border-radius:10px;padding:12px 14px;background:#fafaff">
+          <div style="font-size:.76rem;font-weight:700;color:#696cff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">
+            <i class='bx bx-plus-circle me-1'></i> Record First Payment
+          </div>
+          <div class="row g-2 align-items-end">
+            <div class="col-md-5">
+              <label style="font-size:.73rem;color:#888;font-weight:600">Note <span style="font-weight:400">(optional)</span></label>
+              <input type="text" id="newPayNote" placeholder="e.g. Advance, Full payment…"
+                     class="form-control form-control-sm" style="border-radius:7px">
+            </div>
+            <div class="col-md-4">
+              <label style="font-size:.73rem;color:#888;font-weight:600">Amount (Rs.) <span style="color:#ff3e1d">*</span></label>
+              <input type="number" id="newPayAmount" step="0.01" min="0.01"
+                     max="{{ $grand }}" value="{{ number_format($grand, 2, '.', '') }}"
+                     placeholder="0.00" class="form-control form-control-sm" style="border-radius:7px">
+              <div style="font-size:.71rem;color:#aaa;margin-top:3px">Grand total: Rs. {{ number_format($grand, 2) }}</div>
+            </div>
+            <div class="col-md-3">
+              <button type="button" id="saveNewPayBtn" onclick="saveNewPayment()"
+                      class="btn btn-success btn-sm w-100" style="border-radius:7px;font-weight:600">
+                <i class='bx bx-check me-1'></i> Record Payment
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      @endif
 
       {{-- Line Items --}}
       <div class="d-flex align-items-center justify-content-between mb-2">
@@ -366,7 +477,18 @@
               <span>Grand Total</span>
               <span>Rs. {{ number_format($grand, 2) }}</span>
             </div>
-            @if($paid > 0)
+            {{-- Payment breakdown with dates --}}
+            @if($paymentLogs->count() > 0)
+              @foreach($paymentLogs as $log)
+              <div class="inv-total-row" style="color:#059669;font-size:.82rem">
+                <span class="t-label" style="color:#059669">
+                  {{ $log->note ?? 'Payment' }}
+                  <span style="font-size:.72rem;color:#aaa;font-weight:400;margin-left:4px">{{ $log->paid_at->format('d M Y') }}</span>
+                </span>
+                <span>Rs. {{ number_format($log->amount, 2) }}</span>
+              </div>
+              @endforeach
+            @elseif($paid > 0)
             <div class="inv-total-row" style="color:#71dd37">
               <span class="t-label">Amount Paid</span>
               <span>Rs. {{ number_format($paid, 2) }}</span>
@@ -416,60 +538,54 @@
       @if($store && $store->phone_no1)
       <div style="font-size:8.5pt">Tel: {{ $store->phone_no1 }}{{ $store->phone_no2 ? ' / '.$store->phone_no2 : '' }}</div>
       @endif
-      @if($store && $store->registration_no)
-      <div style="font-size:8pt">Reg: {{ $store->registration_no }}</div>
-      @endif
+
     </div>
 
     <hr class="rp-divider-solid">
 
     {{-- Invoice Meta --}}
-    <div class="rp-row"><span class="rp-label">Invoice:</span><span><strong>{{ $jobCard->invoice_no }}</strong></span></div>
-    <div class="rp-row"><span class="rp-label">Order:</span><span>{{ $jobCard->order_no }}</span></div>
-    <div class="rp-row"><span class="rp-label">Date:</span><span>{{ $jobCard->invoice_date ? $jobCard->invoice_date->format('d/m/Y') : now()->format('d/m/Y') }}</span></div>
+    <div style="font-size:8.5pt;line-height:1.2">
+      <div class="rp-row" style="margin:0.4mm 0"><span class="rp-label">Invoice:</span><span><strong>{{ $jobCard->invoice_no }}</strong></span></div>
+      <div class="rp-row" style="margin:0.4mm 0"><span class="rp-label">Order:</span><span>{{ $jobCard->order_no }}</span></div>
+      <div class="rp-row" style="margin:0.4mm 0"><span class="rp-label">Date:</span><span>{{ $jobCard->invoice_date ? $jobCard->invoice_date->format('d/m/Y') : now()->format('d/m/Y') }}</span></div>
+    </div>
 
     <hr class="rp-divider">
 
     {{-- Customer --}}
     <div style="font-size:8.5pt;font-weight:bold;text-transform:uppercase;margin-bottom:1mm">Customer</div>
-    <div class="rp-row"><span class="rp-label">Name:</span><span>{{ $jobCard->customer_name }}</span></div>
-    <div class="rp-row"><span class="rp-label">Phone:</span><span>{{ $jobCard->phone_no }}</span></div>
+    <div style="font-size:9pt">{{ $jobCard->customer_name }} - {{ $jobCard->phone_no }}</div>
     @if($jobCard->customer_nic)
-    <div class="rp-row"><span class="rp-label">NIC:</span><span>{{ $jobCard->customer_nic }}</span></div>
+    <div style="font-size:8.5pt;color:#000">NIC: {{ $jobCard->customer_nic }}</div>
     @endif
 
     <hr class="rp-divider">
 
     {{-- Device --}}
     <div style="font-size:8.5pt;font-weight:bold;text-transform:uppercase;margin-bottom:1mm">Device</div>
-    <div class="rp-row"><span class="rp-label">Device:</span><span>{{ $jobCard->device_name }}{{ $jobCard->device_brand ? ' ('.$jobCard->device_brand.')' : '' }}</span></div>
+    <div style="font-size:9pt">{{ $jobCard->device_name }}{{ $jobCard->device_brand ? '/'.$jobCard->device_brand : '' }}{{ $jobCard->device_fault ? '/'.$jobCard->device_fault : '' }}</div>
     @if($jobCard->serial_no)
-    <div class="rp-row"><span class="rp-label">Serial:</span><span>{{ $jobCard->serial_no }}</span></div>
-    @endif
-    @if($jobCard->device_fault)
-    <div class="rp-row"><span class="rp-label">Fault:</span><span>{{ $jobCard->device_fault }}</span></div>
+    <div style="font-size:8.5pt">S/N: {{ $jobCard->serial_no }}</div>
     @endif
 
     <hr class="rp-divider">
 
     {{-- Items --}}
-    <div style="font-size:8.5pt;font-weight:bold;text-transform:uppercase;margin-bottom:1mm">Services & Parts</div>
     <table class="rp-table">
       <thead>
         <tr>
-          <th style="width:50%">Item</th>
+          <th style="width:50%">Item Description</th>
           <th class="r" style="width:15%">Qty</th>
           <th class="r" style="width:35%">Amount</th>
         </tr>
       </thead>
       <tbody>
-        @if((float)$jobCard->rupees > 0)
+        {{-- Always show service charge as first row --}}
         <tr>
-          <td>{{ $jobCard->device_fault ?: 'Repair Service' }}</td>
+          <td>Service Charges</td>
           <td class="r">1</td>
-          <td class="r">{{ number_format($jobCard->rupees, 2) }}</td>
+          <td class="r">{{ number_format((float)$jobCard->rupees, 2) }}</td>
         </tr>
-        @endif
         @foreach($jobCard->invoiceItems as $item)
         <tr>
           <td>{{ $item->description }}</td>
@@ -480,26 +596,33 @@
       </tbody>
     </table>
 
-    <hr class="rp-divider">
-
     {{-- Totals --}}
-    @if($jobCard->invoiceItems->count() > 0)
-    <div class="rp-total-row"><span>Service Charge</span><span>{{ number_format($jobCard->rupees, 2) }}</span></div>
-    <div class="rp-total-row"><span>Parts & Labour</span><span>{{ number_format($itemsSum, 2) }}</span></div>
-    @endif
     <div class="rp-total-row"><span>Subtotal</span><span>{{ number_format($subtotal, 2) }}</span></div>
     @if($jobCard->discount > 0)
     <div class="rp-total-row"><span>Discount</span><span>-{{ number_format($jobCard->discount, 2) }}</span></div>
     @endif
     <div class="rp-total-row rp-grand"><span>TOTAL (Rs.)</span><span>{{ number_format($grand, 2) }}</span></div>
-    @if($paid > 0)
+
+    {{-- Payment breakdown with dates --}}
+    @if($paymentLogs->count() > 0)
+      @foreach($paymentLogs as $log)
+      <div class="rp-total-row" style="font-size:8.5pt">
+        <span>{{ $log->note ?? 'Payment' }} ({{ $log->paid_at->format('d/m/Y') }})</span>
+        <span>{{ number_format($log->amount, 2) }}</span>
+      </div>
+      @endforeach
+      @if($paid > 0)
+      <div class="rp-total-row" style="border-top:1px solid #000;font-weight:bold;font-size:9.5pt">
+        <span>Total Paid</span><span>{{ number_format($paid, 2) }}</span>
+      </div>
+      @endif
+    @elseif($paid > 0)
     <div class="rp-total-row"><span>Amount Paid</span><span>{{ number_format($paid, 2) }}</span></div>
     @endif
+
     @if($balance > 0)
     <div class="rp-total-row" style="font-weight:bold"><span>Balance Due</span><span>{{ number_format($balance, 2) }}</span></div>
     @endif
-
-    <hr class="rp-divider">
 
     {{-- Payment Status --}}
     <div class="rp-center" style="margin:2mm 0">
@@ -520,12 +643,26 @@
     {{-- Footer --}}
     <div class="rp-thank">Thank You!</div>
     <div class="rp-footer">
-      <div>{{ $store->store_name ?? 'TrackUp' }}</div>
-      <div>{{ now()->format('d/m/Y h:i A') }}</div>
+      <div>Powered by Trackup product of AxisXNOR</div>
     </div>
 
     {{-- Blank feed space for tear --}}
     <div style="height:10mm"></div>
+  </div>
+</div>
+
+{{-- ── Payment Modal ── --}}
+<div class="modal fade" id="invPaymentModal" tabindex="-1" aria-labelledby="invPaymentModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:18px;border:0;box-shadow:0 8px 40px rgba(0,0,0,.18);">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold" id="invPaymentModalLabel"><i class='bx bx-dollar-circle me-2'></i>Take Payment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pt-2" id="invPayModalBody">
+        <div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -606,6 +743,50 @@ function recalc() {
   if (el('previewBalance'))  el('previewBalance').textContent  = fmt(balance);
 }
 
+// ── Inline payment recording (from edit panel) ──────────────
+async function saveNewPayment() {
+  const amountEl = document.getElementById('newPayAmount');
+  const noteEl   = document.getElementById('newPayNote');
+  const btn      = document.getElementById('saveNewPayBtn');
+  if (!amountEl) return;
+
+  const amount = parseFloat(amountEl.value);
+  if (!amount || amount <= 0) {
+    amountEl.focus();
+    amountEl.style.borderColor = '#ff3e1d';
+    return;
+  }
+  amountEl.style.borderColor = '';
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving…';
+
+  try {
+    const res = await fetch('{{ route("admin.jobcards.completePayment", $jobCard) }}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      body: JSON.stringify({ amount_paid: amount, note: noteEl?.value || '' })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      // Redirect to receipt with invoices redirect param
+      window.location.href = data.receipt_url + '?redirect=invoices';
+    } else {
+      alert(data.message || 'Payment failed.');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bx bx-check me-1"></i> Record Payment';
+    }
+  } catch(e) {
+    alert('Network error. Please try again.');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bx bx-check me-1"></i> Record Payment';
+  }
+}
+
 // Open editor on validation errors
 @if($errors->any()) toggleEdit(); @endif
 
@@ -617,5 +798,103 @@ document.getElementById('invoiceForm')?.addEventListener('submit', function() {
     });
   });
 });
+
+// ── Invoice Payment Modal ──────────────────────────────────────
+(function () {
+  const payBtn = document.getElementById('invoicePayBtn');
+  if (!payBtn) return;
+
+  const payModal = new bootstrap.Modal(document.getElementById('invPaymentModal'));
+
+  // Auto-open if redirected from notification bell (?pay=1)
+  if (new URLSearchParams(window.location.search).get('pay') === '1') {
+    setTimeout(() => payBtn.click(), 400);
+  }
+
+  payBtn.addEventListener('click', function () {
+    const fetchUrl = this.dataset.url;
+    const postUrl  = this.dataset.post;
+    const body     = document.getElementById('invPayModalBody');
+
+    body.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
+    payModal.show();
+
+    fetch(fetchUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(r => r.json())
+      .then(d => {
+        body.innerHTML = `
+          <div class="mb-3">
+            <div class="d-flex justify-content-between mb-1"><span class="text-muted small">Customer</span><span class="fw-semibold">${d.customer_name}</span></div>
+            <div class="d-flex justify-content-between mb-1"><span class="text-muted small">Order No</span><span class="fw-semibold">${d.order_no}</span></div>
+            <div class="d-flex justify-content-between mb-1"><span class="text-muted small">Device</span><span class="fw-semibold">${d.device_name}</span></div>
+            <div class="d-flex justify-content-between mb-1"><span class="text-muted small">Total</span><span class="fw-bold text-primary">Rs.${parseFloat(d.grand_total).toLocaleString()}</span></div>
+            <div class="d-flex justify-content-between mb-1"><span class="text-muted small">Paid So Far</span><span class="fw-semibold text-success">Rs.${parseFloat(d.paid_amount).toLocaleString()}</span></div>
+            <div class="d-flex justify-content-between mb-2"><span class="text-muted small">Balance Due</span><span class="fw-bold text-danger" id="inv-pay-balance">${parseFloat(d.balance).toLocaleString()}</span></div>
+          </div>
+          <hr class="my-2">
+          <form id="invPayForm">
+            <label class="form-label fw-semibold small">Amount Receiving (Rs.)</label>
+            <input type="number" id="inv-pay-amount" class="form-control mb-2" min="0.01" step="0.01"
+                   value="${parseFloat(d.balance).toFixed(2)}" required>
+            <div id="inv-pay-partial-note" class="alert alert-warning py-2 px-3 mt-1 small mb-0" style="border-radius:8px;display:none">
+              Paying less than the balance records a <strong>partial payment</strong>.
+            </div>
+            <div class="d-flex gap-2 mt-3">
+              <button type="button" class="btn btn-outline-secondary flex-fill" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" id="inv-pay-submit" class="btn btn-success flex-fill fw-semibold">
+                <i class='bx bx-printer me-1'></i> Pay Now
+              </button>
+            </div>
+          </form>`;
+
+        const balanceVal = parseFloat(d.balance);
+
+        document.getElementById('inv-pay-amount').addEventListener('input', function () {
+          const entered = parseFloat(this.value) || 0;
+          const note = document.getElementById('inv-pay-partial-note');
+          note.style.display = (entered < balanceVal && entered > 0) ? '' : 'none';
+        });
+
+        document.getElementById('invPayForm').addEventListener('submit', function (e) {
+          e.preventDefault();
+          const amount  = parseFloat(document.getElementById('inv-pay-amount').value);
+          const submitBtn = document.getElementById('inv-pay-submit');
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Processing…';
+
+          fetch(postUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify({ amount_paid: amount })
+          })
+          .then(r => r.json())
+          .then(res => {
+            payModal.hide();
+            if (res.ok) {
+              window.location.href = res.receipt_url + '?redirect=invoices';
+            } else {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<i class="bx bx-check-circle me-1"></i> Confirm Payment';
+              alert(res.message || 'Payment failed.');
+            }
+          })
+          .catch(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bx bx-check-circle me-1"></i> Confirm Payment';
+            alert('Network error. Please try again.');
+          });
+        });
+      })
+      .catch(() => {
+        body.innerHTML = '<div class="alert alert-danger">Failed to load payment details.</div>';
+      });
+  });
+
+
+})();
 </script>
 @endpush

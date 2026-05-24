@@ -32,6 +32,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/jobcards/create',         [JobCardController::class, 'create'])->name('jobcards.create');
         Route::post('/jobcards',               [JobCardController::class, 'store'])->name('jobcards.store');
         Route::get('/jobcards/track',          [JobCardController::class, 'track'])->name('jobcards.track');
+        Route::get('/delivered-orders',        [JobCardController::class, 'deliveredIndex'])->name('jobcards.delivered');
+        Route::get('/jobcards/{jobCard}/payment',  [JobCardController::class, 'payment'])->name('jobcards.payment');
+        Route::post('/jobcards/{jobCard}/payment', [JobCardController::class, 'completePayment'])->name('jobcards.completePayment');
+        Route::patch('/jobcards/{jobCard}/quick-status', [JobCardController::class, 'quickStatus'])->name('jobcards.quickStatus');
+        Route::get('/receipts/{type}/{id}',        [JobCardController::class, 'receipt'])->name('jobcards.receipt');
         Route::get('/jobcards/{jobCard}',      [JobCardController::class, 'show'])->name('jobcards.show');
         Route::get('/jobcards/{jobCard}/edit', [JobCardController::class, 'edit'])->name('jobcards.edit');
         Route::put('/jobcards/{jobCard}',      [JobCardController::class, 'update'])->name('jobcards.update');

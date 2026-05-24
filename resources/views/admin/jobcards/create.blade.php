@@ -307,7 +307,7 @@
 
         <div class="row g-3">
           <div class="col-12">
-            <label class="form-label">Customer Name <span class="required-star">*</span></label>
+            <label for="firstFocus" class="form-label">Customer Name <span class="required-star">*</span></label>
             <input type="text" name="customer_name" id="firstFocus"
               class="form-control @error('customer_name') is-invalid @enderror"
               value="{{ old('customer_name') }}"
@@ -316,10 +316,10 @@
           </div>
 
           <div class="col-md-7">
-            <label class="form-label">Phone Number <span class="required-star">*</span></label>
+            <label for="phone_no" class="form-label">Phone Number <span class="required-star">*</span></label>
             <div class="input-group">
               <span class="input-group-text"><i class='bx bx-phone'></i></span>
-              <input type="text" name="phone_no"
+              <input type="text" name="phone_no" id="phone_no"
                 class="form-control @error('phone_no') is-invalid @enderror"
                 value="{{ old('phone_no') }}" placeholder="07X XXX XXXX" required />
             </div>
@@ -327,40 +327,40 @@
           </div>
 
           <div class="col-md-5">
-            <label class="form-label">NIC</label>
-            <input type="text" name="customer_nic" class="form-control"
+            <label for="customer_nic" class="form-label">NIC</label>
+            <input type="text" name="customer_nic" id="customer_nic" class="form-control"
               value="{{ old('customer_nic') }}" placeholder="XXXXXXXXXX" />
           </div>
 
           <div class="col-12">
-            <label class="form-label">Address</label>
-            <input type="text" name="customer_address" class="form-control"
+            <label for="customer_address" class="form-label">Address</label>
+            <input type="text" name="customer_address" id="customer_address" class="form-control"
               value="{{ old('customer_address') }}" placeholder="Street, City" />
           </div>
 
           <div class="col-md-6">
-            <label class="form-label">Email</label>
-            <input type="email" name="customer_email" class="form-control"
+            <label for="customer_email" class="form-label">Email</label>
+            <input type="email" name="customer_email" id="customer_email" class="form-control"
               value="{{ old('customer_email') }}" placeholder="email@example.com" />
           </div>
 
           <div class="col-md-6">
-            <label class="form-label">Date of Birth</label>
-            <input type="text" name="customer_dob" class="form-control"
+            <label for="customer_dob" class="form-label">Date of Birth</label>
+            <input type="text" name="customer_dob" id="customer_dob" class="form-control"
               value="{{ old('customer_dob') }}" placeholder="01/01/1990" />
           </div>
 
           <div class="col-md-6">
-            <label class="form-label">Date Received <span class="required-star">*</span></label>
-            <input type="date" name="date"
+            <label for="date_received" class="form-label">Date Received <span class="required-star">*</span></label>
+            <input type="date" name="date" id="date_received"
               class="form-control @error('date') is-invalid @enderror"
               value="{{ old('date', date('Y-m-d')) }}" required />
             @error('date')<div class="invalid-feedback">{{ $message }}</div>@enderror
           </div>
 
           <div class="col-md-6">
-            <label class="form-label">Est. Delivery Date</label>
-            <input type="date" name="estimated_delivery" class="form-control"
+            <label for="estimated_delivery" class="form-label">Est. Delivery Date</label>
+            <input type="date" name="estimated_delivery" id="estimated_delivery" class="form-control"
               value="{{ old('estimated_delivery') }}" />
           </div>
 
@@ -390,7 +390,7 @@
 
           {{-- Device Type + add --}}
           <div class="col-12">
-            <label class="form-label">Device Type <span class="required-star">*</span></label>
+            <label for="deviceSelect" class="form-label">Device Type <span class="required-star">*</span></label>
             <div class="select-add-row">
               <select name="device_name" id="deviceSelect"
                 class="form-select @error('device_name') is-invalid @enderror" required>
@@ -407,7 +407,7 @@
 
           {{-- Brand + add --}}
           <div class="col-md-6">
-            <label class="form-label">Brand</label>
+            <label for="brandSelect" class="form-label">Brand</label>
             <div class="select-add-row">
               <select name="device_brand" id="brandSelect" class="form-select">
                 <option value="">-- Select Brand --</option>
@@ -419,7 +419,7 @@
 
           {{-- Fault Type + add --}}
           <div class="col-md-6">
-            <label class="form-label">Fault Type</label>
+            <label for="faultSelect" class="form-label">Fault Type</label>
             <div class="select-add-row">
               <select name="device_fault" id="faultSelect" class="form-select">
                 <option value="">-- Select Fault --</option>
@@ -430,8 +430,8 @@
           </div>
 
           <div class="col-md-6">
-            <label class="form-label">Serial / IMEI No</label>
-            <input type="text" name="serial_no" class="form-control"
+            <label for="serial_no" class="form-label">Serial / IMEI No</label>
+            <input type="text" name="serial_no" id="serial_no" class="form-control"
               value="{{ old('serial_no') }}" placeholder="Serial or IMEI" />
           </div>
 
@@ -465,7 +465,7 @@
           </div>
 
           <div class="col-12">
-            <label class="form-label d-flex justify-content-between">
+            <label for="issueArea" class="form-label d-flex justify-content-between">
               Issue Description
               <span class="char-count"><span id="issueCnt">0</span>/500</span>
             </label>
@@ -474,17 +474,27 @@
           </div>
 
           <div class="col-md-6">
-            <label class="form-label">Estimated Cost (Rs.)</label>
+            <label for="rupees" class="form-label">Estimated Cost (Rs.)</label>
             <div class="input-group">
               <span class="input-group-text">Rs.</span>
-              <input type="number" name="rupees" class="form-control"
+              <input type="number" name="rupees" id="rupees" class="form-control clear-on-focus"
                 value="{{ old('rupees', 0) }}" min="0" step="0.01" />
             </div>
           </div>
 
           <div class="col-md-6">
-            <label class="form-label">Assign to Employee</label>
-            <select name="employee_id" class="form-select">
+            <label for="advance_amount" class="form-label">Advance Amount (Rs.)</label>
+            <div class="input-group">
+              <span class="input-group-text">Rs.</span>
+              <input type="number" name="advance_amount" id="advance_amount" class="form-control clear-on-focus"
+                value="{{ old('advance_amount', 0) }}" min="0" step="0.01" placeholder="0.00" />
+            </div>
+            <small class="text-muted" style="font-size:.75rem">Amount collected upfront</small>
+          </div>
+
+          <div class="col-md-12">
+            <label for="employee_id" class="form-label">Assign to Employee</label>
+            <select name="employee_id" id="employee_id" class="form-select">
               <option value="">-- Unassigned --</option>
               @foreach($employees as $emp)
                 <option value="{{ $emp->id }}" {{ old('employee_id') == $emp->id ? 'selected' : '' }}>{{ $emp->employee_name }}</option>
@@ -494,7 +504,7 @@
 
           {{-- Accessories ── --}}
           <div class="col-12">
-            <label class="form-label">Accessories Received</label>
+            <label class="form-label d-block">Accessories Received</label>
             <div class="acc-grid" id="accGrid">
               @foreach(['Charger','Remote','Cover/Case','Battery','Power Cable','Earphones','Memory Card','Stylus','Other'] as $acc)
               <label class="acc-item">
@@ -511,7 +521,7 @@
           </div>
 
           <div class="col-12">
-            <label class="form-label d-flex justify-content-between">
+            <label for="remarkArea" class="form-label d-flex justify-content-between">
               Internal Remark
               <span class="char-count"><span id="remarkCnt">0</span>/500</span>
             </label>
@@ -766,6 +776,16 @@ $(document).ready(function() {
   if ($('#deviceSelect').val()) {
     $('#deviceSelect').trigger('change');
   }
+});
+
+// ── Clear-on-focus for 0 defaults ──
+document.querySelectorAll('.clear-on-focus').forEach(function(input) {
+  input.addEventListener('focus', function() {
+    if (parseFloat(this.value) === 0) this.value = '';
+  });
+  input.addEventListener('blur', function() {
+    if (this.value === '' || this.value === null) this.value = '0';
+  });
 });
 </script>
 @endpush

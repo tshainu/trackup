@@ -338,7 +338,10 @@
         <div class="cust-id">{{ $job->customer_id }}</div>
       </div>
       <div class="trh-right">
-        <span class="badge {{ $badgeCls }}" style="font-size:.82rem;padding:6px 14px">{{ $job->status ?: 'Pending' }}</span>
+        <div style="text-align:right">
+          <span class="badge {{ $badgeCls }}" style="font-size:.82rem;padding:6px 14px">{{ $job->status ?: 'Pending' }}</span>
+          <div style="font-size:.72rem;opacity:.75;margin-top:4px">Updated: {{ $job->updated_at->format('d M Y, h:i A') }}</div>
+        </div>
         <span class="priority-chip pc-{{ $priority }}">{{ $priority }} Priority</span>
       </div>
     </div>
@@ -356,6 +359,7 @@
             @endif
           </div>
           <div class="sf-label" style="{{ $i === 1 ? 'color:#ff3e1d' : '' }}">{{ $i === 1 ? 'Not Completed' : $step }}</div>
+          @if($i === 1)<div style="font-size:.65rem;color:#ff3e1d;margin-top:2px;text-align:center">{{ $job->updated_at->format('d M Y') }}</div>@endif
         </div>
         @endforeach
       @else
@@ -371,6 +375,7 @@
             @endif
           </div>
           <div class="sf-label">{{ $step }}</div>
+          @if($isCurrent)<div style="font-size:.65rem;color:#696cff;margin-top:2px;text-align:center">{{ $job->updated_at->format('d M Y') }}</div>@endif
         </div>
         @endforeach
       @endif
@@ -423,6 +428,12 @@
       <a href="{{ route('admin.jobcards.edit', $job) }}" class="btn-track-edit">
         <i class='bx bx-edit'></i> Edit Order
       </a>
+      @if($job->status === 'Completed')
+      <button type="button" class="btn btn-success btn-sm fw-semibold" style="border-radius:9px;padding:8px 18px;"
+        data-bs-toggle="modal" data-bs-target="#trackPaymentModal">
+        <i class='bx bx-dollar-circle me-1'></i> Take Payment
+      </button>
+      @endif
       <a href="{{ route('admin.jobcards.index') }}?search={{ $job->order_no }}"
         class="btn btn-outline-secondary btn-sm" style="border-radius:9px;font-weight:600;padding:8px 18px">
         <i class='bx bx-list-ul me-1'></i> View in List
@@ -433,6 +444,60 @@
         </button>
       </form>
     </div>
+
+    @if($job->status === 'Completed')
+    {{-- Track Payment Modal --}}
+    <div class="modal fade" id="trackPaymentModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:14px;">
+          <div class="modal-header" style="background:linear-gradient(135deg,#28a745,#20c997);color:#fff;border-radius:14px 14px 0 0;">
+            <h5 class="modal-title fw-bold"><i class='bx bx-dollar-circle me-2'></i>Complete Payment</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <form method="POST" action="{{ route('admin.jobcards.completePayment', $job) }}">
+            @csrf
+            <div class="modal-body p-4">
+              <div class="mb-3 p-3 rounded" style="background:#f8f9fa;">
+                <div class="d-flex justify-content-between mb-1">
+                  <span class="text-muted">Order No</span>
+                  <strong>{{ $job->order_no }}</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                  <span class="text-muted">Customer</span>
+                  <strong>{{ $job->customer_name }}</strong>
+                </div>
+              </div>
+              <div class="mb-2 d-flex justify-content-between">
+                <span class="text-muted">Grand Total</span>
+                <span class="fw-semibold">Rs. {{ number_format($job->grand_total, 2) }}</span>
+              </div>
+              <div class="mb-2 d-flex justify-content-between">
+                <span class="text-muted">Already Paid</span>
+                <span class="text-success fw-semibold">Rs. {{ number_format($job->paid_amount, 2) }}</span>
+              </div>
+              <div class="mb-3 d-flex justify-content-between">
+                <span class="text-muted">Balance Due</span>
+                <span class="text-danger fw-bold">Rs. {{ number_format($job->balance, 2) }}</span>
+              </div>
+              <hr>
+              <div class="mb-2">
+                <label class="form-label fw-semibold">Amount Paying Now (Rs.)</label>
+                <input type="number" name="amount_paid" class="form-control" step="0.01" min="0"
+                  value="{{ number_format($job->balance, 2, '.', '') }}" required>
+                <div class="form-text text-muted">Must equal or exceed balance due to complete delivery.</div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-success fw-semibold px-4">
+                <i class='bx bx-check-circle me-1'></i>Confirm & Deliver
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    @endif
 
   </div>{{-- /track-result-card --}}
   @endif

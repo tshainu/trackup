@@ -179,116 +179,121 @@
 @endif
 </div>{{-- #resultsArea --}}
 
+{{-- Always show stats + full list --}}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-xl-3">
+    <div class="card text-center p-3" style="border-radius:14px;border:0;box-shadow:0 2px 12px rgba(0,0,0,.07)">
+      <div style="font-size:2rem;font-weight:800;color:#696cff">{{ $stats['total'] }}</div>
+      <div style="font-size:.78rem;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.06em">Pending Payment</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="card text-center p-3" style="border-radius:14px;border:0;box-shadow:0 2px 12px rgba(0,0,0,.07)">
+      <div style="font-size:2rem;font-weight:800;color:#71dd37">{{ $stats['paid'] }}</div>
+      <div style="font-size:.78rem;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.06em">Paid</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="card text-center p-3" style="border-radius:14px;border:0;box-shadow:0 2px 12px rgba(0,0,0,.07)">
+      <div style="font-size:2rem;font-weight:800;color:#ff3e1d">{{ $stats['unpaid'] }}</div>
+      <div style="font-size:.78rem;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.06em">Unpaid</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="card text-center p-3" style="border-radius:14px;border:0;box-shadow:0 2px 12px rgba(0,0,0,.07)">
+      <div style="font-size:1.4rem;font-weight:800;color:#696cff">Rs. {{ number_format($stats['revenue'],0) }}</div>
+      <div style="font-size:.78rem;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.06em">Total Collected</div>
+    </div>
+  </div>
+</div>
+
+{{-- Filter tabs (only shown when no search query) --}}
 @if($query === '')
-  {{-- Default state: show recent invoices --}}
-  @php
-    $recent = \App\Models\JobCard::with('invoiceItems')
-              ->whereNotNull('invoice_no')
-              ->orderByDesc('id')->limit(10)->get();
-    $pendingPayment = \App\Models\JobCard::with('invoiceItems')
-              ->where('payment_received', false)
-              ->where('status', 'Completed')
-              ->orderByDesc('id')->limit(5)->get();
-  @endphp
+<div class="card" style="border-radius:16px;border:0;box-shadow:0 2px 12px rgba(0,0,0,.07)">
+  <div class="card-body p-0">
+    {{-- Tab bar --}}
+    <div class="d-flex align-items-center gap-1 px-4 pt-4 pb-2 flex-wrap">
+      @foreach(['all'=>'All (Unpaid)','paid'=>'Paid','unpaid'=>'Unpaid','partial'=>'Partial'] as $val=>$label)
+        <a href="{{ route('admin.invoices.index', ['filter'=>$val]) }}"
+           class="quick-filter-btn {{ $filter===$val ? 'active':'' }}">
+          {{ $label }}
+          @if($val==='unpaid' && $stats['unpaid']>0)
+            <span style="background:#ff3e1d;color:#fff;border-radius:10px;padding:0 6px;font-size:.68rem;margin-left:4px">{{ $stats['unpaid'] }}</span>
+          @endif
+          @if($val==='partial' && $stats['partial']>0)
+            <span style="background:#f59e0b;color:#fff;border-radius:10px;padding:0 6px;font-size:.68rem;margin-left:4px">{{ $stats['partial'] }}</span>
+          @endif
+        </a>
+      @endforeach
+      <span style="margin-left:auto;font-size:.78rem;color:#aaa">{{ $allInvoices->total() }} records</span>
+    </div>
 
-  <div class="row g-3 mb-4">
-    <div class="col-sm-6 col-xl-3">
-      @php $totalInvoiced = \App\Models\JobCard::whereNotNull('invoice_no')->count(); @endphp
-      <div class="card text-center p-3" style="border-radius:14px;border:0;box-shadow:0 2px 12px rgba(0,0,0,.07)">
-        <div style="font-size:2rem;font-weight:800;color:#696cff">{{ $totalInvoiced }}</div>
-        <div style="font-size:.78rem;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.06em">Total Invoiced</div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      @php $totalPaid = \App\Models\JobCard::where('payment_received', true)->count(); @endphp
-      <div class="card text-center p-3" style="border-radius:14px;border:0;box-shadow:0 2px 12px rgba(0,0,0,.07)">
-        <div style="font-size:2rem;font-weight:800;color:#71dd37">{{ $totalPaid }}</div>
-        <div style="font-size:.78rem;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.06em">Paid</div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      @php $unpaid = \App\Models\JobCard::where('payment_received', false)->where('status','Completed')->count(); @endphp
-      <div class="card text-center p-3" style="border-radius:14px;border:0;box-shadow:0 2px 12px rgba(0,0,0,.07)">
-        <div style="font-size:2rem;font-weight:800;color:#ff3e1d">{{ $unpaid }}</div>
-        <div style="font-size:.78rem;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.06em">Awaiting Payment</div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      @php $totalRevenue = \App\Models\JobCard::sum('paid_amount'); @endphp
-      <div class="card text-center p-3" style="border-radius:14px;border:0;box-shadow:0 2px 12px rgba(0,0,0,.07)">
-        <div style="font-size:1.5rem;font-weight:800;color:#696cff">Rs. {{ number_format($totalRevenue,0) }}</div>
-        <div style="font-size:.78rem;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.06em">Total Collected</div>
-      </div>
+    {{-- List --}}
+    <div class="px-4 pb-4">
+      @if($allInvoices->isEmpty())
+        <div class="empty-state">
+          <i class='bx bx-file-blank'></i>
+          <div style="font-size:1.1rem;font-weight:700;color:#555;margin-bottom:8px">No invoices found</div>
+        </div>
+      @else
+        <div class="d-flex flex-column gap-2">
+          @foreach($allInvoices as $job)
+            @php
+              $grand     = $job->grand_total;
+              $paid      = (float)$job->paid_amount;
+              $balance   = $job->balance;
+              $payStatus = $paid >= $grand && $grand > 0 ? 'paid' : ($paid > 0 ? 'partial' : 'unpaid');
+              $statusColors = ['Pending'=>'warning','In Progress'=>'info','Completed'=>'success','Not Completed'=>'danger'];
+            @endphp
+            <a href="{{ route('admin.invoices.show', $job) }}" class="result-card">
+              <div class="result-icon"><i class='bx bx-file-blank'></i></div>
+              <div style="flex:1;min-width:0">
+                <div class="result-order">
+                  {{ $job->order_no }}
+                  @if($job->invoice_no)
+                    <span style="font-size:.75rem;font-weight:500;color:#aaa;margin-left:8px">{{ $job->invoice_no }}</span>
+                  @else
+                    <span style="font-size:.73rem;color:#d0a020;margin-left:8px;font-weight:600">No Invoice</span>
+                  @endif
+                </div>
+                <div class="result-customer">{{ $job->customer_name }}</div>
+                <div class="result-meta">
+                  <span><i class='bx bx-phone'></i> {{ $job->phone_no }}</span>
+                  @if($job->customer_nic)<span><i class='bx bx-id-card'></i> {{ $job->customer_nic }}</span>@endif
+                  <span><i class='bx bx-chip'></i> {{ $job->device_name }}{{ $job->device_brand ? ' · '.$job->device_brand : '' }}</span>
+                  <span><i class='bx bx-calendar'></i> {{ $job->date ? $job->date->format('d M Y') : '—' }}</span>
+                </div>
+              </div>
+              <div class="result-right">
+                <div class="result-amount">Rs. {{ number_format($grand, 2) }}</div>
+                <div class="result-status">
+                  @if($payStatus === 'paid')
+                    <span class="badge-paid">✓ Paid</span>
+                  @elseif($payStatus === 'partial')
+                    <span class="badge-partial">⚡ Partial · Rs.{{ number_format($balance,2) }} due</span>
+                  @else
+                    <span class="badge-unpaid">● Unpaid</span>
+                  @endif
+                </div>
+                <div style="margin-top:6px">
+                  <span class="badge bg-label-{{ $statusColors[$job->status] ?? 'secondary' }}" style="font-size:.72rem">{{ $job->status }}</span>
+                </div>
+              </div>
+              <div style="flex-shrink:0;color:#696cff"><i class='bx bx-chevron-right' style="font-size:1.4rem"></i></div>
+            </a>
+          @endforeach
+        </div>
+
+        {{-- Pagination --}}
+        @if($allInvoices->hasPages())
+          <div class="d-flex justify-content-center mt-4">
+            {{ $allInvoices->links() }}
+          </div>
+        @endif
+      @endif
     </div>
   </div>
-
-  @if($pendingPayment->count())
-  <div class="card mb-4" style="border-radius:16px;border:0;box-shadow:0 2px 12px rgba(0,0,0,.07)">
-    <div class="card-body p-4">
-      <div class="d-flex align-items-center gap-2 mb-3">
-        <i class='bx bx-time-five' style="font-size:1.2rem;color:#ff3e1d"></i>
-        <span style="font-weight:700;font-size:.9rem">Completed Jobs Awaiting Payment</span>
-      </div>
-      <div class="d-flex flex-column gap-2">
-        @foreach($pendingPayment as $job)
-          @php $job->load('invoiceItems'); @endphp
-          <a href="{{ route('admin.invoices.show', $job) }}" class="result-card" style="padding:12px 16px">
-            <div class="result-icon" style="width:38px;height:38px;font-size:1.1rem"><i class='bx bx-file-blank'></i></div>
-            <div style="flex:1">
-              <div class="result-order">{{ $job->order_no }}</div>
-              <div class="result-customer">{{ $job->customer_name }} · {{ $job->phone_no }}</div>
-            </div>
-            <div class="result-right">
-              <div class="result-amount">Rs. {{ number_format($job->grand_total, 2) }}</div>
-              <span class="badge-unpaid">Unpaid</span>
-            </div>
-            <i class='bx bx-chevron-right' style="color:#696cff;font-size:1.3rem"></i>
-          </a>
-        @endforeach
-      </div>
-    </div>
-  </div>
-  @endif
-
-  @if($recent->count())
-  <div class="card" style="border-radius:16px;border:0;box-shadow:0 2px 12px rgba(0,0,0,.07)">
-    <div class="card-body p-4">
-      <div class="d-flex align-items-center gap-2 mb-3">
-        <i class='bx bx-history' style="font-size:1.2rem;color:#696cff"></i>
-        <span style="font-weight:700;font-size:.9rem">Recent Invoices</span>
-      </div>
-      <div class="d-flex flex-column gap-2">
-        @foreach($recent as $job)
-          @php
-            $grand  = $job->grand_total;
-            $paid   = (float)$job->paid_amount;
-            $balance= $job->balance;
-            $payStatus = $paid >= $grand && $grand > 0 ? 'paid' : ($paid > 0 ? 'partial' : 'unpaid');
-          @endphp
-          <a href="{{ route('admin.invoices.show', $job) }}" class="result-card" style="padding:12px 16px">
-            <div class="result-icon" style="width:38px;height:38px;font-size:1.1rem"><i class='bx bx-file-blank'></i></div>
-            <div style="flex:1">
-              <div class="result-order">{{ $job->order_no }} <span style="font-size:.75rem;color:#aaa;font-weight:500">{{ $job->invoice_no }}</span></div>
-              <div class="result-customer">{{ $job->customer_name }} · {{ $job->device_name }}</div>
-            </div>
-            <div class="result-right">
-              <div class="result-amount">Rs. {{ number_format($grand, 2) }}</div>
-              @if($payStatus === 'paid')
-                <span class="badge-paid">✓ Paid</span>
-              @elseif($payStatus === 'partial')
-                <span class="badge-partial">⚡ Partial</span>
-              @else
-                <span class="badge-unpaid">● Unpaid</span>
-              @endif
-            </div>
-            <i class='bx bx-chevron-right' style="color:#696cff;font-size:1.3rem"></i>
-          </a>
-        @endforeach
-      </div>
-    </div>
-  </div>
-  @endif
-
+</div>
 @endif {{-- $query === '' --}}
 @endsection
 

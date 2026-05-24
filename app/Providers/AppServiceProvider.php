@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use App\Models\JobCard;
+use App\Models\StoreInfo;
 use Carbon\Carbon;
 
 class AppServiceProvider extends ServiceProvider
@@ -39,6 +40,14 @@ class AppServiceProvider extends ServiceProvider
                 'needAssistant'  => $needAssistant,
                 'unpaidCompleted'=> $unpaidCompleted,
             ]);
+
+            // Share store info (logo + name) globally to layout
+            $storeInfo = StoreInfo::first();
+            $view->with('storeInfo', $storeInfo);
+
+            // Logged-in user name: admin or employee
+            $loggedInName = session('admin_name') ?? session('employee_name') ?? 'User';
+            $view->with('loggedInName', $loggedInName);
         });
     }
 }

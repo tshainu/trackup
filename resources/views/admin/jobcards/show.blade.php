@@ -81,7 +81,11 @@
         <div class="info-row"><div class="info-label">Device Age</div><div class="info-value">{{ $jobCard->device_age ? $jobCard->device_age . ' yrs' : '—' }}</div></div>
         <div class="info-row"><div class="info-label">Fault</div><div class="info-value">{{ $jobCard->device_fault ?: '—' }}</div></div>
         <div class="info-row"><div class="info-label">Issue</div><div class="info-value">{{ $jobCard->issue ?: '—' }}</div></div>
-        <div class="info-row"><div class="info-label">Amount</div><div class="info-value"><strong style="color:#696cff">Rs. {{ number_format($jobCard->rupees ?? 0, 2) }}</strong></div></div>
+        <div class="info-row"><div class="info-label">Est. Cost</div><div class="info-value"><strong style="color:#696cff">Rs. {{ number_format($jobCard->rupees ?? 0, 2) }}</strong></div></div>
+        @if((float)$jobCard->advance_amount > 0)
+        <div class="info-row"><div class="info-label">Advance Paid</div><div class="info-value"><span style="color:#28a745;font-weight:700">Rs. {{ number_format($jobCard->advance_amount, 2) }}</span></div></div>
+        <div class="info-row"><div class="info-label">Balance Due</div><div class="info-value"><span style="color:#ff3e1d;font-weight:700">Rs. {{ number_format($jobCard->balance, 2) }}</span></div></div>
+        @endif
         <div class="info-row"><div class="info-label">Assigned To</div><div class="info-value">{{ optional($jobCard->employee)->employee_name ?? '—' }}</div></div>
         <div class="info-row"><div class="info-label">Accessories</div><div class="info-value">{{ $jobCard->accessories ?: '—' }}</div></div>
         <div class="info-row"><div class="info-label">Need Assistant</div><div class="info-value">{{ $jobCard->need_assistant ? '<span class="badge bg-label-warning">Yes</span>' : 'No' }}</div></div>
