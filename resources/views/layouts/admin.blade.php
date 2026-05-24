@@ -350,7 +350,7 @@
             {{-- ── Notification Bell ── --}}
             <li class="nav-item" style="position:relative;">
               <button class="notif-bell-btn" id="notifBellBtn" type="button" aria-label="Notifications">
-                <i class="bx bx-bell"></i>
+                <img src="/assets/img/notification-bell.gif" style="width:34px;height:34px;display:block;" alt="notifications">
                 @if(isset($notifData) && $notifData['total'] > 0)
                   <span class="notif-count-badge">{{ $notifData['total'] }}</span>
                 @endif
