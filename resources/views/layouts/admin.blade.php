@@ -335,6 +335,12 @@
             <div>Store Settings</div>
           </a>
         </li>
+        <li class="menu-item {{ Request::routeIs('admin.sms-settings.*') ? 'active' : '' }}">
+          <a href="{{ route('admin.sms-settings.edit') }}" class="menu-link">
+            <i class="menu-icon tf-icons bx bx-message-rounded-dots"></i>
+            <div>SMS Settings</div>
+          </a>
+        </li>
 
         <div class="menu-divider"></div>
 

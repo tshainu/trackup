@@ -15,6 +15,7 @@ use App\Http\Controllers\Employee\EmployeeDashboardController;
 use App\Http\Controllers\AjaxController;
 use App\Http\Controllers\Admin\FieldComplaintController;
 use App\Http\Controllers\Admin\ServiceTypeController;
+use App\Http\Controllers\Admin\SmsSettingsController;
 
 // Root — render admin dashboard directly (auth is auto-bypassed for preview)
 Route::get('/', [DashboardController::class, 'index'])->middleware(\App\Http\Middleware\AdminAuth::class);
@@ -73,6 +74,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Store Settings
         Route::get('/store',  [StoreController::class, 'edit'])->name('store.edit');
         Route::put('/store',  [StoreController::class, 'update'])->name('store.update');
+
+        // SMS Settings
+        Route::get('/sms-settings',         [SmsSettingsController::class, 'edit'])->name('sms-settings.edit');
+        Route::put('/sms-settings',         [SmsSettingsController::class, 'update'])->name('sms-settings.update');
+        Route::post('/sms-settings/test',   [SmsSettingsController::class, 'test'])->name('sms-settings.test');
 
         // Invoices
         Route::get('/invoices',                        [InvoiceController::class, 'index'])->name('invoices.index');

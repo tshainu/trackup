@@ -8,6 +8,7 @@ use App\Models\Employee;
 use App\Models\DeviceList;
 use App\Models\DeviceBrand;
 use App\Models\DeviceFault;
+use App\Services\SmsService;
 use Illuminate\Http\Request;
 
 class JobCardController extends Controller
@@ -95,7 +96,17 @@ class JobCardController extends Controller
             $validated['payment_status']  = 'partial';
         }
 
-        JobCard::create($validated);
+        $job = JobCard::create($validated);
+
+        // SMS: notify customer of new job order
+        try {
+            (new SmsService())->sendTemplate('job_created', $job->phone_no, [
+                'customer_name' => $job->customer_name,
+                'order_no'      => $job->order_no,
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('[SMS] job_created failed: ' . $e->getMessage());
+        }
 
         return redirect()->route('admin.jobcards.index')
                          ->with('success', 'Job order created successfully.');
@@ -155,7 +166,21 @@ class JobCardController extends Controller
             $validated['cancelled_at']     = now();
         }
 
+        $oldStatus = $jobCard->status;
         $jobCard->update($validated);
+
+        // SMS: notify on Completed or Broken
+        if (in_array($validated['status'], ['Completed', 'Broken']) && $oldStatus !== $validated['status']) {
+            try {
+                (new SmsService())->sendTemplate('job_status_changed', $jobCard->phone_no, [
+                    'customer_name' => $jobCard->customer_name,
+                    'order_no'      => $jobCard->order_no,
+                    'status'        => $validated['status'],
+                ]);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('[SMS] job_status_changed failed: ' . $e->getMessage());
+            }
+        }
 
         return redirect()->route('admin.jobcards.index')
                          ->with('success', 'Job order updated successfully.');
@@ -267,7 +292,22 @@ class JobCardController extends Controller
             return response()->json(['ok' => true, 'status' => 'Delivered', 'archived' => true]);
         }
 
+        $oldStatus = $jobCard->status;
         $jobCard->update(['status' => $status]);
+
+        // SMS: notify on Completed or Broken via quick status
+        if (in_array($status, ['Completed', 'Broken']) && $oldStatus !== $status) {
+            try {
+                (new SmsService())->sendTemplate('job_status_changed', $jobCard->phone_no, [
+                    'customer_name' => $jobCard->customer_name,
+                    'order_no'      => $jobCard->order_no,
+                    'status'        => $status,
+                ]);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('[SMS] job_status_changed (quick) failed: ' . $e->getMessage());
+            }
+        }
+
         return response()->json(['ok' => true, 'status' => $status]);
     }
 

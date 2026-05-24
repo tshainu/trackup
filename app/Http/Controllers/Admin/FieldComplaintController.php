@@ -9,6 +9,7 @@ use App\Models\FieldComplaintItem;
 use App\Models\FieldPaymentLog;
 use App\Models\ServiceType;
 use App\Models\Employee;
+use App\Services\SmsService;
 use Illuminate\Http\Request;
 
 class FieldComplaintController extends Controller
@@ -158,6 +159,16 @@ class FieldComplaintController extends Controller
             'status'            => 'Pending',
         ]);
 
+        // SMS: notify customer of new field complaint
+        try {
+            (new SmsService())->sendTemplate('field_complaint_created', $complaint->phone_no, [
+                'customer_name' => $complaint->customer_name,
+                'complaint_no'  => $complaint->complaint_no,
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('[SMS] field_complaint_created failed: ' . $e->getMessage());
+        }
+
         return redirect()->route('admin.field-complaints.show', $complaint)
             ->with('success', "Complaint {$complaint->complaint_no} logged successfully.");
     }
@@ -278,7 +289,23 @@ class FieldComplaintController extends Controller
             }
         }
 
+        $oldStatus = $fieldComplaint->status;
         $fieldComplaint->update($data);
+
+        // SMS: notify on field service completion
+        if ($request->status === 'Completed' && $oldStatus !== 'Completed') {
+            try {
+                $technician = $fieldComplaint->assignedEmployee?->employee_name ?? 'our technician';
+                (new SmsService())->sendTemplate('field_service_completed', $fieldComplaint->phone_no, [
+                    'customer_name' => $fieldComplaint->customer_name,
+                    'complaint_no'  => $fieldComplaint->complaint_no,
+                    'technician'    => $technician,
+                ]);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('[SMS] field_service_completed failed: ' . $e->getMessage());
+            }
+        }
+
         return back()->with('success', "Status updated to {$request->status}.");
     }
 
