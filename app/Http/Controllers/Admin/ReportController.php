@@ -38,7 +38,7 @@ class ReportController extends Controller
         }
 
         $report = $request->input('report', 'jobs');
-        $base   = JobCard::with(['employee', 'invoiceItems', 'paymentLogs'])->whereBetween('date', [$from, $to]);
+        $base   = JobCard::with(['employee', 'invoiceItems', 'paymentLogs'])->whereBetween('date', [$from.' 00:00:00', $to.' 23:59:59']);
 
         // 1. Jobs
         $jobs = (clone $base)->orderByDesc('date')->get();
