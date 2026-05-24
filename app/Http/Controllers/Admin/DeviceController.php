@@ -12,14 +12,14 @@ class DeviceController extends Controller
 {
     public function index()
     {
-        $devices = DeviceList::with(['brands','faults','accessories'])->get();
+        $devices = DeviceList::with(['brands','faults'])->get();
         return view('admin.devices.index', compact('devices'));
     }
 
     public function indexAccessories()
     {
-        $devices = DeviceList::with('accessories')->get();
-        return view('admin.devices.accessories', compact('devices'));
+        $accessories = DeviceAccessory::orderBy('accessory_name')->get();
+        return view('admin.devices.accessories', compact('accessories'));
     }
 
     // Device types
@@ -89,10 +89,9 @@ class DeviceController extends Controller
     public function storeAccessory(Request $request)
     {
         $request->validate([
-            'device_list_id'  => 'required|exists:device_lists,id',
-            'accessory_name'  => 'required|string|max:100',
+            'accessory_name' => 'required|string|max:100|unique:device_accessories,accessory_name',
         ]);
-        $acc = DeviceAccessory::create($request->only('device_list_id', 'accessory_name'));
+        $acc = DeviceAccessory::create(['accessory_name' => $request->accessory_name]);
 
         if ($request->expectsJson()) {
             return response()->json(['id' => $acc->id, 'accessory_name' => $acc->accessory_name]);
