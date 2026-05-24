@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ServiceType extends Model
 {
-    protected $fillable = ['name', 'icon', 'base_charge', 'active'];
+    protected $fillable = ['name', 'description', 'icon', 'base_charge', 'active'];
 
     protected $casts = [
         'base_charge' => 'float',

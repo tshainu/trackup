@@ -10,20 +10,22 @@ class ServiceTypeController extends Controller
 {
     public function index()
     {
-        $types = ServiceType::orderBy('name')->get();
-        return view('admin.service-types.index', compact('types'));
+        $serviceTypes = ServiceType::orderBy('name')->get();
+        return view('admin.service-types.index', compact('serviceTypes'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'name'        => 'required|string|max:100',
+            'description' => 'nullable|string|max:255',
             'icon'        => 'nullable|string|max:50',
             'base_charge' => 'nullable|numeric|min:0',
         ]);
 
         ServiceType::create([
             'name'        => $request->name,
+            'description' => $request->description,
             'icon'        => $request->input('icon', 'bx-wrench'),
             'base_charge' => $request->input('base_charge', 0),
             'active'      => true,
@@ -36,6 +38,7 @@ class ServiceTypeController extends Controller
     {
         $request->validate([
             'name'        => 'required|string|max:100',
+            'description' => 'nullable|string|max:255',
             'icon'        => 'nullable|string|max:50',
             'base_charge' => 'nullable|numeric|min:0',
             'active'      => 'nullable|boolean',
@@ -43,6 +46,7 @@ class ServiceTypeController extends Controller
 
         $serviceType->update([
             'name'        => $request->name,
+            'description' => $request->description,
             'icon'        => $request->input('icon', $serviceType->icon),
             'base_charge' => $request->input('base_charge', 0),
             'active'      => $request->has('active') ? (bool)$request->active : $serviceType->active,

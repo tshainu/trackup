@@ -122,6 +122,7 @@ Route::prefix('employee')->name('employee.')->group(function () {
 });
 
 // Ajax endpoints
-Route::get('/ajax/brands',      [AjaxController::class, 'brands'])->name('ajax.brands');
-Route::get('/ajax/faults',      [AjaxController::class, 'faults'])->name('ajax.faults');
-Route::get('/ajax/accessories', [AjaxController::class, 'accessories'])->name('ajax.accessories');
+Route::get('/ajax/brands',            [AjaxController::class, 'brands'])->name('ajax.brands');
+Route::get('/ajax/faults',            [AjaxController::class, 'faults'])->name('ajax.faults');
+Route::get('/ajax/accessories',       [AjaxController::class, 'accessories'])->name('ajax.accessories');
+Route::get('/ajax/customer-lookup',   [AjaxController::class, 'customerLookup'])->name('ajax.customer-lookup');

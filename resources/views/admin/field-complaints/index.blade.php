@@ -1,148 +1,140 @@
 @extends('layouts.admin')
 @section('title', 'Field Complaints')
-@section('page-title', 'Field Complaints')
-@section('breadcrumb')
-  <li class="breadcrumb-item active">Field Complaints</li>
-@endsection
-
-@push('styles')
-<style>
-.fc-header { background:linear-gradient(135deg,#f59e0b,#d97706); border-radius:14px; padding:22px 28px; color:#fff; margin-bottom:1.5rem; }
-.fc-header h4 { margin:0;font-weight:700;font-size:1.3rem; }
-.fc-header p  { margin:0;opacity:.85;font-size:.85rem; }
-.tab-pills { display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.2rem; }
-.tab-pill { padding:5px 14px;border-radius:20px;font-size:.78rem;font-weight:600;border:0;cursor:pointer;background:#f0f0f0;color:#555;text-decoration:none;transition:.15s; }
-.tab-pill:hover,.tab-pill.active { background:#f59e0b;color:#fff; }
-.tab-pill .cnt { background:rgba(0,0,0,.12);border-radius:10px;padding:1px 6px;margin-left:4px;font-size:.72rem; }
-.fc-table th { font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#888;font-weight:600;border-top:0; }
-.status-badge { display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;font-size:.72rem;font-weight:600; }
-.s-pending    { background:#fff3cd;color:#856404; }
-.s-assigned   { background:#cfe2ff;color:#084298; }
-.s-inprogress { background:#d1ecf1;color:#0c5460; }
-.s-completed  { background:#d1e7dd;color:#0a5c36; }
-.s-billed     { background:#e2d9f3;color:#5a2d82; }
-.s-cancelled  { background:#f8d7da;color:#842029; }
-.priority-dot { width:8px;height:8px;border-radius:50%;display:inline-block; }
-.p-low    { background:#adb5bd; }
-.p-normal { background:#0d6efd; }
-.p-high   { background:#fd7e14; }
-.p-urgent { background:#dc3545; }
-.action-btn { padding:4px 10px;border-radius:8px;font-size:.75rem;font-weight:600;border:0;cursor:pointer;text-decoration:none; }
-</style>
-@endpush
 
 @section('content')
-<div class="fc-header d-flex justify-content-between align-items-center">
-  <div>
-    <h4><i class='bx bx-map-pin me-2'></i>Field Complaints</h4>
-    <p>Manage on-site service requests &amp; field staff assignments</p>
-  </div>
-  <a href="{{ route('admin.field-complaints.create') }}" class="btn btn-light fw-bold" style="border-radius:10px;">
-    <i class='bx bx-plus me-1'></i>New Complaint
-  </a>
-</div>
+<div class="px-4 py-6 max-w-7xl mx-auto">
 
-{{-- Tabs --}}
-<div class="tab-pills">
-  @php
-    $tabs = [
-      'all'        => ['All', $counts['all']],
-      'pending'    => ['Pending', $counts['pending']],
-      'assigned'   => ['Assigned', $counts['assigned']],
-      'inprogress' => ['In Progress', $counts['inprogress']],
-      'completed'  => ['Completed', $counts['completed']],
-      'billed'     => ['Billed', $counts['billed']],
-    ];
-  @endphp
-  @foreach($tabs as $key => [$label, $cnt])
-    <a href="{{ route('admin.field-complaints.index', ['tab'=>$key, 'q'=>$search]) }}"
-       class="tab-pill {{ $tab === $key ? 'active' : '' }}">
-      {{ $label }}<span class="cnt">{{ $cnt }}</span>
-    </a>
-  @endforeach
-</div>
+    {{-- Header --}}
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+        <div>
+            <h1 class="text-xl font-bold text-gray-900">Field Complaints</h1>
+            <p class="text-sm text-gray-500">On-site repair & service requests</p>
+        </div>
+        <a href="{{ route('admin.field-complaints.create') }}"
+           class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+            New Complaint
+        </a>
+    </div>
 
-{{-- Search --}}
-<form method="GET" class="mb-3 d-flex gap-2" style="max-width:420px;">
-  <input type="hidden" name="tab" value="{{ $tab }}">
-  <input type="text" name="q" class="form-control form-control-sm" placeholder="Search name, phone, complaint no…" value="{{ $search }}">
-  <button class="btn btn-sm btn-outline-secondary">Search</button>
-  @if($search)<a href="{{ route('admin.field-complaints.index', ['tab'=>$tab]) }}" class="btn btn-sm btn-outline-danger">✕</a>@endif
-</form>
+    @if(session('success'))
+    <div class="mb-4 bg-green-50 border border-green-200 text-green-800 rounded-lg px-4 py-3 text-sm flex items-center gap-2">
+        <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+        {{ session('success') }}
+    </div>
+    @endif
 
-@if(session('success'))
-  <div class="alert alert-success alert-dismissible">{{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-@endif
-
-<div class="card" style="border-radius:14px;border:0;box-shadow:0 2px 16px rgba(0,0,0,.07);">
-  <div class="table-responsive">
-    <table class="table fc-table mb-0">
-      <thead><tr>
-        <th>No.</th>
-        <th>Customer</th>
-        <th>Service</th>
-        <th>Priority</th>
-        <th>Assigned To</th>
-        <th>Scheduled</th>
-        <th>Status</th>
-        <th>Grand Total</th>
-        <th>Balance</th>
-        <th></th>
-      </tr></thead>
-      <tbody>
-        @forelse($complaints as $fc)
+    {{-- Tabs --}}
+    <div class="flex flex-wrap gap-1 mb-4 bg-gray-100 rounded-lg p-1 w-fit">
         @php
-          $fc->load('items');
-          $statusClass = match($fc->status) {
-            'Pending'     => 's-pending',
-            'Assigned'    => 's-assigned',
-            'In Progress' => 's-inprogress',
-            'Completed'   => 's-completed',
-            'Billed'      => 's-billed',
-            'Cancelled'   => 's-cancelled',
-            default       => ''
-          };
-          $prioClass = match($fc->priority) {
-            'Low'    => 'p-low',
-            'Normal' => 'p-normal',
-            'High'   => 'p-high',
-            'Urgent' => 'p-urgent',
-            default  => 'p-normal'
-          };
+        $tabs = [
+            'all'       => ['All', $counts['all']],
+            'pending'   => ['Pending', $counts['pending']],
+            'assigned'  => ['Assigned', $counts['assigned']],
+            'inprogress'=> ['In Progress', $counts['inprogress']],
+            'completed' => ['Completed', $counts['completed']],
+            'billed'    => ['Billed', $counts['billed']],
+        ];
         @endphp
-        <tr>
-          <td><a href="{{ route('admin.field-complaints.show', $fc) }}" class="fw-bold text-decoration-none">{{ $fc->complaint_no }}</a></td>
-          <td>
-            <div class="fw-semibold">{{ $fc->customer_name }}</div>
-            <small class="text-muted">{{ $fc->phone_no }}</small>
-          </td>
-          <td>{{ $fc->service_type_name ?? '—' }}</td>
-          <td><span class="priority-dot {{ $prioClass }}"></span> {{ $fc->priority }}</td>
-          <td>{{ $fc->assignedEmployee?->employee_name ?? '<span class="text-muted">Unassigned</span>' }}</td>
-          <td>{{ $fc->scheduled_date?->format('d M Y') ?? '—' }}</td>
-          <td><span class="status-badge {{ $statusClass }}">{{ $fc->status }}</span></td>
-          <td>Rs. {{ number_format($fc->grand_total,2) }}</td>
-          <td>
-            @if($fc->balance > 0)
-              <span class="text-danger fw-semibold">Rs. {{ number_format($fc->balance,2) }}</span>
-            @else
-              <span class="text-success fw-semibold">Paid</span>
-            @endif
-          </td>
-          <td>
-            <a href="{{ route('admin.field-complaints.show', $fc) }}" class="action-btn btn btn-sm btn-outline-primary">View</a>
-          </td>
-        </tr>
-        @empty
-        <tr><td colspan="10" class="text-center text-muted py-5">No complaints found.</td></tr>
-        @endforelse
-      </tbody>
-    </table>
-  </div>
-  @if($complaints->hasPages())
-  <div class="card-footer bg-transparent border-top-0 pt-0 pb-3 px-3">
-    {{ $complaints->appends(['tab'=>$tab,'q'=>$search])->links() }}
-  </div>
-  @endif
+        @foreach($tabs as $key => [$label, $count])
+        <a href="{{ request()->fullUrlWithQuery(['tab'=>$key,'page'=>1]) }}"
+           class="px-3 py-1.5 rounded-md text-sm font-medium transition {{ $tab===$key ? 'bg-white shadow text-indigo-700' : 'text-gray-600 hover:text-gray-900' }}">
+            {{ $label }}
+            <span class="ml-1 text-xs {{ $tab===$key ? 'text-indigo-500' : 'text-gray-400' }}">{{ $count }}</span>
+        </a>
+        @endforeach
+    </div>
+
+    {{-- Search --}}
+    <form method="GET" class="mb-4 flex gap-2">
+        <input type="hidden" name="tab" value="{{ $tab }}">
+        <input type="text" name="q" value="{{ $search }}" placeholder="Search by complaint#, name, phone, address…"
+               class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition max-w-md">
+        <button class="px-4 py-2 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-800 transition">Search</button>
+        @if($search)<a href="{{ route('admin.field-complaints.index',['tab'=>$tab]) }}" class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700">Clear</a>@endif
+    </form>
+
+    {{-- Table --}}
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        @if($complaints->isEmpty())
+        <div class="text-center py-16 text-gray-400">
+            <svg class="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+            <p class="text-sm">No complaints found</p>
+        </div>
+        @else
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Complaint#</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Customer</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Service</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Assigned</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Priority</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Scheduled</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @foreach($complaints as $fc)
+                    @php
+                    $statusColors = [
+                        'Pending'    =>'bg-yellow-100 text-yellow-800',
+                        'Assigned'   =>'bg-blue-100 text-blue-800',
+                        'In Progress'=>'bg-indigo-100 text-indigo-800',
+                        'Completed'  =>'bg-green-100 text-green-800',
+                        'Billed'     =>'bg-purple-100 text-purple-800',
+                        'Cancelled'  =>'bg-red-100 text-red-800',
+                    ];
+                    $priColors = ['Low'=>'text-gray-500','Normal'=>'text-blue-600','High'=>'text-orange-600','Urgent'=>'text-red-600 font-bold'];
+                    @endphp
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-4 py-3">
+                            <a href="{{ route('admin.field-complaints.show', $fc) }}"
+                               class="font-mono font-semibold text-indigo-600 hover:underline">{{ $fc->complaint_no }}</a>
+                            <div class="text-xs text-gray-400">{{ $fc->created_at->format('d M Y') }}</div>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="font-medium text-gray-800">{{ $fc->customer_name }}</div>
+                            <div class="text-xs text-gray-500">{{ $fc->phone_no }}</div>
+                            @if($fc->gps_lat && $fc->gps_lng)
+                            <a href="{{ $fc->googleMapsUrl() }}" target="_blank" class="inline-flex items-center gap-0.5 text-xs text-emerald-600 hover:underline mt-0.5">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
+                                GPS
+                            </a>
+                            @endif
+                        </td>
+                        <td class="px-4 py-3 text-gray-700">{{ $fc->service_type_name ?: '—' }}</td>
+                        <td class="px-4 py-3 text-gray-700 text-sm">
+                            {{ $fc->assignedEmployee?->employee_name ?? '<span class="text-gray-400">Unassigned</span>' }}
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$fc->status] ?? 'bg-gray-100 text-gray-600' }}">
+                                {{ $fc->status }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-sm {{ $priColors[$fc->priority] ?? '' }}">{{ $fc->priority }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-600">
+                            {{ $fc->scheduled_date?->format('d M') ?? '—' }}
+                        </td>
+                        <td class="px-4 py-3 text-right">
+                            <a href="{{ route('admin.field-complaints.show', $fc) }}"
+                               class="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-lg transition">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @if($complaints->hasPages())
+        <div class="px-4 py-3 border-t border-gray-200">{{ $complaints->links() }}</div>
+        @endif
+        @endif
+    </div>
 </div>
 @endsection

@@ -1,203 +1,158 @@
 @extends('layouts.admin')
 @section('title', 'Service Types')
-@section('page-title', 'Service Types')
-@section('breadcrumb')
-  <li class="breadcrumb-item active">Service Types</li>
-@endsection
-
-@push('styles')
-<style>
-.st-header { background:linear-gradient(135deg,#059669,#047857);border-radius:14px;padding:22px 28px;color:#fff;margin-bottom:1.5rem; }
-.st-header h4 { margin:0;font-weight:700; }
-.st-header p  { margin:0;opacity:.85;font-size:.85rem; }
-.st-card { border:0;border-radius:14px;box-shadow:0 2px 16px rgba(0,0,0,.07);margin-bottom:1rem; }
-.st-card .card-body { padding:18px 20px; }
-.st-icon-picker { display:flex;flex-wrap:wrap;gap:6px;margin-top:8px; }
-.st-icon-opt { width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:8px;border:2px solid #e0e0e0;cursor:pointer;font-size:1.1rem;transition:.15s; }
-.st-icon-opt:hover,.st-icon-opt.selected { border-color:#059669;background:#ecfdf5; }
-.st-icon-hidden { display:none; }
-.type-row { display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid #f5f5f5; }
-.type-row:last-child { border-bottom:0; }
-.type-icon-wrap { width:42px;height:42px;border-radius:10px;background:#ecfdf5;display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#059669;flex-shrink:0; }
-.type-name { flex:1;font-weight:600;font-size:.95rem; }
-.type-charge { font-size:.85rem;color:#059669;font-weight:700;min-width:80px; }
-.type-count { font-size:.75rem;color:#aaa; }
-.badge-active   { background:#d1fae5;color:#065f46;padding:3px 10px;border-radius:10px;font-size:.72rem;font-weight:700; }
-.badge-inactive { background:#f3f4f6;color:#9ca3af;padding:3px 10px;border-radius:10px;font-size:.72rem;font-weight:700; }
-</style>
-@endpush
 
 @section('content')
-<div class="st-header d-flex justify-content-between align-items-center">
-  <div>
-    <h4><i class='bx bx-wrench me-2'></i>Service Types</h4>
-    <p>Manage categories for field service requests</p>
-  </div>
-  <button class="btn btn-light fw-bold" style="border-radius:10px;" data-bs-toggle="modal" data-bs-target="#addTypeModal">
-    <i class='bx bx-plus me-1'></i>Add Type
-  </button>
-</div>
-
-@if(session('success'))
-  <div class="alert alert-success alert-dismissible">{{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-@endif
-@if(session('error'))
-  <div class="alert alert-danger alert-dismissible">{{ session('error') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-@endif
-
-<div class="card st-card">
-  <div class="card-body">
-    @forelse($types as $type)
-    <div class="type-row">
-      <div class="type-icon-wrap">
-        <i class="bx {{ $type->icon ?? 'bx-wrench' }}"></i>
-      </div>
-      <div class="type-name">{{ $type->name }}</div>
-      <div class="type-charge">Rs. {{ number_format($type->base_charge, 2) }}</div>
-      <div class="type-count">{{ $type->complaints()->count() }} complaints</div>
-      <span class="{{ $type->active ? 'badge-active' : 'badge-inactive' }}">
-        {{ $type->active ? 'Active' : 'Inactive' }}
-      </span>
-      <div class="d-flex gap-1">
-        {{-- Toggle --}}
-        <form action="{{ route('admin.service-types.toggle', $type) }}" method="POST">
-          @csrf @method('PATCH')
-          <button type="submit" class="btn btn-sm {{ $type->active ? 'btn-outline-warning' : 'btn-outline-success' }}" style="border-radius:8px;font-size:.72rem;padding:3px 8px;">
-            {{ $type->active ? 'Deactivate' : 'Activate' }}
-          </button>
-        </form>
-        {{-- Edit --}}
-        <button class="btn btn-sm btn-outline-primary" style="border-radius:8px;font-size:.72rem;padding:3px 8px;"
-          onclick="openEditModal({{ $type->id }}, '{{ addslashes($type->name) }}', '{{ $type->icon }}', {{ $type->base_charge }}, {{ $type->active ? 'true' : 'false' }})">
-          Edit
+<div class="max-w-3xl mx-auto px-4 py-6">
+    <div class="flex items-center justify-between mb-5">
+        <div>
+            <h1 class="text-xl font-bold text-gray-900">Service Types</h1>
+            <p class="text-sm text-gray-500">Manage field service categories and base charges</p>
+        </div>
+        <button onclick="document.getElementById('addModal').classList.remove('hidden')"
+                class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+            Add Type
         </button>
-        {{-- Delete --}}
-        <form action="{{ route('admin.service-types.destroy', $type) }}" method="POST"
-          onsubmit="return confirm('Delete {{ addslashes($type->name) }}?')">
-          @csrf @method('DELETE')
-          <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius:8px;font-size:.72rem;padding:3px 8px;">✕</button>
+    </div>
+
+    @if(session('success'))
+    <div class="mb-4 bg-green-50 border border-green-200 text-green-800 rounded-lg px-4 py-3 text-sm">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+    <div class="mb-4 bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 text-sm">{{ session('error') }}</div>
+    @endif
+    @if($errors->any())
+    <div class="mb-4 bg-red-50 border border-red-200 rounded-lg p-4">
+        <ul class="list-disc list-inside text-sm text-red-700 space-y-1">
+            @foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach
+        </ul>
+    </div>
+    @endif
+
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        @if($serviceTypes->isEmpty())
+        <div class="text-center py-12 text-gray-400 text-sm">No service types yet</div>
+        @else
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Description</th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Base Charge</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Status</th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                @foreach($serviceTypes as $st)
+                <tr class="hover:bg-gray-50 transition {{ $st->active ? '' : 'opacity-50' }}">
+                    <td class="px-4 py-3 font-semibold text-gray-800">{{ $st->name }}</td>
+                    <td class="px-4 py-3 text-gray-600">{{ $st->description ?: '—' }}</td>
+                    <td class="px-4 py-3 text-right font-mono font-semibold text-gray-800">Rs. {{ number_format($st->base_charge,2) }}</td>
+                    <td class="px-4 py-3 text-center">
+                        <form method="POST" action="{{ route('admin.service-types.toggle', $st) }}">
+                            @csrf @method('PATCH')
+                            <button class="px-2 py-0.5 rounded-full text-xs font-medium {{ $st->active ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }} transition">
+                                {{ $st->active ? 'Active' : 'Inactive' }}
+                            </button>
+                        </form>
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                        <button onclick="openEdit({{ $st->id }}, '{{ addslashes($st->name) }}', {{ $st->base_charge }}, '{{ addslashes($st->description ?? '') }}')"
+                                class="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition mr-1">Edit</button>
+                        <form method="POST" action="{{ route('admin.service-types.destroy', $st) }}" class="inline"
+                              onsubmit="return confirm('Delete {{ $st->name }}?')">
+                            @csrf @method('DELETE')
+                            <button class="text-xs px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition">Del</button>
+                        </form>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+        @endif
+    </div>
+</div>
+
+{{-- Add Modal --}}
+<div id="addModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+            <h3 class="font-bold text-gray-900">Add Service Type</h3>
+            <button onclick="document.getElementById('addModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <form method="POST" action="{{ route('admin.service-types.store') }}" class="p-5 space-y-3">
+            @csrf
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Name <span class="text-red-500">*</span></label>
+                <input type="text" name="name" required placeholder="e.g. AC Service, RO Repair"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Description</label>
+                <input type="text" name="description" placeholder="Optional short description"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Base Charge (Rs.) <span class="text-red-500">*</span></label>
+                <input type="number" step="0.01" min="0" name="base_charge" required placeholder="0.00"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-indigo-400">
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="document.getElementById('addModal').classList.add('hidden')"
+                        class="flex-1 py-2 border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition">Cancel</button>
+                <button class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition">Add</button>
+            </div>
         </form>
-      </div>
     </div>
-    @empty
-    <div class="text-center text-muted py-5">No service types yet. Add one above.</div>
-    @endforelse
-  </div>
 </div>
 
-{{-- ── Add Modal ── --}}
-<div class="modal fade" id="addTypeModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content" style="border-radius:14px;">
-      <div class="modal-header" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;border-radius:14px 14px 0 0;">
-        <h5 class="modal-title fw-bold"><i class='bx bx-plus-circle me-2'></i>Add Service Type</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <form action="{{ route('admin.service-types.store') }}" method="POST">
-        @csrf
-        <div class="modal-body p-4">
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Name <span class="text-danger">*</span></label>
-            <input type="text" name="name" class="form-control" required placeholder="e.g. AC Repair, RO Service…" />
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Base Charge (Rs.)</label>
-            <div class="input-group">
-              <span class="input-group-text">Rs.</span>
-              <input type="number" name="base_charge" class="form-control" min="0" step="0.01" value="0" />
-            </div>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Icon</label>
-            <input type="hidden" name="icon" id="addIconInput" value="bx-wrench" />
-            <div class="st-icon-picker" id="addIconPicker">
-              @php $icons = ['bx-wrench','bx-droplet','bx-sun','bx-plug','bx-water','bx-home','bx-cog','bx-chip','bx-alarm','bx-bolt','bx-shield','bx-car','bx-refrigerator','bx-tv','bx-wifi','bx-sitemap']; @endphp
-              @foreach($icons as $icon)
-              <div class="st-icon-opt {{ $icon === 'bx-wrench' ? 'selected' : '' }}" data-icon="{{ $icon }}" onclick="selectIcon(this,'addIconInput','addIconPicker')">
-                <i class="bx {{ $icon }}"></i>
-              </div>
-              @endforeach
-            </div>
-          </div>
+{{-- Edit Modal --}}
+<div id="editModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+            <h3 class="font-bold text-gray-900">Edit Service Type</h3>
+            <button onclick="document.getElementById('editModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn fw-bold" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;border-radius:10px;">Add Type</button>
-        </div>
-      </form>
+        <form id="editForm" method="POST" class="p-5 space-y-3">
+            @csrf @method('PUT')
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Name <span class="text-red-500">*</span></label>
+                <input type="text" id="editName" name="name" required
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Description</label>
+                <input type="text" id="editDescription" name="description"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Base Charge (Rs.)</label>
+                <input type="number" step="0.01" min="0" id="editCharge" name="base_charge" required
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-indigo-400">
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="document.getElementById('editModal').classList.add('hidden')"
+                        class="flex-1 py-2 border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition">Cancel</button>
+                <button class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition">Save</button>
+            </div>
+        </form>
     </div>
-  </div>
 </div>
-
-{{-- ── Edit Modal ── --}}
-<div class="modal fade" id="editTypeModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content" style="border-radius:14px;">
-      <div class="modal-header" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;border-radius:14px 14px 0 0;">
-        <h5 class="modal-title fw-bold"><i class='bx bx-edit me-2'></i>Edit Service Type</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <form id="editTypeForm" method="POST">
-        @csrf @method('PUT')
-        <div class="modal-body p-4">
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Name <span class="text-danger">*</span></label>
-            <input type="text" name="name" id="editTypeName" class="form-control" required />
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Base Charge (Rs.)</label>
-            <div class="input-group">
-              <span class="input-group-text">Rs.</span>
-              <input type="number" name="base_charge" id="editTypeCharge" class="form-control" min="0" step="0.01" />
-            </div>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Icon</label>
-            <input type="hidden" name="icon" id="editIconInput" value="bx-wrench" />
-            <div class="st-icon-picker" id="editIconPicker">
-              @foreach($icons as $icon)
-              <div class="st-icon-opt" data-icon="{{ $icon }}" onclick="selectIcon(this,'editIconInput','editIconPicker')">
-                <i class="bx {{ $icon }}"></i>
-              </div>
-              @endforeach
-            </div>
-          </div>
-          <div class="form-check form-switch mt-2">
-            <input class="form-check-input" type="checkbox" name="active" id="editTypeActive" value="1">
-            <label class="form-check-label fw-semibold" for="editTypeActive">Active</label>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn fw-bold" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;border-radius:10px;">Save Changes</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
-@endsection
 
 @push('scripts')
 <script>
-function selectIcon(el, inputId, pickerId) {
-  document.querySelectorAll('#' + pickerId + ' .st-icon-opt').forEach(o => o.classList.remove('selected'));
-  el.classList.add('selected');
-  document.getElementById(inputId).value = el.dataset.icon;
-}
-
-function openEditModal(id, name, icon, charge, active) {
-  const form = document.getElementById('editTypeForm');
-  form.action = `/admin/service-types/${id}`;
-  document.getElementById('editTypeName').value   = name;
-  document.getElementById('editTypeCharge').value = charge;
-  document.getElementById('editTypeActive').checked = active;
-  document.getElementById('editIconInput').value  = icon;
-  // Highlight correct icon
-  document.querySelectorAll('#editIconPicker .st-icon-opt').forEach(o => {
-    o.classList.toggle('selected', o.dataset.icon === icon);
-  });
-  new bootstrap.Modal(document.getElementById('editTypeModal')).show();
+function openEdit(id, name, charge, description) {
+    document.getElementById('editForm').action = `/admin/service-types/${id}`;
+    document.getElementById('editName').value        = name;
+    document.getElementById('editCharge').value      = charge;
+    document.getElementById('editDescription').value = description;
+    document.getElementById('editModal').classList.remove('hidden');
 }
 </script>
 @endpush
+@endsection

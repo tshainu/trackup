@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Customer;
 use App\Models\FieldComplaint;
 use App\Models\FieldComplaintItem;
 use App\Models\FieldPaymentLog;
@@ -79,27 +80,71 @@ class FieldComplaintController extends Controller
         $request->validate([
             'customer_name'   => 'required|string|max:150',
             'phone_no'        => 'required|string|max:20',
-            'address'         => 'required|string',
+            'address'         => 'nullable|string',
             'location_notes'  => 'nullable|string',
+            'gps_raw'         => 'nullable|string',
+            'gps_lat'         => 'nullable|numeric',
+            'gps_lng'         => 'nullable|numeric',
+            'gps_label'       => 'nullable|string|max:100',
             'service_type_id' => 'nullable|exists:service_types,id',
             'description'     => 'nullable|string',
             'priority'        => 'required|in:Low,Normal,High,Urgent',
             'scheduled_date'  => 'nullable|date',
             'advance_amount'  => 'nullable|numeric|min:0',
             'remark'          => 'nullable|string',
+            'customer_db_id'  => 'nullable|exists:customers,id',
         ]);
 
-        $advance = (float)($request->advance_amount ?? 0);
-        $serviceType = $request->service_type_id
-            ? ServiceType::find($request->service_type_id)
-            : null;
+        $advance     = (float)($request->advance_amount ?? 0);
+        $serviceType = $request->service_type_id ? ServiceType::find($request->service_type_id) : null;
+
+        // Resolve GPS — if raw link pasted, try to parse it
+        $lat = $request->gps_lat ? (float)$request->gps_lat : null;
+        $lng = $request->gps_lng ? (float)$request->gps_lng : null;
+        if ((!$lat || !$lng) && $request->filled('gps_raw')) {
+            $parsed = Customer::parseGpsLink($request->gps_raw);
+            if ($parsed) { $lat = $parsed['lat']; $lng = $parsed['lng']; }
+        }
+
+        // Upsert customer in shared DB
+        $customer = null;
+        if ($request->customer_db_id) {
+            $customer = Customer::find($request->customer_db_id);
+        }
+        if (!$customer) {
+            $customer = Customer::where('phone', $request->phone_no)->first();
+        }
+
+        $customerData = [
+            'name'    => $request->customer_name,
+            'phone'   => $request->phone_no,
+            'address' => $request->address,
+        ];
+        if ($lat && $lng) {
+            $customerData['gps_lat']      = $lat;
+            $customerData['gps_lng']      = $lng;
+            $customerData['gps_label']    = $request->gps_label ?: 'Site';
+            $customerData['gps_raw_link'] = $request->gps_raw;
+        }
+
+        if ($customer) {
+            $customer->update($customerData);
+        } else {
+            $customer = Customer::create(array_merge($customerData, [
+                'customer_id' => Customer::nextCustomerId(),
+            ]));
+        }
 
         $complaint = FieldComplaint::create([
             'complaint_no'      => FieldComplaint::nextComplaintNo(),
+            'customer_db_id'    => $customer->id,
             'customer_name'     => $request->customer_name,
             'phone_no'          => $request->phone_no,
             'address'           => $request->address,
             'location_notes'    => $request->location_notes,
+            'gps_lat'           => $lat,
+            'gps_lng'           => $lng,
+            'gps_label'         => $request->gps_label ?: ($lat ? 'Site' : null),
             'service_type_id'   => $request->service_type_id,
             'service_type_name' => $serviceType?->name,
             'description'       => $request->description,

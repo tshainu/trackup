@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class FieldComplaint extends Model
 {
     protected $fillable = [
-        'complaint_no', 'customer_name', 'phone_no', 'address', 'location_notes',
+        'complaint_no', 'customer_db_id', 'customer_name', 'phone_no', 'address', 'location_notes',
+        'gps_lat', 'gps_lng', 'gps_label',
         'service_type_id', 'service_type_name', 'description', 'priority', 'status',
         'assigned_to', 'assigned_at', 'scheduled_date', 'completed_at', 'completion_notes',
         'photos', 'service_charge', 'discount', 'paid_amount', 'advance_amount',
@@ -55,7 +56,23 @@ class FieldComplaint extends Model
         return "FC-{$prefix}" . str_pad($seq, 3, '0', STR_PAD_LEFT);
     }
 
+    public function hasGps(): bool
+    {
+        return !is_null($this->gps_lat) && !is_null($this->gps_lng);
+    }
+
+    public function googleMapsUrl(): ?string
+    {
+        if (!$this->hasGps()) return null;
+        return "https://www.google.com/maps?q={$this->gps_lat},{$this->gps_lng}";
+    }
+
     // ── Relationships ─────────────────────────────────────────────────────────
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'customer_db_id');
+    }
+
     public function serviceType()
     {
         return $this->belongsTo(ServiceType::class);

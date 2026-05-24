@@ -1,436 +1,424 @@
 @extends('layouts.admin')
-@section('title', $fieldComplaint->complaint_no)
-@section('page-title', $fieldComplaint->complaint_no)
-@section('breadcrumb')
-  <li class="breadcrumb-item"><a href="{{ route('admin.field-complaints.index') }}">Field Complaints</a></li>
-  <li class="breadcrumb-item active">{{ $fieldComplaint->complaint_no }}</li>
-@endsection
-
-@push('styles')
-<style>
-.fc-show-header { background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:14px;padding:22px 28px;color:#fff;margin-bottom:1.5rem; }
-.fc-show-header h4 { margin:0;font-weight:700; }
-.fc-show-header .meta { opacity:.88;font-size:.85rem;margin-top:4px; }
-.status-badge { display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:12px;font-size:.78rem;font-weight:700; }
-.s-pending    { background:#fff3cd;color:#856404; }
-.s-assigned   { background:#cfe2ff;color:#084298; }
-.s-inprogress { background:#d1ecf1;color:#0c5460; }
-.s-completed  { background:#d1e7dd;color:#0a5c36; }
-.s-billed     { background:#e2d9f3;color:#5a2d82; }
-.s-cancelled  { background:#f8d7da;color:#842029; }
-.info-card { border:0;border-radius:14px;box-shadow:0 2px 16px rgba(0,0,0,.07);margin-bottom:1.25rem; }
-.info-card .card-header { background:#fafafa;border-bottom:1px solid #f0f0f0;border-radius:14px 14px 0 0;padding:14px 20px;font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;color:#666; }
-.dl-row { display:flex;padding:8px 0;border-bottom:1px solid #f8f8f8;gap:12px; }
-.dl-row:last-child { border-bottom:0; }
-.dl-label { width:140px;flex-shrink:0;font-size:.8rem;color:#888;font-weight:600; }
-.dl-value { font-size:.88rem;color:#333;font-weight:500; }
-.priority-badge { padding:2px 10px;border-radius:10px;font-size:.72rem;font-weight:700; }
-.p-low    { background:#e9ecef;color:#495057; }
-.p-normal { background:#cfe2ff;color:#084298; }
-.p-high   { background:#ffe5d0;color:#c35a00; }
-.p-urgent { background:#f8d7da;color:#842029; }
-.item-table th { font-size:.72rem;text-transform:uppercase;color:#888;font-weight:600;border-top:0; }
-.total-row td { font-weight:700; }
-.payment-log-item { padding:8px 0;border-bottom:1px solid #f5f5f5;display:flex;justify-content:space-between;align-items:center; }
-.payment-log-item:last-child { border-bottom:0; }
-.section-action-btn { font-size:.8rem;font-weight:600;border-radius:8px; }
-</style>
-@endpush
+@section('title', 'Complaint ' . $fieldComplaint->complaint_no)
 
 @section('content')
-
-@if(session('success'))
-  <div class="alert alert-success alert-dismissible mb-3">{{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-@endif
-@if(session('error'))
-  <div class="alert alert-danger alert-dismissible mb-3">{{ session('error') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-@endif
-
 @php
-  $statusClass = match($fieldComplaint->status) {
-    'Pending'     => 's-pending',
-    'Assigned'    => 's-assigned',
-    'In Progress' => 's-inprogress',
-    'Completed'   => 's-completed',
-    'Billed'      => 's-billed',
-    'Cancelled'   => 's-cancelled',
-    default       => ''
-  };
-  $prioClass = match($fieldComplaint->priority) {
-    'Low'    => 'p-low',
-    'Normal' => 'p-normal',
-    'High'   => 'p-high',
-    'Urgent' => 'p-urgent',
-    default  => 'p-normal'
-  };
+$fc = $fieldComplaint;
+$statusColors = [
+    'Pending'    =>'bg-yellow-100 text-yellow-800 border-yellow-200',
+    'Assigned'   =>'bg-blue-100 text-blue-800 border-blue-200',
+    'In Progress'=>'bg-indigo-100 text-indigo-800 border-indigo-200',
+    'Completed'  =>'bg-green-100 text-green-800 border-green-200',
+    'Billed'     =>'bg-purple-100 text-purple-800 border-purple-200',
+    'Cancelled'  =>'bg-red-100 text-red-800 border-red-200',
+];
+$priColors=['Low'=>'text-gray-500','Normal'=>'text-blue-600','High'=>'text-orange-600','Urgent'=>'text-red-600 font-bold'];
 @endphp
 
-<div class="fc-show-header d-flex justify-content-between align-items-start">
-  <div>
-    <h4><i class='bx bx-map-pin me-2'></i>{{ $fieldComplaint->complaint_no }}</h4>
-    <div class="meta">
-      Logged {{ $fieldComplaint->created_at->format('d M Y, h:i A') }} &nbsp;·&nbsp;
-      <span class="status-badge {{ $statusClass }}">{{ $fieldComplaint->status }}</span>
-      &nbsp;·&nbsp;
-      <span class="priority-badge {{ $prioClass }}">{{ $fieldComplaint->priority }}</span>
-    </div>
-  </div>
-  <div class="d-flex gap-2 flex-wrap">
-    @if($fieldComplaint->status === 'Completed' || $fieldComplaint->status === 'Billed')
-      <a href="{{ route('admin.field-complaints.invoice', $fieldComplaint) }}" target="_blank"
-         class="btn btn-light fw-bold" style="border-radius:10px;">
-        <i class='bx bx-receipt me-1'></i>Invoice
-      </a>
-    @endif
-    <form action="{{ route('admin.field-complaints.destroy', $fieldComplaint) }}" method="POST"
-      onsubmit="return confirm('Delete this complaint?')">
-      @csrf @method('DELETE')
-      <button type="submit" class="btn btn-outline-danger fw-bold" style="border-radius:10px;">
-        <i class='bx bx-trash'></i>
-      </button>
-    </form>
-  </div>
-</div>
+<div class="max-w-4xl mx-auto px-4 py-6 space-y-5">
 
-<div class="row g-4">
-  <!-- LEFT column -->
-  <div class="col-lg-7">
-
-    {{-- Customer Info --}}
-    <div class="card info-card">
-      <div class="card-header">Customer Info</div>
-      <div class="card-body px-4 py-3">
-        <div class="dl-row"><span class="dl-label">Name</span><span class="dl-value">{{ $fieldComplaint->customer_name }}</span></div>
-        <div class="dl-row"><span class="dl-label">Phone</span><span class="dl-value">{{ $fieldComplaint->phone_no }}</span></div>
-        <div class="dl-row"><span class="dl-label">Address</span><span class="dl-value">{{ $fieldComplaint->address }}</span></div>
-        @if($fieldComplaint->location_notes)
-        <div class="dl-row"><span class="dl-label">Location Notes</span><span class="dl-value">{{ $fieldComplaint->location_notes }}</span></div>
-        @endif
-        @if($fieldComplaint->description)
-        <div class="dl-row"><span class="dl-label">Problem</span><span class="dl-value">{{ $fieldComplaint->description }}</span></div>
-        @endif
-        @if($fieldComplaint->remark)
-        <div class="dl-row"><span class="dl-label">Remark</span><span class="dl-value">{{ $fieldComplaint->remark }}</span></div>
-        @endif
-        @if($fieldComplaint->completion_notes)
-        <div class="dl-row"><span class="dl-label">Completion Notes</span><span class="dl-value">{{ $fieldComplaint->completion_notes }}</span></div>
-        @endif
-      </div>
-    </div>
-
-    {{-- Service & Assignment --}}
-    <div class="card info-card">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        Service & Assignment
-        <button class="btn btn-sm btn-outline-warning section-action-btn" data-bs-toggle="modal" data-bs-target="#assignModal">
-          <i class='bx bx-user-check me-1'></i>{{ $fieldComplaint->assigned_to ? 'Reassign' : 'Assign' }}
-        </button>
-      </div>
-      <div class="card-body px-4 py-3">
-        <div class="dl-row"><span class="dl-label">Service Type</span><span class="dl-value">{{ $fieldComplaint->service_type_name ?? '—' }}</span></div>
-        <div class="dl-row"><span class="dl-label">Scheduled</span><span class="dl-value">{{ $fieldComplaint->scheduled_date?->format('d M Y') ?? '—' }}</span></div>
-        <div class="dl-row"><span class="dl-label">Assigned To</span><span class="dl-value">
-          {{ $fieldComplaint->assignedEmployee?->employee_name ?? '—' }}
-          @if($fieldComplaint->assigned_at)<small class="text-muted"> · {{ $fieldComplaint->assigned_at->format('d M, h:i A') }}</small>@endif
-        </span></div>
-        @if($fieldComplaint->completed_at)
-        <div class="dl-row"><span class="dl-label">Completed At</span><span class="dl-value">{{ $fieldComplaint->completed_at->format('d M Y, h:i A') }}</span></div>
-        @endif
-      </div>
-    </div>
-
-    {{-- Edit Details --}}
-    <div class="card info-card">
-      <div class="card-header">Edit Details / Line Items</div>
-      <div class="card-body p-4">
-        <form action="{{ route('admin.field-complaints.update', $fieldComplaint) }}" method="POST">
-          @csrf @method('PUT')
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label fw-semibold small">Customer Name</label>
-              <input type="text" name="customer_name" class="form-control form-control-sm" value="{{ $fieldComplaint->customer_name }}" required />
+    {{-- Back + Header --}}
+    <div class="flex items-center gap-3">
+        <a href="{{ route('admin.field-complaints.index') }}" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        </a>
+        <div class="flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+                <h1 class="text-xl font-bold text-gray-900 font-mono">{{ $fc->complaint_no }}</h1>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold border {{ $statusColors[$fc->status] ?? 'bg-gray-100 text-gray-600 border-gray-200' }}">
+                    {{ $fc->status }}
+                </span>
+                <span class="text-sm {{ $priColors[$fc->priority] ?? '' }}">{{ $fc->priority }}</span>
             </div>
-            <div class="col-md-6">
-              <label class="form-label fw-semibold small">Phone</label>
-              <input type="text" name="phone_no" class="form-control form-control-sm" value="{{ $fieldComplaint->phone_no }}" required />
-            </div>
-            <div class="col-12">
-              <label class="form-label fw-semibold small">Address</label>
-              <input type="text" name="address" class="form-control form-control-sm" value="{{ $fieldComplaint->address }}" required />
-            </div>
-            <div class="col-12">
-              <label class="form-label fw-semibold small">Location Notes</label>
-              <input type="text" name="location_notes" class="form-control form-control-sm" value="{{ $fieldComplaint->location_notes }}" />
-            </div>
-            <div class="col-md-5">
-              <label class="form-label fw-semibold small">Service Type</label>
-              <select name="service_type_id" class="form-select form-select-sm" id="editServiceType">
-                <option value="">— None —</option>
-                @foreach($serviceTypes as $st)
-                  <option value="{{ $st->id }}" data-charge="{{ $st->base_charge }}"
-                    {{ $fieldComplaint->service_type_id == $st->id ? 'selected' : '' }}>
-                    {{ $st->name }}
-                  </option>
-                @endforeach
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label fw-semibold small">Priority</label>
-              <select name="priority" class="form-select form-select-sm">
-                @foreach(['Low','Normal','High','Urgent'] as $p)
-                  <option value="{{ $p }}" {{ $fieldComplaint->priority == $p ? 'selected' : '' }}>{{ $p }}</option>
-                @endforeach
-              </select>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label fw-semibold small">Scheduled</label>
-              <input type="date" name="scheduled_date" class="form-control form-control-sm"
-                value="{{ $fieldComplaint->scheduled_date?->format('Y-m-d') }}" />
-            </div>
-            <div class="col-md-4">
-              <label class="form-label fw-semibold small">Service Charge (Rs.)</label>
-              <input type="number" name="service_charge" class="form-control form-control-sm" id="editServiceCharge"
-                value="{{ $fieldComplaint->service_charge }}" min="0" step="0.01" />
-            </div>
-            <div class="col-md-4">
-              <label class="form-label fw-semibold small">Discount (Rs.)</label>
-              <input type="number" name="discount" class="form-control form-control-sm"
-                value="{{ $fieldComplaint->discount }}" min="0" step="0.01" />
-            </div>
-            <div class="col-12">
-              <label class="form-label fw-semibold small">Description</label>
-              <textarea name="description" class="form-control form-control-sm" rows="2">{{ $fieldComplaint->description }}</textarea>
-            </div>
-            <div class="col-12">
-              <label class="form-label fw-semibold small">Remark</label>
-              <input type="text" name="remark" class="form-control form-control-sm" value="{{ $fieldComplaint->remark }}" />
-            </div>
-          </div>
-
-          {{-- Line Items --}}
-          <div class="mt-3">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <span class="fw-semibold small text-uppercase text-muted" style="letter-spacing:.05em;">Parts / Labour Items</span>
-              <button type="button" class="btn btn-sm btn-outline-warning" id="addItemBtn" style="font-size:.75rem;border-radius:8px;">+ Add Item</button>
-            </div>
-            <table class="table table-sm" id="itemsTable">
-              <thead><tr>
-                <th style="font-size:.72rem;color:#888;">Description</th>
-                <th style="font-size:.72rem;color:#888;width:60px;">Qty</th>
-                <th style="font-size:.72rem;color:#888;width:100px;">Unit Price</th>
-                <th style="font-size:.72rem;color:#888;width:80px;">Total</th>
-                <th style="width:32px;"></th>
-              </tr></thead>
-              <tbody id="itemsBody">
-                @foreach($fieldComplaint->items as $i => $item)
-                <tr class="item-row">
-                  <td><input type="text" name="items[{{ $i }}][description]" class="form-control form-control-sm" value="{{ $item->description }}" required /></td>
-                  <td><input type="number" name="items[{{ $i }}][qty]" class="form-control form-control-sm item-qty" value="{{ $item->qty }}" min="1" required /></td>
-                  <td><input type="number" name="items[{{ $i }}][unit_price]" class="form-control form-control-sm item-price" value="{{ $item->unit_price }}" min="0" step="0.01" required /></td>
-                  <td><input type="text" class="form-control form-control-sm item-total bg-light" value="{{ number_format($item->total,2) }}" readonly /></td>
-                  <td><button type="button" class="btn btn-sm btn-outline-danger remove-item" style="border-radius:6px;padding:2px 6px;">✕</button></td>
-                </tr>
-                @endforeach
-              </tbody>
-            </table>
-          </div>
-
-          <div class="d-flex gap-2 mt-3">
-            <button type="submit" class="btn btn-warning px-4 fw-bold" style="border-radius:10px;color:#fff;font-size:.85rem;">
-              <i class='bx bx-save me-1'></i>Save Changes
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- RIGHT column -->
-  <div class="col-lg-5">
-
-    {{-- Status Update --}}
-    <div class="card info-card">
-      <div class="card-header">Update Status</div>
-      <div class="card-body p-4">
-        <form action="{{ route('admin.field-complaints.status', $fieldComplaint) }}" method="POST">
-          @csrf @method('PATCH')
-          <div class="mb-3">
-            <select name="status" class="form-select">
-              @foreach(['Pending','Assigned','In Progress','Completed','Billed','Cancelled'] as $s)
-                <option value="{{ $s }}" {{ $fieldComplaint->status === $s ? 'selected' : '' }}>{{ $s }}</option>
-              @endforeach
-            </select>
-          </div>
-          <div class="mb-3" id="completionNotesWrap" style="{{ $fieldComplaint->status !== 'Completed' ? 'display:none' : '' }}">
-            <label class="form-label fw-semibold small">Completion Notes</label>
-            <textarea name="completion_notes" class="form-control form-control-sm" rows="2" placeholder="What was done…">{{ $fieldComplaint->completion_notes }}</textarea>
-          </div>
-          <button type="submit" class="btn btn-warning fw-bold w-100" style="border-radius:10px;color:#fff;">
-            <i class='bx bx-refresh me-1'></i>Update Status
-          </button>
-        </form>
-      </div>
-    </div>
-
-    {{-- Financials --}}
-    <div class="card info-card">
-      <div class="card-header">Financials</div>
-      <div class="card-body px-4 py-3">
-        <div class="dl-row"><span class="dl-label">Service Charge</span><span class="dl-value">Rs. {{ number_format($fieldComplaint->service_charge,2) }}</span></div>
-        <div class="dl-row"><span class="dl-label">Items Total</span><span class="dl-value">Rs. {{ number_format($fieldComplaint->items->sum('total'),2) }}</span></div>
-        @if($fieldComplaint->discount > 0)
-        <div class="dl-row"><span class="dl-label">Discount</span><span class="dl-value text-danger">− Rs. {{ number_format($fieldComplaint->discount,2) }}</span></div>
-        @endif
-        <div class="dl-row"><span class="dl-label fw-bold">Grand Total</span><span class="dl-value fw-bold fs-5">Rs. {{ number_format($fieldComplaint->grand_total,2) }}</span></div>
-        <div class="dl-row"><span class="dl-label">Paid</span><span class="dl-value text-success fw-semibold">Rs. {{ number_format($fieldComplaint->paid_amount,2) }}</span></div>
-        <div class="dl-row"><span class="dl-label">Balance</span>
-          <span class="dl-value fw-bold {{ $fieldComplaint->balance > 0 ? 'text-danger' : 'text-success' }}">
-            {{ $fieldComplaint->balance > 0 ? 'Rs. '.number_format($fieldComplaint->balance,2) : 'Fully Paid ✓' }}
-          </span>
+            <p class="text-sm text-gray-500">Logged {{ $fc->created_at->diffForHumans() }}</p>
         </div>
-      </div>
-    </div>
-
-    {{-- Record Payment --}}
-    @if($fieldComplaint->balance > 0)
-    <div class="card info-card">
-      <div class="card-header">Record Payment</div>
-      <div class="card-body p-4">
-        <form action="{{ route('admin.field-complaints.payment', $fieldComplaint) }}" method="POST">
-          @csrf
-          <div class="mb-3">
-            <label class="form-label fw-semibold small">Amount Received (Rs.)</label>
-            <div class="input-group input-group-sm">
-              <span class="input-group-text">Rs.</span>
-              <input type="number" name="amount_paid" class="form-control"
-                value="{{ number_format($fieldComplaint->balance, 2, '.', '') }}"
-                min="0.01" step="0.01" required />
-            </div>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-semibold small">Note</label>
-            <input type="text" name="note" class="form-control form-control-sm" placeholder="e.g. Cash, Card, Instalment…" />
-          </div>
-          <button type="submit" class="btn btn-success fw-bold w-100" style="border-radius:10px;">
-            <i class='bx bx-check-circle me-1'></i>Record Payment
-          </button>
-        </form>
-      </div>
-    </div>
-    @endif
-
-    {{-- Payment History --}}
-    @if($fieldComplaint->paymentLogs->isNotEmpty())
-    <div class="card info-card">
-      <div class="card-header">Payment History</div>
-      <div class="card-body px-4 py-2">
-        @foreach($fieldComplaint->paymentLogs as $log)
-        <div class="payment-log-item">
-          <div>
-            <div class="fw-semibold small">Rs. {{ number_format($log->amount,2) }}</div>
-            <small class="text-muted">{{ $log->note }} · {{ \Carbon\Carbon::parse($log->paid_at)->format('d M Y') }}</small>
-          </div>
-          <span class="badge bg-success-subtle text-success">Paid</span>
+        <div class="flex gap-2">
+            <a href="{{ route('admin.field-complaints.invoice', $fc) }}" target="_blank"
+               class="inline-flex items-center gap-1.5 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Invoice
+            </a>
         </div>
-        @endforeach
-      </div>
     </div>
+
+    @if(session('success'))
+    <div class="bg-green-50 border border-green-200 text-green-800 rounded-lg px-4 py-3 text-sm">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+    <div class="bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 text-sm">{{ session('error') }}</div>
     @endif
 
-  </div>
-</div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
-{{-- Assign Modal --}}
-<div class="modal fade" id="assignModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content" style="border-radius:14px;">
-      <div class="modal-header" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border-radius:14px 14px 0 0;">
-        <h5 class="modal-title fw-bold"><i class='bx bx-user-check me-2'></i>Assign Field Staff</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <form action="{{ route('admin.field-complaints.assign', $fieldComplaint) }}" method="POST">
-        @csrf @method('PATCH')
-        <div class="modal-body p-4">
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Select Field Staff</label>
-            <select name="assigned_to" class="form-select" required>
-              <option value="">— Choose staff member —</option>
-              @foreach($fieldStaff as $emp)
-                <option value="{{ $emp->id }}" {{ $fieldComplaint->assigned_to == $emp->id ? 'selected' : '' }}>
-                  {{ $emp->employee_name }} ({{ ucfirst($emp->role) }})
-                </option>
-              @endforeach
-            </select>
-            @if($fieldStaff->isEmpty())
-              <small class="text-warning mt-1 d-block">No outbound field staff found. Add employees with type "Outbound Field Staff".</small>
+        {{-- LEFT: main details --}}
+        <div class="lg:col-span-2 space-y-5">
+
+            {{-- Customer card --}}
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                <div class="px-5 py-3 bg-indigo-50 border-b border-indigo-100 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        <span class="font-semibold text-indigo-800 text-sm">Customer</span>
+                        @if($fc->customer)
+                        <span class="text-xs text-indigo-500 font-mono">{{ $fc->customer->customer_id }}</span>
+                        @endif
+                    </div>
+                </div>
+                <div class="p-5">
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <div class="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Name</div>
+                            <div class="font-semibold text-gray-800">{{ $fc->customer_name }}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Phone</div>
+                            <a href="tel:{{ $fc->phone_no }}" class="font-semibold text-indigo-600 hover:underline">{{ $fc->phone_no }}</a>
+                        </div>
+                        <div class="col-span-2">
+                            <div class="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Address</div>
+                            <div class="text-gray-700">{{ $fc->address ?: '—' }}</div>
+                        </div>
+                        @if($fc->location_notes)
+                        <div class="col-span-2">
+                            <div class="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Location Notes</div>
+                            <div class="text-gray-700 italic">{{ $fc->location_notes }}</div>
+                        </div>
+                        @endif
+                    </div>
+
+                    {{-- GPS --}}
+                    @if($fc->gps_lat && $fc->gps_lng)
+                    <div class="mt-4 bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
+                            <div>
+                                <div class="text-sm font-semibold text-emerald-800">
+                                    {{ $fc->gps_label ?: 'GPS Location' }}
+                                </div>
+                                <div class="text-xs text-emerald-600 font-mono">{{ $fc->gps_lat }}, {{ $fc->gps_lng }}</div>
+                            </div>
+                        </div>
+                        <a href="{{ $fc->googleMapsUrl() }}" target="_blank"
+                           class="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-lg transition">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                            Open Maps
+                        </a>
+                    </div>
+                    @endif
+
+                    {{-- History from shared DB --}}
+                    @if($fc->customer && $fc->customer->fieldComplaints()->count() > 1)
+                    <div class="mt-3 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-1.5">
+                        ⚠ This customer has {{ $fc->customer->fieldComplaints()->count() - 1 }} other visit(s) on record
+                    </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Service details --}}
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                <div class="px-5 py-3 bg-blue-50 border-b border-blue-100 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <span class="font-semibold text-blue-800 text-sm">Service Details</span>
+                </div>
+                <div class="p-5 space-y-3 text-sm">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <div class="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Service Type</div>
+                            <div class="font-medium text-gray-800">{{ $fc->service_type_name ?: '—' }}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Scheduled</div>
+                            <div class="font-medium text-gray-800">{{ $fc->scheduled_date?->format('d M Y') ?? '—' }}</div>
+                        </div>
+                    </div>
+                    @if($fc->description)
+                    <div>
+                        <div class="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Issue Description</div>
+                        <div class="text-gray-700 bg-gray-50 rounded p-2 border border-gray-100">{{ $fc->description }}</div>
+                    </div>
+                    @endif
+                    @if($fc->completion_notes)
+                    <div>
+                        <div class="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Completion Notes</div>
+                        <div class="text-gray-700 bg-green-50 rounded p-2 border border-green-100">{{ $fc->completion_notes }}</div>
+                    </div>
+                    @endif
+                    @if($fc->assigned_to)
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <div class="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Assigned To</div>
+                            <div class="font-medium text-gray-800">{{ $fc->assignedEmployee?->employee_name }}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Assigned At</div>
+                            <div class="text-gray-600">{{ $fc->assigned_at?->format('d M Y, g:i A') ?? '—' }}</div>
+                        </div>
+                    </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Bill & items --}}
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                <div class="px-5 py-3 bg-amber-50 border-b border-amber-100 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M12 7h.01M9 3h6a2 2 0 012 2v14a2 2 0 01-2 2H9a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>
+                        <span class="font-semibold text-amber-800 text-sm">Billing</span>
+                    </div>
+                    @if(!in_array($fc->status, ['Billed','Cancelled']))
+                    <button onclick="document.getElementById('editBillingModal').classList.remove('hidden')"
+                            class="text-xs px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded-lg transition font-medium">
+                        Edit
+                    </button>
+                    @endif
+                </div>
+                <div class="p-5">
+                    {{-- Line items --}}
+                    @if($fc->items->isNotEmpty())
+                    <table class="w-full text-sm mb-3">
+                        <thead>
+                            <tr class="text-xs text-gray-500 border-b border-gray-100">
+                                <th class="text-left pb-2">Description</th>
+                                <th class="text-right pb-2">Qty</th>
+                                <th class="text-right pb-2">Unit</th>
+                                <th class="text-right pb-2">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50">
+                            @foreach($fc->items as $item)
+                            <tr>
+                                <td class="py-1.5 text-gray-700">{{ $item->description }}</td>
+                                <td class="text-right text-gray-600">{{ $item->qty }}</td>
+                                <td class="text-right text-gray-600">{{ number_format($item->unit_price,2) }}</td>
+                                <td class="text-right font-medium">{{ number_format($item->total,2) }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                    @endif
+
+                    <div class="space-y-1.5 text-sm border-t border-gray-100 pt-3">
+                        <div class="flex justify-between text-gray-600">
+                            <span>Service Charge</span>
+                            <span class="font-mono">Rs. {{ number_format($fc->service_charge,2) }}</span>
+                        </div>
+                        @if($fc->items->isNotEmpty())
+                        <div class="flex justify-between text-gray-600">
+                            <span>Parts / Labour</span>
+                            <span class="font-mono">Rs. {{ number_format($fc->items->sum('total'),2) }}</span>
+                        </div>
+                        @endif
+                        @if($fc->discount > 0)
+                        <div class="flex justify-between text-gray-500">
+                            <span>Discount</span>
+                            <span class="font-mono text-red-500">− Rs. {{ number_format($fc->discount,2) }}</span>
+                        </div>
+                        @endif
+                        <div class="flex justify-between font-bold text-gray-900 border-t border-gray-200 pt-2 mt-2">
+                            <span>Grand Total</span>
+                            <span class="font-mono">Rs. {{ number_format($fc->grand_total,2) }}</span>
+                        </div>
+                        <div class="flex justify-between text-green-700">
+                            <span>Paid</span>
+                            <span class="font-mono">Rs. {{ number_format($fc->paid_amount,2) }}</span>
+                        </div>
+                        <div class="flex justify-between {{ $fc->balance > 0 ? 'text-red-600 font-semibold' : 'text-green-600' }}">
+                            <span>Balance</span>
+                            <span class="font-mono">Rs. {{ number_format($fc->balance,2) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Payment logs --}}
+            @if($fc->paymentLogs->isNotEmpty())
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                <div class="px-5 py-3 bg-gray-50 border-b border-gray-200">
+                    <span class="font-semibold text-gray-700 text-sm">Payment History</span>
+                </div>
+                <table class="w-full text-sm">
+                    <tbody class="divide-y divide-gray-100">
+                        @foreach($fc->paymentLogs as $pl)
+                        <tr>
+                            <td class="px-4 py-2.5 text-gray-500">{{ $pl->paid_at->format('d M Y, g:i A') }}</td>
+                            <td class="px-4 py-2.5 text-gray-600">{{ $pl->note ?: 'Payment' }}</td>
+                            <td class="px-4 py-2.5 text-right font-mono font-semibold text-green-700">Rs. {{ number_format($pl->amount,2) }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
             @endif
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Scheduled Date</label>
-            <input type="date" name="scheduled_date" class="form-control"
-              value="{{ $fieldComplaint->scheduled_date?->format('Y-m-d') }}" />
-          </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-warning fw-bold" style="color:#fff;">
-            <i class='bx bx-check me-1'></i>Assign
-          </button>
+
+        {{-- RIGHT: actions sidebar --}}
+        <div class="space-y-4">
+
+            {{-- Assign --}}
+            @if(!in_array($fc->status, ['Completed','Billed','Cancelled']))
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                <div class="px-4 py-3 bg-blue-50 border-b border-blue-100">
+                    <span class="font-semibold text-blue-800 text-sm">Assign Field Staff</span>
+                </div>
+                <form method="POST" action="{{ route('admin.field-complaints.assign', $fc) }}" class="p-4 space-y-3">
+                    @csrf @method('PATCH')
+                    <select name="assigned_to" required
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400">
+                        <option value="">— Select staff —</option>
+                        @foreach($fieldStaff as $emp)
+                        <option value="{{ $emp->id }}" {{ $fc->assigned_to == $emp->id ? 'selected' : '' }}>
+                            {{ $emp->employee_name }}
+                        </option>
+                        @endforeach
+                    </select>
+                    <input type="date" name="scheduled_date" value="{{ $fc->scheduled_date?->format('Y-m-d') }}"
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400">
+                    <button class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition">
+                        Assign
+                    </button>
+                </form>
+            </div>
+            @endif
+
+            {{-- Status --}}
+            @if($fc->status !== 'Cancelled')
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                    <span class="font-semibold text-gray-700 text-sm">Update Status</span>
+                </div>
+                <form method="POST" action="{{ route('admin.field-complaints.status', $fc) }}" class="p-4 space-y-3">
+                    @csrf @method('PATCH')
+                    <select name="status"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-gray-400">
+                        @foreach(['Pending','Assigned','In Progress','Completed','Billed','Cancelled'] as $s)
+                        <option value="{{ $s }}" {{ $fc->status === $s ? 'selected' : '' }}>{{ $s }}</option>
+                        @endforeach
+                    </select>
+                    <textarea name="completion_notes" rows="2" placeholder="Completion / cancellation notes…"
+                              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-gray-400 resize-none">{{ $fc->completion_notes }}</textarea>
+                    <button class="w-full py-2 bg-gray-700 hover:bg-gray-800 text-white text-sm font-semibold rounded-lg transition">
+                        Update
+                    </button>
+                </form>
+            </div>
+            @endif
+
+            {{-- Record payment --}}
+            @if($fc->balance > 0)
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                <div class="px-4 py-3 bg-green-50 border-b border-green-100">
+                    <span class="font-semibold text-green-800 text-sm">Record Payment</span>
+                    <div class="text-xs text-green-600">Balance: Rs. {{ number_format($fc->balance,2) }}</div>
+                </div>
+                <form method="POST" action="{{ route('admin.field-complaints.payment', $fc) }}" class="p-4 space-y-3">
+                    @csrf
+                    <input type="number" step="0.01" name="amount_paid" placeholder="Amount (Rs.)" required
+                           max="{{ $fc->balance }}"
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-green-400">
+                    <input type="text" name="note" placeholder="Note (optional)"
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-400">
+                    <button class="w-full py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition">
+                        Record
+                    </button>
+                </form>
+            </div>
+            @endif
+
+            {{-- Delete --}}
+            @if(in_array($fc->status, ['Pending','Cancelled']))
+            <form method="POST" action="{{ route('admin.field-complaints.destroy', $fc) }}"
+                  onsubmit="return confirm('Delete complaint {{ $fc->complaint_no }}? This cannot be undone.')">
+                @csrf @method('DELETE')
+                <button class="w-full py-2 border border-red-300 text-red-600 text-sm font-medium rounded-lg hover:bg-red-50 transition">
+                    Delete Complaint
+                </button>
+            </form>
+            @endif
         </div>
-      </form>
     </div>
-  </div>
 </div>
 
-@endsection
+{{-- Edit Billing Modal --}}
+<div id="editBillingModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+            <h3 class="font-bold text-gray-900">Edit Billing</h3>
+            <button onclick="document.getElementById('editBillingModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <form method="POST" action="{{ route('admin.field-complaints.update', $fc) }}" class="p-5 space-y-4">
+            @csrf @method('PUT')
+            {{-- Keep required fields --}}
+            <input type="hidden" name="customer_name" value="{{ $fc->customer_name }}">
+            <input type="hidden" name="phone_no" value="{{ $fc->phone_no }}">
+            <input type="hidden" name="address" value="{{ $fc->address }}">
+            <input type="hidden" name="priority" value="{{ $fc->priority }}">
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Service Charge (Rs.)</label>
+                    <input type="number" step="0.01" name="service_charge" value="{{ $fc->service_charge }}"
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Discount (Rs.)</label>
+                    <input type="number" step="0.01" name="discount" value="{{ $fc->discount }}"
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono">
+                </div>
+            </div>
+
+            {{-- Line items --}}
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <label class="text-xs font-semibold text-gray-600">Parts / Labour Items</label>
+                    <button type="button" id="addItemBtn" class="text-xs px-2 py-1 bg-indigo-50 text-indigo-700 rounded hover:bg-indigo-100">+ Add Item</button>
+                </div>
+                <div id="itemsContainer" class="space-y-2">
+                    @foreach($fc->items as $i => $item)
+                    <div class="flex gap-2 items-start item-row">
+                        <input type="text" name="items[{{ $i }}][description]" value="{{ $item->description }}" placeholder="Description"
+                               class="flex-1 border border-gray-200 rounded px-2 py-1.5 text-xs" required>
+                        <input type="number" name="items[{{ $i }}][qty]" value="{{ $item->qty }}" placeholder="Qty" min="1"
+                               class="w-14 border border-gray-200 rounded px-2 py-1.5 text-xs" required>
+                        <input type="number" step="0.01" name="items[{{ $i }}][unit_price]" value="{{ $item->unit_price }}" placeholder="Price"
+                               class="w-20 border border-gray-200 rounded px-2 py-1.5 text-xs font-mono" required>
+                        <button type="button" class="removeItem text-red-400 hover:text-red-600 mt-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <button class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition">Save Changes</button>
+        </form>
+    </div>
+</div>
 
 @push('scripts')
 <script>
-// Status → show/hide completion notes
-document.querySelector('[name="status"]')?.addEventListener('change', function () {
-  document.getElementById('completionNotesWrap').style.display = this.value === 'Completed' ? '' : 'none';
+let itemIdx = {{ $fc->items->count() }};
+document.getElementById('addItemBtn').addEventListener('click', function () {
+    const container = document.getElementById('itemsContainer');
+    const row = document.createElement('div');
+    row.className = 'flex gap-2 items-start item-row';
+    row.innerHTML = `
+        <input type="text" name="items[${itemIdx}][description]" placeholder="Description" class="flex-1 border border-gray-200 rounded px-2 py-1.5 text-xs" required>
+        <input type="number" name="items[${itemIdx}][qty]" placeholder="Qty" min="1" value="1" class="w-14 border border-gray-200 rounded px-2 py-1.5 text-xs" required>
+        <input type="number" step="0.01" name="items[${itemIdx}][unit_price]" placeholder="Price" class="w-20 border border-gray-200 rounded px-2 py-1.5 text-xs font-mono" required>
+        <button type="button" class="removeItem text-red-400 hover:text-red-600 mt-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>`;
+    container.appendChild(row);
+    itemIdx++;
 });
-
-// Line items
-let rowIdx = {{ $fieldComplaint->items->count() }};
-
-document.getElementById('addItemBtn')?.addEventListener('click', function () {
-  const tbody = document.getElementById('itemsBody');
-  const row = document.createElement('tr');
-  row.className = 'item-row';
-  row.innerHTML = `
-    <td><input type="text" name="items[${rowIdx}][description]" class="form-control form-control-sm" required /></td>
-    <td><input type="number" name="items[${rowIdx}][qty]" class="form-control form-control-sm item-qty" value="1" min="1" required /></td>
-    <td><input type="number" name="items[${rowIdx}][unit_price]" class="form-control form-control-sm item-price" value="0" min="0" step="0.01" required /></td>
-    <td><input type="text" class="form-control form-control-sm item-total bg-light" value="0.00" readonly /></td>
-    <td><button type="button" class="btn btn-sm btn-outline-danger remove-item" style="border-radius:6px;padding:2px 6px;">✕</button></td>
-  `;
-  tbody.appendChild(row);
-  rowIdx++;
-  attachRowListeners(row);
-});
-
-function attachRowListeners(row) {
-  row.querySelectorAll('.item-qty, .item-price').forEach(inp => {
-    inp.addEventListener('input', () => {
-      const qty   = parseFloat(row.querySelector('.item-qty').value)   || 0;
-      const price = parseFloat(row.querySelector('.item-price').value) || 0;
-      row.querySelector('.item-total').value = (qty * price).toFixed(2);
-    });
-  });
-  row.querySelector('.remove-item')?.addEventListener('click', () => row.remove());
-}
-
-// Attach to existing rows
-document.querySelectorAll('.item-row').forEach(attachRowListeners);
-
-// Service type → update service charge
-document.getElementById('editServiceType')?.addEventListener('change', function () {
-  const charge = this.options[this.selectedIndex]?.dataset.charge;
-  if (charge !== undefined) {
-    document.getElementById('editServiceCharge').value = parseFloat(charge).toFixed(2);
-  }
+document.getElementById('itemsContainer').addEventListener('click', function (e) {
+    if (e.target.closest('.removeItem')) {
+        e.target.closest('.item-row').remove();
+    }
 });
 </script>
 @endpush
+@endsection
