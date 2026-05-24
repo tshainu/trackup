@@ -272,7 +272,7 @@
         <li class="menu-item {{ Request::routeIs('admin.devices.*') ? 'open active' : '' }}">
           <a href="javascript:void(0);" class="menu-link menu-toggle">
             <i class="menu-icon tf-icons bx bx-devices"></i>
-            <div>Devices & Brands</div>
+            <div>Device Management</div>
           </a>
           <ul class="menu-sub">
             <li class="menu-item {{ Request::routeIs('admin.devices.index') ? 'active' : '' }}">
