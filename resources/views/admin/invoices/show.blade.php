@@ -251,17 +251,17 @@
             <i class='bx bx-plus-circle me-1'></i> New Payment Entry
           </div>
           <div class="row g-2 align-items-end">
-            <div class="col-md-5">
+            <div class="col-md-6">
               <label style="font-size:.73rem;color:#888;font-weight:600">Note <span style="font-weight:400">(optional)</span></label>
               <input type="text" id="newPayNote" placeholder="e.g. Advance, Final payment…"
                      class="form-control form-control-sm" style="border-radius:7px">
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
               <label style="font-size:.73rem;color:#888;font-weight:600">Amount (Rs.) <span style="color:#ff3e1d">*</span></label>
               <input type="number" id="newPayAmount" step="0.01" min="0.01"
                      max="{{ $balance }}" value="{{ number_format($balance, 2, '.', '') }}"
                      placeholder="0.00" class="form-control form-control-sm" style="border-radius:7px">
-              <div style="font-size:.71rem;color:#aaa;margin-top:3px">Balance due: Rs. {{ number_format($balance, 2) }}</div>
+              <div style="font-size:.71rem;color:#aaa;margin-top:3px">Balance: Rs. {{ number_format($balance, 2) }}</div>
             </div>
             <div class="col-md-3">
               <button type="button" id="saveNewPayBtn" onclick="saveNewPayment()"
@@ -286,17 +286,17 @@
             <i class='bx bx-plus-circle me-1'></i> Record First Payment
           </div>
           <div class="row g-2 align-items-end">
-            <div class="col-md-5">
+            <div class="col-md-6">
               <label style="font-size:.73rem;color:#888;font-weight:600">Note <span style="font-weight:400">(optional)</span></label>
               <input type="text" id="newPayNote" placeholder="e.g. Advance, Full payment…"
                      class="form-control form-control-sm" style="border-radius:7px">
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
               <label style="font-size:.73rem;color:#888;font-weight:600">Amount (Rs.) <span style="color:#ff3e1d">*</span></label>
               <input type="number" id="newPayAmount" step="0.01" min="0.01"
                      max="{{ $grand }}" value="{{ number_format($grand, 2, '.', '') }}"
                      placeholder="0.00" class="form-control form-control-sm" style="border-radius:7px">
-              <div style="font-size:.71rem;color:#aaa;margin-top:3px">Grand total: Rs. {{ number_format($grand, 2) }}</div>
+              <div style="font-size:.71rem;color:#aaa;margin-top:3px">Total: Rs. {{ number_format($grand, 2) }}</div>
             </div>
             <div class="col-md-3">
               <button type="button" id="saveNewPayBtn" onclick="saveNewPayment()"
