@@ -10,7 +10,7 @@
     <h4 class="fw-bold mb-1">Notifications</h4>
     <p class="text-muted mb-0" style="font-size:.85rem;">All active alerts requiring attention</p>
   </div>
-  @php $total = $dueToday->count() + $needAssistant->count() + $unpaidCompleted->count(); @endphp
+  @php $total = $dueToday->count() + $needAssistant->count() + $unpaidCompleted->count() + ($fieldCompleted?->count() ?? 0); @endphp
   @if($total > 0)
     <span class="badge bg-danger" style="font-size:.85rem;">{{ $total }} Active</span>
   @else
@@ -177,6 +177,44 @@
             </form>
             <a href="{{ route('admin.jobcards.edit', $job->id) }}" class="btn btn-sm btn-outline-primary">
               <i class="bx bx-edit-alt me-1"></i> Edit
+            </a>
+          </td>
+        </tr>
+        @endforeach
+      </tbody>
+    </table>
+  </div>
+</div>
+@endif
+
+{{-- ── Field Complaints Unpaid ── --}}
+@if(isset($fieldCompleted) && $fieldCompleted->count() > 0)
+<div class="card mb-4">
+  <div class="card-header d-flex align-items-center gap-2 py-3">
+    <div style="width:32px;height:32px;background:#fff3cd;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+      <i class="bx bx-map-pin" style="color:#d97706;font-size:1.1rem;"></i>
+    </div>
+    <div>
+      <h6 class="mb-0 fw-bold">Field Services — Payment Pending</h6>
+      <small class="text-muted">Completed field complaints awaiting payment</small>
+    </div>
+    <span class="badge ms-auto" style="background:#f59e0b;color:#fff;">{{ $fieldCompleted->count() }}</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr><th>Complaint No</th><th>Customer</th><th>Service</th><th>Paid So Far</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        @foreach($fieldCompleted as $fc)
+        <tr>
+          <td><span class="fw-semibold">{{ $fc->complaint_no }}</span></td>
+          <td>{{ $fc->customer_name }}</td>
+          <td>{{ $fc->service_type_name ?? '—' }}</td>
+          <td>Rs. {{ number_format($fc->paid_amount, 2) }}</td>
+          <td>
+            <a href="{{ route('admin.field-complaints.show', $fc->id) }}" class="btn btn-sm btn-outline-warning" style="color:#d97706;">
+              <i class='bx bx-show me-1'></i>View
             </a>
           </td>
         </tr>

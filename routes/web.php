@@ -13,6 +13,8 @@ use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Employee\EmployeeDashboardController;
 use App\Http\Controllers\AjaxController;
+use App\Http\Controllers\Admin\FieldComplaintController;
+use App\Http\Controllers\Admin\ServiceTypeController;
 
 // Root — render admin dashboard directly (auth is auto-bypassed for preview)
 Route::get('/', [DashboardController::class, 'index'])->middleware(\App\Http\Middleware\AdminAuth::class);
@@ -78,6 +80,25 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/invoices/{jobCard}',              [InvoiceController::class, 'show'])->name('invoices.show');
         Route::put('/invoices/{jobCard}',              [InvoiceController::class, 'update'])->name('invoices.update');
         Route::patch('/invoices/{jobCard}/mark-paid',  [InvoiceController::class, 'markPaid'])->name('invoices.markPaid');
+
+        // Field Complaints (Field Services)
+        Route::get('/field-complaints',                           [FieldComplaintController::class, 'index'])->name('field-complaints.index');
+        Route::get('/field-complaints/create',                    [FieldComplaintController::class, 'create'])->name('field-complaints.create');
+        Route::post('/field-complaints',                          [FieldComplaintController::class, 'store'])->name('field-complaints.store');
+        Route::get('/field-complaints/{fieldComplaint}/invoice',  [FieldComplaintController::class, 'invoice'])->name('field-complaints.invoice');
+        Route::get('/field-complaints/{fieldComplaint}',          [FieldComplaintController::class, 'show'])->name('field-complaints.show');
+        Route::put('/field-complaints/{fieldComplaint}',          [FieldComplaintController::class, 'update'])->name('field-complaints.update');
+        Route::patch('/field-complaints/{fieldComplaint}/assign', [FieldComplaintController::class, 'assign'])->name('field-complaints.assign');
+        Route::patch('/field-complaints/{fieldComplaint}/status', [FieldComplaintController::class, 'updateStatus'])->name('field-complaints.status');
+        Route::post('/field-complaints/{fieldComplaint}/payment', [FieldComplaintController::class, 'recordPayment'])->name('field-complaints.payment');
+        Route::delete('/field-complaints/{fieldComplaint}',       [FieldComplaintController::class, 'destroy'])->name('field-complaints.destroy');
+
+        // Service Types
+        Route::get('/service-types',                             [ServiceTypeController::class, 'index'])->name('service-types.index');
+        Route::post('/service-types',                            [ServiceTypeController::class, 'store'])->name('service-types.store');
+        Route::put('/service-types/{serviceType}',               [ServiceTypeController::class, 'update'])->name('service-types.update');
+        Route::delete('/service-types/{serviceType}',            [ServiceTypeController::class, 'destroy'])->name('service-types.destroy');
+        Route::patch('/service-types/{serviceType}/toggle',      [ServiceTypeController::class, 'toggle'])->name('service-types.toggle');
 
         // Notifications
         Route::get('/notifications',                             [NotificationController::class, 'index'])->name('notifications.index');

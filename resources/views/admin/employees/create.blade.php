@@ -119,6 +119,30 @@
         </div>
       </div>
 
+      {{-- Staff Type --}}
+      <div class="section-divider"><i class='bx bx-map'></i> Staff Type</div>
+      <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label fw-semibold">Work Type <span class="text-danger">*</span></label>
+          <div class="d-flex gap-3 mt-1">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="type" id="typeInbound" value="inbound"
+                {{ old('type','inbound') === 'inbound' ? 'checked' : '' }} />
+              <label class="form-check-label" for="typeInbound">
+                <span class="fw-semibold">Inbound</span> <small class="text-muted">— Office / Workshop</small>
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="type" id="typeOutbound" value="outbound"
+                {{ old('type') === 'outbound' ? 'checked' : '' }} />
+              <label class="form-check-label" for="typeOutbound">
+                <span class="fw-semibold">Outbound</span> <small class="text-muted">— Field Staff</small>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {{-- Account --}}
       <div class="section-divider"><i class='bx bx-lock-alt'></i> Login Credentials</div>
       <div class="row g-3">

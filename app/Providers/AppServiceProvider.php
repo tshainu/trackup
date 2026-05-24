@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use App\Models\JobCard;
+use App\Models\FieldComplaint;
 use App\Models\StoreInfo;
 use Carbon\Carbon;
 
@@ -32,13 +33,19 @@ class AppServiceProvider extends ServiceProvider
                 ->where('payment_received', false)
                 ->get(['id', 'order_no', 'device_name', 'customer_name', 'rupees']);
 
-            $totalCount = $dueToday->count() + $needAssistant->count() + $unpaidCompleted->count();
+            // 4. Field complaints completed but unpaid
+            $fieldCompleted = FieldComplaint::where('status', 'Completed')
+                ->where('payment_received', false)
+                ->get(['id', 'complaint_no', 'customer_name', 'service_type_name', 'paid_amount']);
+
+            $totalCount = $dueToday->count() + $needAssistant->count() + $unpaidCompleted->count() + $fieldCompleted->count();
 
             $view->with('notifData', [
                 'total'          => $totalCount,
                 'dueToday'       => $dueToday,
                 'needAssistant'  => $needAssistant,
                 'unpaidCompleted'=> $unpaidCompleted,
+                'fieldCompleted' => $fieldCompleted,
             ]);
 
             // Share store info (logo + name) globally to layout

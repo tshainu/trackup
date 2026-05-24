@@ -256,6 +256,35 @@
 
         <div class="menu-divider"></div>
 
+        {{-- ── FIELD SERVICES ── --}}
+        <li class="menu-section-label">Field Services</li>
+        <li class="menu-item {{ Request::routeIs('admin.field-complaints.*') ? 'open active' : '' }}">
+          <a href="javascript:void(0);" class="menu-link menu-toggle">
+            <i class="menu-icon tf-icons bx bx-map-pin"></i>
+            <div>Field Complaints</div>
+          </a>
+          <ul class="menu-sub">
+            <li class="menu-item {{ Request::routeIs('admin.field-complaints.index') ? 'active' : '' }}">
+              <a href="{{ route('admin.field-complaints.index') }}" class="menu-link">
+                <div>All Complaints</div>
+              </a>
+            </li>
+            <li class="menu-item {{ Request::routeIs('admin.field-complaints.create') ? 'active' : '' }}">
+              <a href="{{ route('admin.field-complaints.create') }}" class="menu-link">
+                <div>New Complaint</div>
+              </a>
+            </li>
+          </ul>
+        </li>
+        <li class="menu-item {{ Request::routeIs('admin.service-types.*') ? 'active' : '' }}">
+          <a href="{{ route('admin.service-types.index') }}" class="menu-link">
+            <i class="menu-icon tf-icons bx bx-wrench"></i>
+            <div>Service Types</div>
+          </a>
+        </li>
+
+        <div class="menu-divider"></div>
+
         {{-- ── PEOPLE ── --}}
         <li class="menu-section-label">People</li>
         <li class="menu-item {{ Request::routeIs('admin.employees.*') ? 'active' : '' }}">
@@ -449,6 +478,22 @@
                           </button>
                         </div>
                       </div>
+                    @endforeach
+                  @endif
+
+                  {{-- Field Complaints Unpaid --}}
+                  @if(isset($notifData['fieldCompleted']) && $notifData['fieldCompleted']->count() > 0)
+                    <div class="notif-section-head" style="color:#d97706;">Field Services — Payment</div>
+                    @foreach($notifData['fieldCompleted'] as $fc)
+                      <a href="{{ route('admin.field-complaints.show', $fc->id) }}" class="notif-item">
+                        <div class="notif-item-icon" style="background:#fff3cd;color:#d97706;">
+                          <i class="bx bx-map-pin"></i>
+                        </div>
+                        <div class="notif-item-body">
+                          <strong>{{ $fc->complaint_no }} — {{ $fc->customer_name }}</strong>
+                          <span>{{ $fc->service_type_name ?? 'Field Service' }} · Completed, unpaid</span>
+                        </div>
+                      </a>
                     @endforeach
                   @endif
 

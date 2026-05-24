@@ -1,38 +1,79 @@
-# TrackUp Task Progress
+# Fault Handling Module — Build Plan
 
-## Status: Fixing UI Styling Consistency
+## What it is
+Field service module: customer calls in → office logs complaint → assigns to field staff → field staff completes → office bills.
 
-## Completed
-- [x] Dashboard stat cards - Sneat card style with icons (committed)
-- [x] Job card show - STATUS badge fixed (bg-label-*)
-- [x] Job cards index - badge classes fixed
-- [x] track.blade.php - badge classes fixed
+## Database
 
-## Pages & Status
-| Page | Status | Issues |
-|------|--------|--------|
-| Admin Dashboard | ✅ DONE | All good |
-| Admin Job Cards (index) | ✅ DONE | Looks good |
-| Admin Job Cards (create) | ✅ Looks OK | - |
-| Admin Job Cards (show) | ✅ Fixed | Status badge now shows |
-| Admin Employees | ✅ Looks OK | - |
-| Admin Devices | ⚠️ STYLE | Dark header, custom cyan/orange badges |
-| Admin Reports | ⚠️ STYLE | Different stat card style, dark table |
-| Admin Store | ⚠️ STYLE | Dark card headers |
-| Employee Dashboard | ⚠️ STYLE | Plain number cards (no icons), dark table |
-| Employee My Jobs | ? | Not yet checked |
+### 1. field_complaints table
+- id, complaint_no (auto, e.g. FC-2605001)
+- customer_name, phone_no, address, location_notes
+- service_type (AC / Washing Machine / RO System / Solar Panel / Other — from service_types table)
+- description (fault details)
+- priority (Low / Normal / High / Urgent)
+- status (Pending / Assigned / In Progress / Completed / Billed / Cancelled)
+- assigned_to (employee_id, must be field/outbound staff)
+- assigned_at
+- scheduled_date (when to go)
+- completed_at
+- completion_notes
+- field_staff_note (from field staff side)
+- photos (JSON — field staff can attach, for future app)
+- created_by (admin/employee)
+- created_at, updated_at
 
-## Issues to Fix
-1. Devices page - dark card headers, non-Sneat badge style
-2. Store page - dark card headers  
-3. Reports page - different stat card style + dark table
-4. Employee dashboard - plain stat cards (add icon style like admin dashboard)
-5. Employee my jobs - not yet checked
+### 2. service_types table
+- id, name, base_charge (default), icon, active
 
-## Next Steps
-1. Check employee my jobs page
-2. Fix all dark card headers to use Sneat card style
-3. Fix employee dashboard stat cards to match admin style
-4. Fix devices/store dark headers
-5. Commit all fixes
-6. Git push
+### 3. field_complaint_items table (billing line items)
+- id, complaint_id, description, qty, unit_price, total
+
+### 4. Employee table
+- Add `type` column: 'inbound' | 'outbound' (field staff)
+- Keep existing `role` column
+
+## Models
+- FieldComplaint
+- ServiceType
+- FieldComplaintItem
+
+## Controllers (Admin)
+- FieldComplaintController (CRUD + assign + status + billing)
+- ServiceTypeController (manage service categories)
+
+## Views (Admin)
+- field-complaints/index — list with status filter tabs
+- field-complaints/create — log new complaint
+- field-complaints/show — full detail + assign + bill generate
+- service-types/index — manage categories
+
+## Routes
+- /admin/field-complaints (index, create, store, show, edit, update, destroy)
+- /admin/field-complaints/{id}/assign (PATCH)
+- /admin/field-complaints/{id}/status (PATCH — for office to update)
+- /admin/field-complaints/{id}/complete (PATCH — simulate field staff completion)
+- /admin/field-complaints/{id}/bill (GET — view invoice)
+- /admin/service-types (CRUD)
+
+## Sidebar
+- New section "Field Services" under Operations
+- Field Complaints (with badge for pending/assigned count)
+- Service Types
+
+## Notifications
+- When field staff marks complete → notification in admin bell
+- Reuse existing notification system pattern (poll or eager load)
+
+## Build Order
+1. Migrations (service_types, field_complaints, field_complaint_items, add type to employees)
+2. Models
+3. Seed service types (AC, Washing Machine, RO System, Solar Panel, Other)
+4. Routes
+5. ServiceTypeController (simple CRUD)
+6. FieldComplaintController
+7. Views: index → create → show (with assign + bill panels)
+8. Sidebar
+9. Employee type field on Employee create/edit
+10. Notifications integration
+
+## Status: IN PROGRESS

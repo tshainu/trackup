@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\JobCard;
+use App\Models\FieldComplaint;
 use Carbon\Carbon;
 
 class NotificationController extends Controller
@@ -27,7 +28,12 @@ class NotificationController extends Controller
             ->orderBy('updated_at', 'desc')
             ->get();
 
-        return view('admin.notifications.index', compact('dueToday', 'needAssistant', 'unpaidCompleted'));
+        $fieldCompleted = FieldComplaint::where('status', 'Completed')
+            ->where('payment_received', false)
+            ->orderBy('completed_at', 'desc')
+            ->get();
+
+        return view('admin.notifications.index', compact('dueToday', 'needAssistant', 'unpaidCompleted', 'fieldCompleted'));
     }
 
     public function markPaymentReceived(JobCard $jobCard)

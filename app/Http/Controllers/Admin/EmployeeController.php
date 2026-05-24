@@ -32,6 +32,7 @@ class EmployeeController extends Controller
             'email'            => 'nullable|email|max:255',
             'user_name'        => 'required|string|unique:employees,user_name|max:50',
             'role'             => 'required|string|max:50',
+            'type'             => 'nullable|in:inbound,outbound',
             'password'         => 'required|string|min:6|confirmed',
             'photo'            => 'nullable|image|max:2048',
         ]);
@@ -67,6 +68,7 @@ class EmployeeController extends Controller
             'phone_no_2'       => 'nullable|string|max:20',
             'email'            => 'nullable|email|max:255',
             'role'             => 'required|string|max:50',
+            'type'             => 'nullable|in:inbound,outbound',
             'status'           => 'required|in:active,inactive',
             'photo'            => 'nullable|image|max:2048',
         ]);
