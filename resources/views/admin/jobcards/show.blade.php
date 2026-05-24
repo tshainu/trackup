@@ -33,7 +33,7 @@
 
 @section('content')
 @php
-  $statusColors = ['Pending'=>'#ffab00','In Progress'=>'#03c3ec','Completed'=>'#71dd37','Not Completed'=>'#ff3e1d'];
+  $statusColors = ['Pending'=>'#ffab00','In Progress'=>'#03c3ec','Completed'=>'#71dd37','Not Completed'=>'#ff3e1d','Cancelled'=>'#8592a3'];
   $priorityColors = ['Low'=>'#71dd37','Normal'=>'#03c3ec','High'=>'#ffab00','Urgent'=>'#ff3e1d'];
   $sc = ['Pending'=>'bg-label-warning','In Progress'=>'bg-label-info','Completed'=>'bg-label-success','Not Completed'=>'bg-label-danger'];
 @endphp
@@ -94,6 +94,21 @@
     </div>
   </div>
 </div>
+
+@if($jobCard->status === 'Cancelled')
+<div class="alert mt-3 mb-0 d-flex align-items-start gap-3" style="background:#fff0ee;border:1.5px solid #ffb3a8;border-radius:12px;padding:16px 20px">
+  <i class='bx bx-block' style="font-size:1.4rem;color:#ff3e1d;margin-top:2px;flex-shrink:0"></i>
+  <div>
+    <div style="font-weight:700;font-size:.9rem;color:#c0392b;margin-bottom:4px">Order Cancelled</div>
+    @if($jobCard->cancelled_reason)
+    <div style="font-size:.85rem;color:#555;margin-bottom:4px"><strong>Reason:</strong> {{ $jobCard->cancelled_reason }}</div>
+    @endif
+    @if($jobCard->cancelled_at)
+    <div style="font-size:.78rem;color:#888"><i class='bx bx-time me-1'></i>{{ $jobCard->cancelled_at->format('d M Y, H:i') }}</div>
+    @endif
+  </div>
+</div>
+@endif
 
 <div class="d-flex gap-2 mt-3 flex-wrap">
   <a href="{{ route('admin.jobcards.edit', $jobCard) }}" class="btn" style="background:linear-gradient(135deg,#696cff,#8c57ff);color:#fff;border-radius:10px;font-weight:600;padding:8px 24px">

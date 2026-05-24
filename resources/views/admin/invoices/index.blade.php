@@ -132,7 +132,7 @@
           $paid   = (float)$job->paid_amount;
           $balance= $job->balance;
           $payStatus = $paid >= $grand && $grand > 0 ? 'paid' : ($paid > 0 ? 'partial' : 'unpaid');
-          $statusColors = ['Pending'=>'warning','In Progress'=>'info','Completed'=>'success','Not Completed'=>'danger'];
+          $statusColors = ['Pending'=>'warning','In Progress'=>'info','Completed'=>'success','Not Completed'=>'danger','Cancelled'=>'secondary'];
         @endphp
         <a href="{{ route('admin.invoices.show', $job) }}" class="result-card">
           <div class="result-icon"><i class='bx bx-file-blank'></i></div>
@@ -243,7 +243,7 @@
               $paid      = (float)$job->paid_amount;
               $balance   = $job->balance;
               $payStatus = $paid >= $grand && $grand > 0 ? 'paid' : ($paid > 0 ? 'partial' : 'unpaid');
-              $statusColors = ['Pending'=>'warning','In Progress'=>'info','Completed'=>'success','Not Completed'=>'danger'];
+              $statusColors = ['Pending'=>'warning','In Progress'=>'info','Completed'=>'success','Not Completed'=>'danger','Cancelled'=>'secondary'];
             @endphp
             <a href="{{ route('admin.invoices.show', $job) }}" class="result-card">
               <div class="result-icon"><i class='bx bx-file-blank'></i></div>

@@ -413,7 +413,7 @@
           <div class="col-md-6">
             <label class="form-label">Status <span class="required-star">*</span></label>
             <select name="status" class="form-select" required id="statusSelect">
-              @foreach(['Pending','In Progress','Completed','Not Completed','Broken'] as $s)
+              @foreach(['Pending','In Progress','Completed','Not Completed','Broken','Cancelled'] as $s)
                 <option value="{{ $s }}" {{ old('status', $jobCard->status) == $s ? 'selected' : '' }}>{{ $s }}</option>
               @endforeach
             </select>
@@ -492,6 +492,11 @@
     <a href="{{ route('admin.jobcards.index') }}" class="btn btn-outline-secondary" style="border-radius:10px;padding:10px 24px;font-weight:600">
       <i class='bx bx-x me-1'></i>Cancel
     </a>
+    @if(!in_array($jobCard->status, ['Cancelled','Completed','Not Completed']))
+    <button type="button" class="btn btn-outline-danger" style="border-radius:10px;padding:10px 24px;font-weight:600" onclick="cancelOrder()">
+      <i class='bx bx-block me-1'></i>Cancel Order
+    </button>
+    @endif
     <button type="submit" class="btn-save-main btn">
       <i class='bx bx-save me-1'></i>Update Job Order
     </button>
@@ -517,6 +522,34 @@
         <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
         <button type="button" class="btn btn-primary btn-sm" id="quickAddConfirm"
           style="background:linear-gradient(135deg,#696cff,#8c57ff);border:0">Add</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{-- ── Cancel Order Modal ── --}}
+<div class="modal fade quick-add-modal" id="cancelOrderModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header" style="background:linear-gradient(135deg,#ff3e1d,#ff6b4a)">
+        <h6 class="modal-title fw-bold mb-0"><i class='bx bx-block me-2'></i>Cancel Order {{ $jobCard->order_no }}</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning py-2 mb-3" style="font-size:.83rem">
+          <i class='bx bx-error-circle me-1'></i>This action cannot be undone. The order will be permanently marked as <strong>Cancelled</strong>.
+        </div>
+        <label class="form-label fw-semibold">Reason for Cancellation <span class="text-danger">*</span></label>
+        <textarea class="form-control" id="cancelReasonInput" rows="3"
+          placeholder="e.g. Customer changed mind, device not worth repairing, duplicate entry..."
+          maxlength="500" style="resize:vertical"></textarea>
+        <div class="text-danger mt-1" id="cancelReasonError" style="font-size:.8rem;display:none"></div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Keep Order</button>
+        <button type="button" class="btn btn-danger btn-sm fw-bold" id="cancelOrderConfirm">
+          <i class='bx bx-block me-1'></i>Yes, Cancel Order
+        </button>
       </div>
     </div>
   </div>
@@ -669,6 +702,31 @@ document.getElementById('joForm').addEventListener('submit', function () {
   const h = document.createElement('input');
   h.type = 'hidden'; h.name = 'accessories'; h.value = checked.join(', ');
   this.appendChild(h);
+});
+
+// ── Cancel Order ──
+function cancelOrder() {
+  document.getElementById('cancelReasonInput').value = '';
+  document.getElementById('cancelReasonError').style.display = 'none';
+  new bootstrap.Modal(document.getElementById('cancelOrderModal')).show();
+  setTimeout(() => document.getElementById('cancelReasonInput').focus(), 350);
+}
+document.getElementById('cancelOrderConfirm').addEventListener('click', function () {
+  const reason = document.getElementById('cancelReasonInput').value.trim();
+  const err    = document.getElementById('cancelReasonError');
+  if (!reason) { err.textContent = 'Please enter a reason.'; err.style.display = ''; return; }
+  const form = document.getElementById('joForm');
+  // Inject cancel_reason hidden input
+  let ri = form.querySelector('input[name="cancel_reason"]');
+  if (!ri) { ri = document.createElement('input'); ri.type = 'hidden'; ri.name = 'cancel_reason'; form.appendChild(ri); }
+  ri.value = reason;
+  // Override status to Cancelled
+  document.querySelector('select[name="status"]').removeAttribute('name');
+  let si = form.querySelector('input[name="status"]');
+  if (!si) { si = document.createElement('input'); si.type = 'hidden'; si.name = 'status'; form.appendChild(si); }
+  si.value = 'Cancelled';
+  bootstrap.Modal.getInstance(document.getElementById('cancelOrderModal')).hide();
+  form.submit();
 });
 </script>
 @endpush

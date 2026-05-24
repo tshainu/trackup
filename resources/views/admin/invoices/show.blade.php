@@ -127,7 +127,7 @@
   $itemsSum     = (float)$jobCard->invoiceItems->sum('total');
   $payStatus    = $paid >= $grand && $grand > 0 ? 'paid' : ($paid > 0 ? 'partial' : 'unpaid');
   $payLabels    = ['paid'=>'✓ Fully Paid','partial'=>'⚡ Partially Paid','unpaid'=>'● Payment Pending'];
-  $statusColors = ['Pending'=>'warning','In Progress'=>'info','Completed'=>'success','Not Completed'=>'danger'];
+  $statusColors = ['Pending'=>'warning','In Progress'=>'info','Completed'=>'success','Not Completed'=>'danger','Cancelled'=>'secondary'];
   $paymentLogs  = $jobCard->paymentLogs ?? collect();
 @endphp
 
@@ -766,7 +766,7 @@ async function saveNewPayment() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
         'X-Requested-With': 'XMLHttpRequest',
       },
       body: JSON.stringify({ amount_paid: amount, note: noteEl?.value || '' })
@@ -866,7 +866,7 @@ document.getElementById('invoiceForm')?.addEventListener('submit', function() {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
               'X-Requested-With': 'XMLHttpRequest',
             },
             body: JSON.stringify({ amount_paid: amount })

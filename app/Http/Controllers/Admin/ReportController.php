@@ -49,6 +49,7 @@ class ReportController extends Controller
             'pending'       => $jobs->where('status', 'Pending')->count(),
             'not_completed' => $jobs->where('status', 'Not Completed')->count(),
             'broken'        => $jobs->where('status', 'Broken')->count(),
+            'cancelled'     => $jobs->where('status', 'Cancelled')->count(),
             'by_device'     => $jobs->groupBy('device_name')->map->count()->sortDesc()->take(8),
             'by_brand'      => $jobs->whereNotNull('device_brand')->groupBy('device_brand')->map->count()->sortDesc()->take(8),
         ];
@@ -193,7 +194,8 @@ class ReportController extends Controller
             $sumRows .= $hdr(['Metric','Value']);
             foreach (['Total Jobs'=>$jobSummary['total'],'Completed'=>$jobSummary['completed'],
                       'In Progress'=>$jobSummary['in_progress'],'Pending'=>$jobSummary['pending'],
-                      'Not Completed'=>$jobSummary['not_completed'],'Broken'=>$jobSummary['broken']] as $k=>$v) {
+                      'Not Completed'=>$jobSummary['not_completed'],'Broken'=>$jobSummary['broken'],
+                      'Cancelled'=>$jobSummary['cancelled']] as $k=>$v) {
                 $sumRows .= $row([$cell($k), $cell($v,'Number')]);
             }
         } elseif ($report === 'payment') {
@@ -416,7 +418,7 @@ class ReportController extends Controller
             ? '<span class="badge-paid">Paid</span>'
             : ($j->paid_amount > 0 ? '<span class="badge-partial">Partial</span>' : '<span class="badge-unpaid">Unpaid</span>');
         $stBadge = function($s) {
-            $map = ['Completed'=>'completed','Pending'=>'pending','In Progress'=>'progress','Broken'=>'broken','Not Completed'=>'broken'];
+            $map = ['Completed'=>'completed','Pending'=>'pending','In Progress'=>'progress','Broken'=>'broken','Not Completed'=>'broken','Cancelled'=>'broken'];
             $cls = $map[$s] ?? 'pending';
             return '<span class="badge-'.$cls.'">'.htmlspecialchars($s).'</span>';
         };
@@ -426,7 +428,7 @@ class ReportController extends Controller
             $html .= '<table class="stat-grid"><tr>';
             foreach (['Total'=>$jobSummary['total'],'Completed'=>$jobSummary['completed'],
                       'In Progress'=>$jobSummary['in_progress'],'Pending'=>$jobSummary['pending'],
-                      'Broken'=>$jobSummary['broken']] as $lbl=>$val) {
+                      'Broken'=>$jobSummary['broken'],'Cancelled'=>$jobSummary['cancelled']] as $lbl=>$val) {
                 $html .= '<td><div class="stat-val">'.$val.'</div><div class="stat-lbl">'.$lbl.'</div></td>';
             }
             $html .= '</tr></table>';

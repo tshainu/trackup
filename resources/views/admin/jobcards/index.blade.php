@@ -96,6 +96,7 @@
     'Completed'     => ['cls'=>'bg-label-success',  'dot'=>'#71dd37', 'icon'=>'bx-check-circle'],
     'Not Completed' => ['cls'=>'bg-label-danger',   'dot'=>'#ff3e1d', 'icon'=>'bx-x-circle'],
     'Broken'        => ['cls'=>'bg-label-danger',   'dot'=>'#c0392b', 'icon'=>'bx-error'],
+    'Cancelled'     => ['cls'=>'bg-label-secondary','dot'=>'#8592a3', 'icon'=>'bx-block'],
     'Delivered'     => ['cls'=>'bg-label-primary',  'dot'=>'#6f42c1', 'icon'=>'bx-package'],
   ];
 
@@ -271,6 +272,7 @@
               <option value="Completed" {{ $job->status === 'Completed' ? 'selected' : '' }}>Completed</option>
               <option value="Not Completed" {{ $job->status === 'Not Completed' ? 'selected' : '' }}>Not Completed</option>
               <option value="Broken" {{ $job->status === 'Broken' ? 'selected' : '' }}>Broken</option>
+              <option value="Cancelled" {{ $job->status === 'Cancelled' ? 'selected' : '' }} style="color:#8592a3">Cancelled</option>
               <option value="Delivered" {{ $job->status === 'Delivered' ? 'selected' : '' }} {{ !$canDeliver ? 'disabled' : '' }}
                 title="{{ $isPartial ? 'Settle full payment before delivering' : (!in_array($job->status, ['Completed','Broken']) ? 'Mark job Completed or Broken before delivering' : '') }}"
                 style="{{ !$canDeliver ? 'color:#ccc' : 'color:#6f42c1;font-weight:700' }}">Delivered{{ $isPartial ? ' (Unpaid)' : '' }}</option>
@@ -461,12 +463,14 @@ const statusColors = {
   'In Progress':   '#03c3ec',
   'Completed':     '#71dd37',
   'Not Completed': '#ff3e1d',
+  'Cancelled':     '#8592a3',
 };
 const statusBadgeClass = {
   'Pending':       'bg-label-warning',
   'In Progress':   'bg-label-info',
   'Completed':     'bg-label-success',
   'Not Completed': 'bg-label-danger',
+  'Cancelled':     'bg-label-secondary',
 };
 const headerGradients = {
   'Low':    'linear-gradient(135deg,#2d6a09,#71dd37)',
@@ -589,6 +593,7 @@ const statusSelectBg = {
   'Completed':     { bg:'#e6f9d8', color:'#2d8a00' },
   'Not Completed': { bg:'#ffe0de', color:'#c0392b' },
   'Broken':        { bg:'#ffe8e6', color:'#c0392b' },
+  'Cancelled':     { bg:'#f0f0f0', color:'#8592a3' },
   'Delivered':     { bg:'#ede8ff', color:'#6f42c1' },
 };
 

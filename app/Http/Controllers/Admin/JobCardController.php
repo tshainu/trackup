@@ -135,7 +135,8 @@ class JobCardController extends Controller
             'issue'            => 'nullable|string|max:500',
             'date'             => 'required|date',
             'rupees'           => 'nullable|numeric|min:0',
-            'status'           => 'required|in:Pending,In Progress,Completed,Not Completed,Broken',
+            'status'           => 'required|in:Pending,In Progress,Completed,Not Completed,Broken,Cancelled',
+            'cancel_reason'    => 'nullable|string|max:500',
             'remark'           => 'nullable|string|max:500',
             'need_assistant'     => 'nullable|boolean',
             'employee_id'        => 'nullable|exists:employees,id',
@@ -146,6 +147,11 @@ class JobCardController extends Controller
         $validated['need_assistant']   = $request->has('need_assistant') ? 1 : 0;
         $validated['payment_received'] = $request->has('payment_received') ? 1 : 0;
         $validated['priority'] = $request->input('priority', 'Normal');
+
+        if ($validated['status'] === 'Cancelled' && $jobCard->status !== 'Cancelled') {
+            $validated['cancelled_reason'] = $request->input('cancel_reason');
+            $validated['cancelled_at']     = now();
+        }
 
         $jobCard->update($validated);
 
