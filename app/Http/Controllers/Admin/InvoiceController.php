@@ -127,7 +127,6 @@ class InvoiceController extends Controller
     {
         $request->validate([
             'discount'   => 'nullable|numeric|min:0',
-            'paid_amount'=> 'nullable|numeric|min:0',
             'rupees'     => 'nullable|numeric|min:0',
             'items'      => 'nullable|array',
             'items.*.description' => 'required|string|max:255',
@@ -135,11 +134,10 @@ class InvoiceController extends Controller
             'items.*.unit_price'  => 'required|numeric|min:0',
         ]);
 
-        // Update base charge + amounts
+        // Update base charge and discount ONLY — paid_amount is managed by payment transactions, never reset here
         $jobCard->update([
-            'rupees'      => $request->input('rupees', $jobCard->rupees),
-            'discount'    => $request->input('discount', 0),
-            'paid_amount' => $request->input('paid_amount', 0),
+            'rupees'   => $request->input('rupees', $jobCard->rupees),
+            'discount' => $request->input('discount', 0),
         ]);
 
         // Sync line items

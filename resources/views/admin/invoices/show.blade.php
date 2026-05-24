@@ -269,6 +269,13 @@
           </div>
         </div>
         @endforeach
+        @php $editPayLineCount = $paymentLogs->count() + ($advanceNotLogged ? 1 : 0); @endphp
+        @if($editPayLineCount > 1 && $paid > 0)
+        <div class="d-flex justify-content-between align-items-center px-2 py-1 mt-1" style="background:#f0f0fa;border-radius:7px;font-size:.8rem;font-weight:700;color:#333">
+          <span>Total Paid</span>
+          <span style="color:#059669">Rs. {{ number_format($paid, 2) }}</span>
+        </div>
+        @endif
         @endif
 
         {{-- + Add New Payment row (only if balance > 0) --}}
@@ -506,6 +513,7 @@
             </div>
             {{-- Payment breakdown with dates --}}
             @if($paymentLogs->count() > 0 || $advanceNotLogged)
+              @php $payLineCount = $paymentLogs->count() + ($advanceNotLogged ? 1 : 0); @endphp
               {{-- Synthetic advance row if not in logs --}}
               @if($advanceNotLogged)
               <div class="inv-total-row" style="color:#059669;font-size:.82rem">
@@ -525,6 +533,12 @@
                 <span>Rs. {{ number_format($log->amount, 2) }}</span>
               </div>
               @endforeach
+              @if($payLineCount > 1 && $paid > 0)
+              <div class="inv-total-row" style="font-weight:700;font-size:.85rem;border-top:1px solid #d0d0e8;padding-top:4px;margin-top:2px">
+                <span class="t-label">Total Paid</span>
+                <span>Rs. {{ number_format($paid, 2) }}</span>
+              </div>
+              @endif
             @elseif($paid > 0)
             <div class="inv-total-row" style="color:#71dd37">
               <span class="t-label">Amount Paid</span>
