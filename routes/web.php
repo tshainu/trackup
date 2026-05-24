@@ -59,6 +59,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/devices/faults/{fault}',          [DeviceController::class, 'destroyFault'])->name('devices.faults.destroy');
         Route::get('/devices/accessories',                [DeviceController::class, 'indexAccessories'])->name('devices.accessories.index');
         Route::post('/devices/accessories',               [DeviceController::class, 'storeAccessory'])->name('devices.accessories.store');
+        Route::patch('/devices/accessories/{accessory}', [DeviceController::class, 'updateAccessory'])->name('devices.accessories.update');
         Route::delete('/devices/accessories/{accessory}', [DeviceController::class, 'destroyAccessory'])->name('devices.accessories.destroy');
         Route::delete('/devices/{device}',                [DeviceController::class, 'destroyDevice'])->name('devices.destroy');
 

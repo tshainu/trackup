@@ -51,12 +51,35 @@
   font-size:.84rem;font-weight:600;color:#4a4a8a;
   transition:.15s;
 }
-.acc-tag .rm-btn {
+.acc-tag .tag-btn {
   background:none;border:none;padding:0;cursor:pointer;
   color:#a0a0c0;line-height:1;font-size:1rem;
   display:flex;align-items:center;transition:.15s;
 }
-.acc-tag .rm-btn:hover { color:#e04040; }
+.acc-tag .tag-btn:hover { color:#696cff; }
+.acc-tag .tag-btn.rm-btn:hover { color:#e04040; }
+
+/* Inline edit row */
+.acc-edit-row {
+  display:none;align-items:center;gap:6px;
+  background:#f5f5ff;border:1.5px solid #d0d0f0;
+  border-radius:20px;padding:3px 3px 3px 14px;
+}
+.acc-edit-row.active { display:inline-flex; }
+.acc-edit-row input {
+  border:none;background:transparent;outline:none;
+  font-size:.84rem;font-weight:600;color:#3d3d8a;width:140px;
+}
+.acc-edit-row .save-btn {
+  background:#696cff;color:#fff;border:none;border-radius:14px;
+  padding:3px 10px;font-size:.78rem;font-weight:700;cursor:pointer;
+}
+.acc-edit-row .save-btn:hover { opacity:.85; }
+.acc-edit-row .cancel-btn {
+  background:none;border:none;color:#a0a0c0;cursor:pointer;font-size:1rem;
+  display:flex;align-items:center;
+}
+.acc-edit-row .cancel-btn:hover { color:#555; }
 
 .acc-empty {
   color:#b0b0c8;font-size:.88rem;font-style:italic;
@@ -89,8 +112,11 @@
   <div class="acc-tags-row" id="accTags">
     @forelse($accessories as $acc)
     <span class="acc-tag" id="acc-tag-{{ $acc->id }}">
-      {{ $acc->accessory_name }}
-      <button type="button" class="rm-btn" onclick="deleteAcc({{ $acc->id }})" title="Remove">
+      <span class="acc-name" id="acc-name-{{ $acc->id }}">{{ $acc->accessory_name }}</span>
+      <button type="button" class="tag-btn" onclick="startEdit({{ $acc->id }}, '{{ addslashes($acc->accessory_name) }}')" title="Rename">
+        <i class='bx bx-pencil'></i>
+      </button>
+      <button type="button" class="tag-btn rm-btn" onclick="deleteAcc({{ $acc->id }})" title="Remove">
         <i class='bx bx-x'></i>
       </button>
     </span>
@@ -105,6 +131,7 @@
 <script>
 const storeUrl   = '{{ route("admin.devices.accessories.store") }}';
 const destroyUrl = '/admin/devices/accessories/';
+const updateBase = '/admin/devices/accessories/';
 const csrfToken  = document.querySelector('meta[name="csrf-token"]').content;
 
 async function addAcc() {
@@ -130,8 +157,9 @@ async function addAcc() {
     document.getElementById('accEmpty')?.remove();
 
     const tag = `<span class="acc-tag" id="acc-tag-${data.id}">
-      ${escHtml(data.accessory_name)}
-      <button type="button" class="rm-btn" onclick="deleteAcc(${data.id})" title="Remove"><i class='bx bx-x'></i></button>
+      <span class="acc-name" id="acc-name-${data.id}">${escHtml(data.accessory_name)}</span>
+      <button type="button" class="tag-btn" onclick="startEdit(${data.id},'${escHtml(data.accessory_name).replace(/'/g,"\\'")}')" title="Rename"><i class='bx bx-pencil'></i></button>
+      <button type="button" class="tag-btn rm-btn" onclick="deleteAcc(${data.id})" title="Remove"><i class='bx bx-x'></i></button>
     </span>`;
     document.getElementById('accTags').insertAdjacentHTML('beforeend', tag);
     updateCount(1);
@@ -165,8 +193,64 @@ function updateCount(delta) {
   el.textContent = n + ' ' + (n === 1 ? 'accessory' : 'accessories');
 }
 
+// ── Edit (rename) ──
+let _editId = null;
+
+function startEdit(id, currentName) {
+  // cancel any open edit
+  if (_editId && _editId !== id) cancelEdit(_editId);
+  _editId = id;
+
+  const tag = document.getElementById('acc-tag-'+id);
+  tag.style.display = 'none';
+
+  const row = document.createElement('span');
+  row.className = 'acc-edit-row active';
+  row.id = 'acc-edit-'+id;
+  row.innerHTML = `
+    <input type="text" id="acc-edit-input-${id}" value="${escHtml(currentName)}" maxlength="100"
+           onkeydown="if(event.key==='Enter'){event.preventDefault();saveEdit(${id})}
+                      if(event.key==='Escape'){cancelEdit(${id})}" />
+    <button class="save-btn" onclick="saveEdit(${id})">Save</button>
+    <button class="cancel-btn" onclick="cancelEdit(${id})"><i class='bx bx-x'></i></button>`;
+  tag.insertAdjacentElement('afterend', row);
+  document.getElementById('acc-edit-input-'+id).select();
+}
+
+async function saveEdit(id) {
+  const input = document.getElementById('acc-edit-input-'+id);
+  const name  = input.value.trim();
+  if (!name) { input.focus(); return; }
+
+  try {
+    const res  = await fetch(updateBase + id, {
+      method: 'PATCH',
+      headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':csrfToken, 'Accept':'application/json' },
+      body: JSON.stringify({ accessory_name: name })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      alert(data.errors?.accessory_name?.[0] || data.message || 'Error');
+      return;
+    }
+    // Update tag text
+    document.getElementById('acc-name-'+id).textContent = data.accessory_name;
+    // Update edit button's onclick with new name
+    const tag = document.getElementById('acc-tag-'+id);
+    tag.querySelector('.tag-btn').setAttribute('onclick', `startEdit(${id},'${escHtml(data.accessory_name).replace(/'/g,"\\'")}')`)
+    cancelEdit(id);
+  } catch(e) { alert('Request failed'); }
+}
+
+function cancelEdit(id) {
+  document.getElementById('acc-edit-'+id)?.remove();
+  const tag = document.getElementById('acc-tag-'+id);
+  if (tag) tag.style.display = '';
+  _editId = null;
+}
+
 function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 </script>
 @endpush

@@ -105,4 +105,13 @@ class DeviceController extends Controller
         if (request()->expectsJson()) return response()->json(['ok' => true]);
         return back()->with('success', 'Accessory deleted.');
     }
+
+    public function updateAccessory(Request $request, DeviceAccessory $accessory)
+    {
+        $request->validate([
+            'accessory_name' => 'required|string|max:100|unique:device_accessories,accessory_name,'.$accessory->id,
+        ]);
+        $accessory->update(['accessory_name' => $request->accessory_name]);
+        return response()->json(['id' => $accessory->id, 'accessory_name' => $accessory->accessory_name]);
+    }
 }
