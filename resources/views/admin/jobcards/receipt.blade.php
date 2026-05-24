@@ -357,16 +357,24 @@
     {{-- ── Payment History ── --}}
     <div class="section">
       <div class="section-title">Payment Summary</div>
-      @if(isset($advanceAmount) && $advanceAmount > 0)
-      <div class="total-row" style="color:#555; font-size:.8rem;">
-        <span>Advance Paid</span>
-        <span>Rs.{{ number_format($advanceAmount, 2) }}</span>
-      </div>
-      @endif
+      @php
+        $rcptAdvance = (float)($advanceAmount ?? 0);
+        $rcptLogs    = $paymentLogs ?? collect();
+        $rcptLogsSum = (float)$rcptLogs->sum('amount');
+        // Advance not logged if: logs + advance ≈ paidAmount
+        $rcptAdvanceNotLogged = $rcptAdvance > 0 && abs(($rcptLogsSum + $rcptAdvance) - (float)$paidAmount) < 0.01;
+      @endphp
 
       {{-- Per-payment breakdown with dates --}}
-      @if(isset($paymentLogs) && $paymentLogs->count() > 0)
-        @foreach($paymentLogs as $log)
+      @if($rcptLogs->count() > 0 || $rcptAdvanceNotLogged)
+        {{-- Synthetic advance row if not in logs --}}
+        @if($rcptAdvanceNotLogged)
+        <div class="total-row" style="font-size:.8rem;color:#2d6a4f;">
+          <span>Advance Payment</span>
+          <span>Rs.{{ number_format($rcptAdvance, 2) }}</span>
+        </div>
+        @endif
+        @foreach($rcptLogs as $log)
         <div class="total-row" style="font-size:.8rem;color:#2d6a4f;">
           <span>{{ $log->note ?? 'Payment' }} <span style="color:#aaa;font-size:.75rem;">({{ $log->paid_at->format('d M Y, h:i A') }})</span></span>
           <span>Rs.{{ number_format($log->amount, 2) }}</span>
@@ -376,6 +384,12 @@
           <span>Total Paid</span>
           <span>Rs.{{ number_format($paidAmount, 2) }}</span>
         </div>
+      @elseif($rcptAdvance > 0)
+      {{-- Advance exists but logs exist too (advance IS in logs) — just show logs --}}
+      <div class="total-row total-paid">
+        <span>Amount Paid</span>
+        <span>Rs.{{ number_format($paidAmount, 2) }}</span>
+      </div>
       @else
       <div class="total-row total-paid">
         <span>Amount Paid</span>

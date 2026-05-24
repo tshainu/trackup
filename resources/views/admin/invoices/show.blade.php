@@ -128,7 +128,11 @@
   $payStatus    = $paid >= $grand && $grand > 0 ? 'paid' : ($paid > 0 ? 'partial' : 'unpaid');
   $payLabels    = ['paid'=>'✓ Fully Paid','partial'=>'⚡ Partially Paid','unpaid'=>'● Payment Pending'];
   $statusColors = ['Pending'=>'warning','In Progress'=>'info','Completed'=>'success','Not Completed'=>'danger','Cancelled'=>'secondary'];
-  $paymentLogs  = $jobCard->paymentLogs ?? collect();
+  $paymentLogs       = $jobCard->paymentLogs ?? collect();
+  $advance           = (float)($jobCard->advance_amount ?? 0);
+  $logsSum           = (float)$paymentLogs->sum('amount');
+  // Advance is not logged if: advance > 0 AND (logsSum + advance ≈ paid)
+  $advanceNotLogged  = $advance > 0 && abs(($logsSum + $advance) - $paid) < 0.01;
 @endphp
 
 <div class="inv-wrap">
@@ -220,6 +224,29 @@
           </div>
         </div>
         @else
+        {{-- Synthetic advance row if advance was not written to payment_logs --}}
+        @if($advanceNotLogged)
+        <div class="row g-2 align-items-center mb-2">
+          <div class="col-md-5">
+            <div class="form-control form-control-sm" style="border-radius:7px;background:#f4f4f8;color:#555;border-color:#e0e0f0;cursor:not-allowed">
+              Advance Payment
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-control form-control-sm" style="border-radius:7px;background:#f4f4f8;color:#333;font-weight:700;border-color:#e0e0f0;cursor:not-allowed;text-align:right">
+              Rs. {{ number_format($advance, 2) }}
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-control form-control-sm" style="border-radius:7px;background:#f4f4f8;color:#aaa;border-color:#e0e0f0;cursor:not-allowed;font-size:.78rem">
+              {{ $jobCard->created_at->format('d M Y, h:i A') }}
+            </div>
+          </div>
+          <div class="col-md-1 text-center">
+            <i class='bx bx-lock' style="color:#ccc;font-size:1rem"></i>
+          </div>
+        </div>
+        @endif
         @foreach($paymentLogs as $log)
         <div class="row g-2 align-items-center mb-2">
           <div class="col-md-5">
@@ -478,7 +505,17 @@
               <span>Rs. {{ number_format($grand, 2) }}</span>
             </div>
             {{-- Payment breakdown with dates --}}
-            @if($paymentLogs->count() > 0)
+            @if($paymentLogs->count() > 0 || $advanceNotLogged)
+              {{-- Synthetic advance row if not in logs --}}
+              @if($advanceNotLogged)
+              <div class="inv-total-row" style="color:#059669;font-size:.82rem">
+                <span class="t-label" style="color:#059669">
+                  Advance Payment
+                  <span style="font-size:.72rem;color:#aaa;font-weight:400;margin-left:4px">{{ $jobCard->created_at->format('d M Y') }}</span>
+                </span>
+                <span>Rs. {{ number_format($advance, 2) }}</span>
+              </div>
+              @endif
               @foreach($paymentLogs as $log)
               <div class="inv-total-row" style="color:#059669;font-size:.82rem">
                 <span class="t-label" style="color:#059669">
@@ -604,7 +641,14 @@
     <div class="rp-total-row rp-grand"><span>TOTAL (Rs.)</span><span>{{ number_format($grand, 2) }}</span></div>
 
     {{-- Payment breakdown with dates --}}
-    @if($paymentLogs->count() > 0)
+    @if($paymentLogs->count() > 0 || $advanceNotLogged)
+      {{-- Synthetic advance row if not in logs --}}
+      @if($advanceNotLogged)
+      <div class="rp-total-row" style="font-size:8.5pt">
+        <span>Advance Payment ({{ $jobCard->created_at->format('d/m/Y') }})</span>
+        <span>{{ number_format($advance, 2) }}</span>
+      </div>
+      @endif
       @foreach($paymentLogs as $log)
       <div class="rp-total-row" style="font-size:8.5pt">
         <span>{{ $log->note ?? 'Payment' }} ({{ $log->paid_at->format('d/m/Y') }})</span>
