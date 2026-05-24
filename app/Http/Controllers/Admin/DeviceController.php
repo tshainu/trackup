@@ -16,6 +16,12 @@ class DeviceController extends Controller
         return view('admin.devices.index', compact('devices'));
     }
 
+    public function indexAccessories()
+    {
+        $devices = DeviceList::with('accessories')->get();
+        return view('admin.devices.accessories', compact('devices'));
+    }
+
     // Device types
     public function storeDevice(Request $request)
     {

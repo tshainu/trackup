@@ -269,11 +269,23 @@
 
         {{-- ── SYSTEM ── --}}
         <li class="menu-section-label">System</li>
-        <li class="menu-item {{ Request::routeIs('admin.devices.*') ? 'active' : '' }}">
-          <a href="{{ route('admin.devices.index') }}" class="menu-link">
+        <li class="menu-item {{ Request::routeIs('admin.devices.*') ? 'open active' : '' }}">
+          <a href="javascript:void(0);" class="menu-link menu-toggle">
             <i class="menu-icon tf-icons bx bx-devices"></i>
             <div>Devices & Brands</div>
           </a>
+          <ul class="menu-sub">
+            <li class="menu-item {{ Request::routeIs('admin.devices.index') ? 'active' : '' }}">
+              <a href="{{ route('admin.devices.index') }}" class="menu-link">
+                <div>Devices & Brands</div>
+              </a>
+            </li>
+            <li class="menu-item {{ Request::routeIs('admin.devices.accessories.index') ? 'active' : '' }}">
+              <a href="{{ route('admin.devices.accessories.index') }}" class="menu-link">
+                <div>Accessories Received</div>
+              </a>
+            </li>
+          </ul>
         </li>
         <li class="menu-item {{ Request::routeIs('admin.invoices.*') ? 'active' : '' }}">
           <a href="{{ route('admin.invoices.index') }}" class="menu-link">

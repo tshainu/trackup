@@ -57,6 +57,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/devices/brands/{brand}', [DeviceController::class, 'destroyBrand'])->name('devices.brands.destroy');
         Route::post('/devices/faults',                    [DeviceController::class, 'storeFault'])->name('devices.faults.store');
         Route::delete('/devices/faults/{fault}',          [DeviceController::class, 'destroyFault'])->name('devices.faults.destroy');
+        Route::get('/devices/accessories',                [DeviceController::class, 'indexAccessories'])->name('devices.accessories.index');
         Route::post('/devices/accessories',               [DeviceController::class, 'storeAccessory'])->name('devices.accessories.store');
         Route::delete('/devices/accessories/{accessory}', [DeviceController::class, 'destroyAccessory'])->name('devices.accessories.destroy');
         Route::delete('/devices/{device}',                [DeviceController::class, 'destroyDevice'])->name('devices.destroy');
