@@ -773,8 +773,7 @@ async function saveNewPayment() {
     });
     const data = await res.json();
     if (data.ok) {
-      // Redirect to receipt with invoices redirect param
-      window.location.href = data.receipt_url + '?redirect=invoices';
+      triggerPrintThenRedirect();
     } else {
       alert(data.message || 'Payment failed.');
       btn.disabled = false;
@@ -875,7 +874,7 @@ document.getElementById('invoiceForm')?.addEventListener('submit', function() {
           .then(res => {
             payModal.hide();
             if (res.ok) {
-              window.location.href = res.receipt_url + '?redirect=invoices';
+              triggerPrintThenRedirect();
             } else {
               submitBtn.disabled = false;
               submitBtn.innerHTML = '<i class="bx bx-check-circle me-1"></i> Confirm Payment';
@@ -896,5 +895,15 @@ document.getElementById('invoiceForm')?.addEventListener('submit', function() {
 
 
 })();
+
+function triggerPrintThenRedirect() {
+  const invoicesUrl = '{{ route("admin.invoices.index") }}';
+  // Use onafterprint to redirect after the print dialog closes
+  window.onafterprint = function () {
+    window.onafterprint = null;
+    window.location.href = invoicesUrl;
+  };
+  window.print();
+}
 </script>
 @endpush
