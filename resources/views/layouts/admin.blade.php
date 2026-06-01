@@ -220,9 +220,11 @@
           </a>
         </li>
 
-        <div class="menu-divider"></div>
+        @php $shopModules = session('shop_modules', ['job_orders','field_services']); @endphp
 
         {{-- ── OPERATIONS ── --}}
+        @if(in_array('job_orders', $shopModules))
+        <div class="menu-divider"></div>
         <li class="menu-section-label">Operations</li>
         <li class="menu-item {{ Request::routeIs('admin.jobcards.*') ? 'open active' : '' }}">
           <a href="javascript:void(0);" class="menu-link menu-toggle">
@@ -253,10 +255,11 @@
             </li>
           </ul>
         </li>
-
-        <div class="menu-divider"></div>
+        @endif
 
         {{-- ── FIELD SERVICES ── --}}
+        @if(in_array('field_services', $shopModules))
+        <div class="menu-divider"></div>
         <li class="menu-section-label">Field Services</li>
         <li class="menu-item {{ Request::routeIs('admin.field-complaints.*') ? 'open active' : '' }}">
           <a href="javascript:void(0);" class="menu-link menu-toggle">
@@ -282,6 +285,7 @@
             <div>Service Types</div>
           </a>
         </li>
+        @endif
 
         <div class="menu-divider"></div>
 
@@ -329,17 +333,48 @@
             <div>Reports</div>
           </a>
         </li>
-        <li class="menu-item {{ Request::routeIs('admin.store.*') ? 'active' : '' }}">
-          <a href="{{ route('admin.store.edit') }}" class="menu-link">
+
+        <div class="menu-divider"></div>
+
+        {{-- ── SETTINGS ── --}}
+        <li class="menu-section-label">Settings</li>
+        @php
+          $onSettings = Request::routeIs('admin.store.*')
+                     || Request::routeIs('admin.sms-settings.*')
+                     || Request::routeIs('admin.label-settings.*')
+                     || Request::routeIs('admin.whatsapp-settings.*');
+        @endphp
+        <li class="menu-item {{ $onSettings ? 'open active' : '' }}">
+          <a href="javascript:void(0);" class="menu-link menu-toggle">
             <i class="menu-icon tf-icons bx bx-cog"></i>
-            <div>Store Settings</div>
+            <div>Settings</div>
           </a>
-        </li>
-        <li class="menu-item {{ Request::routeIs('admin.sms-settings.*') ? 'active' : '' }}">
-          <a href="{{ route('admin.sms-settings.edit') }}" class="menu-link">
-            <i class="menu-icon tf-icons bx bx-message-rounded-dots"></i>
-            <div>SMS Settings</div>
-          </a>
+          <ul class="menu-sub">
+            <li class="menu-item {{ Request::routeIs('admin.store.*') ? 'active' : '' }}">
+              <a href="{{ route('admin.store.edit') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-store"></i>
+                <div>Store Settings</div>
+              </a>
+            </li>
+            <li class="menu-item {{ Request::routeIs('admin.sms-settings.*') ? 'active' : '' }}">
+              <a href="{{ route('admin.sms-settings.edit') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-message-rounded-dots"></i>
+                <div>SMS Settings</div>
+              </a>
+            </li>
+            <li class="menu-item {{ Request::routeIs('admin.whatsapp-settings.*') ? 'active' : '' }}">
+              <a href="{{ route('admin.whatsapp-settings.edit') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bxl-whatsapp"></i>
+                <div>WhatsApp Settings</div>
+              </a>
+            </li>
+            <li class="menu-item {{ Request::routeIs('admin.label-settings.*') ? 'active' : '' }}">
+              <a href="{{ route('admin.label-settings.edit') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-barcode"></i>
+                <div>Label Settings</div>
+              </a>
+            </li>
+          </ul>
         </li>
 
         <div class="menu-divider"></div>
@@ -385,10 +420,10 @@
             @endif
             <div>
               <div style="font-size:.92rem;font-weight:700;color:#2d2d3a;line-height:1.2;">
-                {{ isset($storeInfo) && $storeInfo && $storeInfo->store_name ? $storeInfo->store_name : 'TrackUp' }}
+                {{ isset($storeInfo) && $storeInfo && $storeInfo->store_name ? $storeInfo->store_name : (session('shop_name') ?? 'TrackUp') }}
               </div>
               <div style="font-size:.76rem;color:#a0a0b0;line-height:1;">
-                Hello, <span style="font-weight:600;color:#696cff;">{{ $loggedInName ?? 'User' }}</span>
+                Hello, <span style="font-weight:600;color:#696cff;">{{ $loggedInName ?? 'User' }}</span> &nbsp;·&nbsp; <span style="font-weight:600;color:#696cff;">{{ session('shop_code') }}</span>
               </div>
             </div>
           </div>
@@ -488,7 +523,7 @@
                   @endif
 
                   {{-- Field Complaints Unpaid --}}
-                  @if(isset($notifData['fieldCompleted']) && $notifData['fieldCompleted']->count() > 0)
+                  @if(in_array('field_services', session('shop_modules', ['job_orders','field_services'])) && isset($notifData['fieldCompleted']) && $notifData['fieldCompleted']->count() > 0)
                     <div class="notif-section-head" style="color:#d97706;">Field Services — Payment</div>
                     @foreach($notifData['fieldCompleted'] as $fc)
                       <a href="{{ route('admin.field-complaints.show', $fc->id) }}" class="notif-item">

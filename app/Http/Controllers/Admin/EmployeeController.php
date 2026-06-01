@@ -17,7 +17,7 @@ class EmployeeController extends Controller
 
     public function create()
     {
-        $nextId = 'EMP' . str_pad(Employee::count() + 1, 3, '0', STR_PAD_LEFT);
+        $nextId = 'EMP' . str_pad(Employee::where('shop_id', session('shop_id'))->count() + 1, 3, '0', STR_PAD_LEFT);
         return view('admin.employees.create', compact('nextId'));
     }
 
@@ -30,17 +30,20 @@ class EmployeeController extends Controller
             'phone_no_1'       => 'nullable|string|max:20',
             'phone_no_2'       => 'nullable|string|max:20',
             'email'            => 'nullable|email|max:255',
-            'user_name'        => 'required|string|unique:employees,user_name|max:50',
+            'user_name'        => 'required|string|max:50|unique:employees,user_name,NULL,id,shop_id,' . session('shop_id'),
             'role'             => 'required|string|max:50',
             'type'             => 'nullable|in:inbound,outbound',
             'password'         => 'required|string|min:6|confirmed',
             'photo'            => 'nullable|image|max:2048',
         ]);
 
-        $validated['user_id']          = 'EMP' . str_pad(Employee::count() + 1, 3, '0', STR_PAD_LEFT);
+        $shopId    = session('shop_id');
+        $shopCount = Employee::where('shop_id', $shopId)->count() + 1;
+        $validated['shop_id']          = $shopId;
+        $validated['user_id']          = 'EMP' . str_pad($shopCount, 3, '0', STR_PAD_LEFT);
         $validated['password']         = Hash::make($validated['password']);
         $validated['status']           = 'active';
-        $validated['registration_no']  = 'REG' . str_pad(Employee::count() + 1, 3, '0', STR_PAD_LEFT);
+        $validated['registration_no']  = 'REG' . str_pad($shopCount, 3, '0', STR_PAD_LEFT);
 
         if ($request->hasFile('photo')) {
             $path = $request->file('photo')->store('employees', 'public');

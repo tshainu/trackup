@@ -24,7 +24,7 @@ class DashboardController extends Controller
         $recentJobs = JobCard::with('employee')->latest()->take(10)->get();
         $monthlyData = $this->getMonthlyData();
         $chartData = $this->getLast7DaysData();
-        $store = StoreInfo::first();
+        $store = StoreInfo::current();
 
         // Today's delivery list — jobs created or updated today (any status)
         $todayDeliveries = JobCard::with('employee')

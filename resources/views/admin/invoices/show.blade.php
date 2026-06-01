@@ -22,8 +22,8 @@
   color:#fff; padding:32px 36px;
   display:flex; justify-content:space-between; align-items:flex-start; gap:24px; flex-wrap:wrap;
 }
-.inv-store-name { font-size:1.5rem; font-weight:800; letter-spacing:-.5px; }
-.inv-store-meta  { font-size:.82rem; opacity:.8; margin-top:4px; line-height:1.6; }
+.inv-store-name { font-size:24pt; font-weight:800; letter-spacing:-.5px; }
+.inv-store-meta  { font-size:18pt; opacity:.85; margin-top:4px; line-height:1.6; }
 .inv-no-block { text-align:right; }
 .inv-no-label { font-size:.75rem; text-transform:uppercase; letter-spacing:.1em; opacity:.7; }
 .inv-no       { font-size:1.6rem; font-weight:800; letter-spacing:1px; }
@@ -96,7 +96,7 @@
     padding:4mm 4mm 8mm 2mm;
   }
   .rp-center { text-align:center; }
-  .rp-store-name { font-size:13pt; font-weight:bold; text-transform:uppercase; letter-spacing:1px; }
+  .rp-store-name { font-size:24pt; font-weight:bold; letter-spacing:1px; }
   .rp-divider { border:none; border-top:1px dashed #000; margin:3mm 0; }
   .rp-divider-solid { border:none; border-top:2px solid #000; margin:3mm 0; }
   .rp-row { display:flex; justify-content:space-between; font-size:9.5pt; margin:1mm 0; }
@@ -397,7 +397,7 @@
           @if($store && $store->logo)
             <img src="{{ asset('storage/' . $store->logo) }}" alt="Logo" style="height:44px;margin-bottom:8px;filter:brightness(0) invert(1)">
           @endif
-          <div class="inv-store-name">{{ $store->store_name ?? config('app.name', 'TrackUp') }}</div>
+          <div class="inv-store-name">{{ $store?->store_name ?? session('shop_name') ?? 'TrackUp' }}</div>
           <div class="inv-store-meta">
             @if($store)
               {{ $store->store_address }}<br>
@@ -564,7 +564,7 @@
       </div>
 
       <div class="inv-footer">
-        <div><strong>{{ $store->store_name ?? 'TrackUp' }}</strong><br>Thank you for your business!</div>
+        <div><strong>{{ $store?->store_name ?? session('shop_name') ?? 'TrackUp' }}</strong><br>Thank you for your business!</div>
         <div style="text-align:right">
           <div>Generated: {{ now()->format('d M Y, h:i A') }}</div>
           <div>{{ $jobCard->invoice_no }} · {{ $jobCard->order_no }}</div>
@@ -583,12 +583,12 @@
 
     {{-- Store Header --}}
     <div class="rp-center">
-      <div class="rp-store-name">{{ $store->store_name ?? 'TrackUp' }}</div>
+      <div class="rp-store-name">{{ $store?->store_name ?? session('shop_name') ?? 'TrackUp' }}</div>
       @if($store && $store->store_address)
-      <div style="font-size:8.5pt;margin-top:1mm">{{ $store->store_address }}</div>
+      <div style="font-size:18pt;margin-top:1mm">{{ $store->store_address }}</div>
       @endif
       @if($store && $store->phone_no1)
-      <div style="font-size:8.5pt">Tel: {{ $store->phone_no1 }}{{ $store->phone_no2 ? ' / '.$store->phone_no2 : '' }}</div>
+      <div style="font-size:18pt">Tel: {{ $store->phone_no1 }}{{ $store->phone_no2 ? ' / '.$store->phone_no2 : '' }}</div>
       @endif
 
     </div>

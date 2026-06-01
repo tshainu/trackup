@@ -210,7 +210,7 @@
       <span><span class="d-inline-block me-1" style="width:12px;height:12px;border-radius:50%;background:#696cff;"></span>Total</span>
       <span><span class="d-inline-block me-1" style="width:12px;height:12px;border-radius:50%;background:#71dd37;"></span>Completed</span>
       <span><span class="d-inline-block me-1" style="width:12px;height:12px;border-radius:50%;background:#ffab00;"></span>Pending</span>
-      <span><span class="d-inline-block me-1" style="width:12px;height:12px;border-radius:50%;background:#8c57ff;"></span>Revenue (÷100)</span>
+
     </div>
   </div>
   <div class="card-body pt-3" style="height:280px; position:relative;">
@@ -385,10 +385,10 @@
   // Data from controller (passed as JSON)
   const chartData = @json($chartData ?? []);
 
-  const totalData    = labels.map((_, i) => chartData[i]?.total    ?? 0);
-  const completedData= labels.map((_, i) => chartData[i]?.completed?? 0);
-  const pendingData  = labels.map((_, i) => chartData[i]?.pending  ?? 0);
-  const revenueData  = labels.map((_, i) => (chartData[i]?.revenue ?? 0) / 100);
+  const totalData    = labels.map((_, i) => chartData[i]?.total     ?? 0);
+  const completedData= labels.map((_, i) => chartData[i]?.completed ?? 0);
+  const pendingData  = labels.map((_, i) => chartData[i]?.pending   ?? 0);
+
 
   const ctx = document.getElementById('jobsLineChart').getContext('2d');
   new Chart(ctx, {
@@ -429,17 +429,7 @@
           tension: 0.45,
           fill: false,
         },
-        {
-          label: 'Revenue (÷100)',
-          data: revenueData,
-          borderColor: '#8c57ff',
-          backgroundColor: 'rgba(140,87,255,0.07)',
-          borderWidth: 2.5,
-          pointBackgroundColor: '#8c57ff',
-          pointRadius: 4,
-          tension: 0.45,
-          fill: false,
-        },
+
       ]
     },
     options: {
@@ -457,9 +447,6 @@
           padding: 10,
           callbacks: {
             label: function(ctx) {
-              if (ctx.dataset.label === 'Revenue (÷100)') {
-                return 'Revenue: Rs.' + (ctx.raw * 100).toLocaleString();
-              }
               return ctx.dataset.label + ': ' + ctx.raw;
             }
           }
@@ -472,9 +459,12 @@
         },
         y: {
           beginAtZero: true,
+          position: 'left',
           grid: { color: 'rgba(0,0,0,0.04)' },
-          ticks: { color: '#8a8d93', font: { size: 11 }, precision: 0 }
-        }
+          ticks: { color: '#8a8d93', font: { size: 11 }, precision: 0 },
+
+        },
+
       }
     }
   });

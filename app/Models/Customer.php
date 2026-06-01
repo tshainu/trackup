@@ -31,7 +31,9 @@ class Customer extends Model
 
     public static function nextCustomerId(): string
     {
-        $last = static::orderByDesc('id')->value('customer_id');
+        $shopId = session('shop_id');
+        $query  = $shopId ? static::where('shop_id', $shopId) : static::query();
+        $last   = $query->orderByDesc('id')->value('customer_id');
         if (!$last) return 'CUS-001';
         preg_match('/(\d+)$/', $last, $m);
         $next = isset($m[1]) ? (int)$m[1] + 1 : 1;

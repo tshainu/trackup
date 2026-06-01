@@ -10,7 +10,10 @@ class StoreController extends Controller
 {
     public function edit()
     {
-        $store = StoreInfo::firstOrNew([]);
+        $shopId = session('shop_id');
+        $store  = $shopId
+            ? StoreInfo::firstOrNew(['shop_id' => $shopId])
+            : StoreInfo::firstOrNew([]);
         return view('admin.store.edit', compact('store'));
     }
 
@@ -28,7 +31,13 @@ class StoreController extends Controller
             'logo'            => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
         ]);
 
-        $store = StoreInfo::firstOrNew(['id' => 1]);
+        $shopId = session('shop_id');
+        $store  = $shopId
+            ? StoreInfo::firstOrNew(['shop_id' => $shopId])
+            : StoreInfo::firstOrNew(['id' => 1]);
+        if ($shopId) {
+            $validated['shop_id'] = $shopId;
+        }
 
         // Handle logo upload
         if ($request->hasFile('logo')) {

@@ -1,12 +1,14 @@
 <?php
-
 namespace App\Models;
-
+use App\Traits\ShopScoped;
 use Illuminate\Database\Eloquent\Model;
 
 class FieldComplaint extends Model
 {
+    use ShopScoped;
+
     protected $fillable = [
+        'shop_id',
         'complaint_no', 'customer_db_id', 'customer_name', 'phone_no', 'address', 'location_notes',
         'gps_lat', 'gps_lng', 'gps_label',
         'service_type_id', 'service_type_name', 'description', 'priority', 'status',
@@ -28,7 +30,6 @@ class FieldComplaint extends Model
         'invoice_date'     => 'date',
     ];
 
-    // ── Accessors ────────────────────────────────────────────────────────────
     public function getGrandTotalAttribute(): float
     {
         $itemsSum = $this->items->sum('total');
@@ -45,13 +46,16 @@ class FieldComplaint extends Model
         return max(0, $this->grand_total - (float)$this->paid_amount);
     }
 
-    // ── Auto complaint_no ─────────────────────────────────────────────────────
     public static function nextComplaintNo(): string
     {
         $year  = now()->format('y');
         $month = now()->format('m');
         $prefix = $year . $month;
-        $last = static::where('complaint_no', 'like', "FC-{$prefix}%")->max('complaint_no');
+        $shopId = session('shop_id');
+        $last = static::withoutGlobalScope('shop')
+                       ->where('shop_id', $shopId)
+                       ->where('complaint_no', 'like', "FC-{$prefix}%")
+                       ->max('complaint_no');
         $seq  = $last ? ((int)substr($last, -3) + 1) : 1;
         return "FC-{$prefix}" . str_pad($seq, 3, '0', STR_PAD_LEFT);
     }
@@ -67,7 +71,6 @@ class FieldComplaint extends Model
         return "https://www.google.com/maps?q={$this->gps_lat},{$this->gps_lng}";
     }
 
-    // ── Relationships ─────────────────────────────────────────────────────────
     public function customer()
     {
         return $this->belongsTo(Customer::class, 'customer_db_id');

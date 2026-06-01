@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "icon": "./assets/icon.png",
+    "android": {
+      "package": "com.trackup.mobile",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#1E40AF"
+      },
+      "edgeToEdgeEnabled": true
+    },
+    "extra": {
+      "apiUrl": "http://69.169.97.195:8080"
+    },
+    "ios": {
+      "bundleIdentifier": "com.trackup.mobile",
+      "supportsTablet": true
+    },
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#1E40AF"
+    },
+    "updates": {
+      "enabled": false
+    },
+    "name": "TrackUp",
+    "slug": "trackup-mobile",
+    "version": "1.0.0",
+    "scheme": "trackup",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-font"
+    ]
+  }
+}

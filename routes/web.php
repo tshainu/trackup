@@ -16,6 +16,11 @@ use App\Http\Controllers\AjaxController;
 use App\Http\Controllers\Admin\FieldComplaintController;
 use App\Http\Controllers\Admin\ServiceTypeController;
 use App\Http\Controllers\Admin\SmsSettingsController;
+use App\Http\Controllers\Admin\LabelSettingsController;
+use App\Http\Controllers\Admin\WhatsappSettingsController;
+use App\Http\Controllers\SuperAdmin\AuthController as SAAuth;
+use App\Http\Controllers\SuperAdmin\DashboardController as SADash;
+use App\Http\Controllers\SuperAdmin\ShopController as SAShop;
 
 // Root — render admin dashboard directly (auth is auto-bypassed for preview)
 Route::get('/', [DashboardController::class, 'index'])->middleware(\App\Http\Middleware\AdminAuth::class);
@@ -80,6 +85,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/sms-settings',         [SmsSettingsController::class, 'update'])->name('sms-settings.update');
         Route::post('/sms-settings/test',   [SmsSettingsController::class, 'test'])->name('sms-settings.test');
 
+        // Label Settings
+        Route::get('/label-settings',  [LabelSettingsController::class, 'edit'])->name('label-settings.edit');
+        Route::put('/label-settings',  [LabelSettingsController::class, 'update'])->name('label-settings.update');
+
+        // WhatsApp Settings
+        Route::get('/whatsapp-settings',       [WhatsappSettingsController::class, 'edit'])->name('whatsapp-settings.edit');
+        Route::put('/whatsapp-settings',       [WhatsappSettingsController::class, 'update'])->name('whatsapp-settings.update');
+        Route::post('/whatsapp-settings/test', [WhatsappSettingsController::class, 'test'])->name('whatsapp-settings.test');
+
         // Invoices
         Route::get('/invoices',                        [InvoiceController::class, 'index'])->name('invoices.index');
         Route::get('/invoices/search',                 [InvoiceController::class, 'search'])->name('invoices.search');
@@ -131,6 +145,20 @@ Route::prefix('employee')->name('employee.')->group(function () {
         Route::post('/field-jobs/{fieldComplaint}/accept',                 [EmployeeDashboardController::class, 'acceptFieldJob'])->name('field-jobs.accept');
         Route::get('/field-jobs/{fieldComplaint}/complete',                [EmployeeDashboardController::class, 'completeFieldJobForm'])->name('field-jobs.complete');
         Route::post('/field-jobs/{fieldComplaint}/complete',               [EmployeeDashboardController::class, 'completeFieldJob'])->name('field-jobs.complete.save');
+    });
+});
+
+// Super Admin
+Route::prefix('superadmin')->name('superadmin.')->group(function () {
+    Route::get('/login',  [SAAuth::class, 'showLogin'])->name('login');
+    Route::post('/login', [SAAuth::class, 'login'])->name('login.post');
+    Route::post('/logout',[SAAuth::class, 'logout'])->name('logout');
+
+    Route::middleware(\App\Http\Middleware\SuperAdminAuth::class)->group(function () {
+        Route::get('/dashboard', [SADash::class, 'index'])->name('dashboard');
+        Route::resource('/shops', SAShop::class)->names('shops');
+        Route::post('/shops/{shop}/reset-password', [SAShop::class, 'resetPassword'])->name('shops.reset-password');
+        Route::patch('/shops/{shop}/status',        [SAShop::class, 'updateStatus'])->name('shops.update-status');
     });
 });
 

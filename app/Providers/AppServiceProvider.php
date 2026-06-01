@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Session;
 use App\Models\JobCard;
 use App\Models\FieldComplaint;
 use App\Models\StoreInfo;
@@ -48,8 +49,9 @@ class AppServiceProvider extends ServiceProvider
                 'fieldCompleted' => $fieldCompleted,
             ]);
 
-            // Share store info (logo + name) globally to layout
-            $storeInfo = StoreInfo::first();
+            // Share store info (logo + name) globally to layout — scoped to current shop
+            $shopId    = Session::get('shop_id');
+            $storeInfo = $shopId ? StoreInfo::where('shop_id', $shopId)->first() : StoreInfo::first();
             $view->with('storeInfo', $storeInfo);
 
             // Logged-in user name: admin or employee

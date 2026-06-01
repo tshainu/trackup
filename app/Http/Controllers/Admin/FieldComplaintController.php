@@ -56,6 +56,8 @@ class FieldComplaintController extends Controller
 
         $complaints = $query->paginate(20)->withQueryString();
 
+        $today = now()->toDateString();
+
         $counts = [
             'all'        => FieldComplaint::count(),
             'pending'    => FieldComplaint::where('status','Pending')->count(),
@@ -65,7 +67,26 @@ class FieldComplaintController extends Controller
             'billed'     => FieldComplaint::where('status','Billed')->count(),
         ];
 
-        return view('admin.field-complaints.index', compact('complaints','tab','search','counts'));
+        $stats = [
+            'new_today'   => FieldComplaint::whereDate('created_at', $today)->count(),
+            'pending'     => FieldComplaint::whereIn('status', ['Pending','Assigned'])->count(),
+            'in_progress' => FieldComplaint::where('status','In Progress')->count(),
+            'completed'   => FieldComplaint::where('status','Completed')->count(),
+            'overdue'     => FieldComplaint::whereNotNull('scheduled_date')
+                                ->whereDate('scheduled_date','<',$today)
+                                ->whereNotIn('status',['Completed','Billed','Cancelled'])->count(),
+            'billed'      => FieldComplaint::where('status','Billed')->count(),
+            'revenue'     => FieldComplaint::whereIn('status',['Completed','Billed'])->sum('paid_amount'),
+            'outstanding' => (function() {
+                // grand_total is a model accessor (not a real column), compute balance in PHP
+                $rows = FieldComplaint::whereIn('status',['Completed','Billed'])
+                            ->with('items')
+                            ->get(['id','service_charge','discount','paid_amount']);
+                return $rows->sum(fn($r) => max(0, $r->grand_total - (float)$r->paid_amount));
+            })(),
+        ];
+
+        return view('admin.field-complaints.index', compact('complaints','tab','search','counts','stats'));
     }
 
     // ── Create ────────────────────────────────────────────────────────────────
@@ -395,7 +416,8 @@ class FieldComplaintController extends Controller
             $fieldComplaint->refresh();
         }
 
-        return view('admin.field-complaints.invoice', compact('fieldComplaint'));
+        $store = \App\Models\StoreInfo::current();
+        return view('admin.field-complaints.invoice', compact('fieldComplaint', 'store'));
     }
 
     // ── Destroy ───────────────────────────────────────────────────────────────

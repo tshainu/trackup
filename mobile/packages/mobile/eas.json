@@ -1,0 +1,17 @@
+{
+  "build": {
+    "production": {},
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {}
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascApiKeyPath": "./keys/AuthKey.p8"
+      }
+    }
+  }
+}

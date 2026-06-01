@@ -34,17 +34,14 @@
       text-align: center;
     }
     .receipt-header .brand {
-      font-size: 1.5rem;
+      font-size: 24pt;
       font-weight: 800;
-      letter-spacing: 2px;
-      text-transform: uppercase;
+      letter-spacing: 1px;
     }
     .receipt-header .brand-sub {
-      font-size: .72rem;
-      opacity: .75;
-      letter-spacing: .15em;
-      margin-top: 2px;
-      text-transform: uppercase;
+      font-size: 18pt;
+      opacity: .85;
+      margin-top: 4px;
     }
     .receipt-header .receipt-title {
       margin-top: 14px;
@@ -244,8 +241,12 @@
 
   {{-- ── Header ── --}}
   <div class="receipt-header">
-    <div class="brand">{{ config('app.name', 'TrackUp') }}</div>
-    <div class="brand-sub">Repair & Service</div>
+    <div class="brand">{{ $shop?->shop_name ?? config('app.name', 'TrackUp') }}</div>
+    @if($shop?->address)
+      <div class="brand-sub">{{ $shop->address }}</div>
+    @elseif($shop?->phone)
+      <div class="brand-sub">{{ $shop->phone }}</div>
+    @endif
     <div class="receipt-title">Payment Receipt</div>
     <div class="order-no"># {{ $orderNo }}</div>
     @if($paymentType === 'full')

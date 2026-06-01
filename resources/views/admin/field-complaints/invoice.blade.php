@@ -136,7 +136,7 @@
                    style="height:44px;margin-bottom:10px;border-radius:8px;background:rgba(255,255,255,.15);padding:3px;">
               @endif
               <div class="text-white fw-bold" style="font-size:1.3rem;line-height:1.2;">
-                {{ $store?->store_name ?? config('app.name') }}
+                {{ $store?->store_name ?? session('shop_name') ?? 'TrackUp' }}
               </div>
               @if($store?->store_address)
               <div class="text-white small mt-1" style="opacity:.8;">{{ $store->store_address }}</div>
@@ -307,7 +307,7 @@
         {{-- Footer --}}
         <div class="invoice-footer">
           <p class="text-muted small mb-1">
-            Thank you for choosing <strong>{{ $store?->store_name ?? config('app.name') }}</strong>
+            Thank you for choosing <strong>{{ $store?->store_name ?? session('shop_name') ?? 'TrackUp' }}</strong>
           </p>
           <p class="text-muted small mb-0">
             @if($store?->phone_no1) {{ $store->phone_no1 }} @endif

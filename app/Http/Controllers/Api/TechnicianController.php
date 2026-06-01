@@ -174,11 +174,19 @@ class TechnicianController extends Controller
                                      'service_type_name','description','status','priority',
                                      'scheduled_date','assigned_at']);
 
+        $today = now()->toDateString();
         $all = FieldComplaint::where('assigned_to', $emp->id)->get();
         $stats = [
+            'new'         => FieldComplaint::where('assigned_to', $emp->id)
+                                ->whereDate('created_at', $today)->count(),
             'assigned'    => $all->where('status', 'Assigned')->count(),
             'in_progress' => $all->where('status', 'In Progress')->count(),
             'completed'   => $all->where('status', 'Completed')->count(),
+            'pending'     => $all->whereIn('status', ['Pending', 'Assigned'])->count(),
+            'overdue'     => FieldComplaint::where('assigned_to', $emp->id)
+                                ->whereNotNull('scheduled_date')
+                                ->whereDate('scheduled_date', '<', $today)
+                                ->whereNotIn('status', ['Completed', 'Cancelled'])->count(),
             'total'       => $all->count(),
         ];
 
@@ -263,5 +271,24 @@ class TechnicianController extends Controller
         ]);
 
         return response()->json(['message' => 'Job marked as On Hold', 'job' => $job]);
+    }
+
+    public function updateGps(Request $request, $id)
+    {
+        $emp = $request->attributes->get('auth_employee');
+        $job = FieldComplaint::where('assigned_to', $emp->id)->findOrFail($id);
+
+        $request->validate([
+            'gps_lat' => 'required|numeric',
+            'gps_lng' => 'required|numeric',
+        ]);
+
+        $job->update([
+            'gps_lat'   => $request->input('gps_lat'),
+            'gps_lng'   => $request->input('gps_lng'),
+            'gps_label' => $request->input('gps_label', 'Technician Location'),
+        ]);
+
+        return response()->json(['message' => 'GPS updated', 'job' => $job]);
     }
 }

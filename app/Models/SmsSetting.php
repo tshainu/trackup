@@ -1,12 +1,13 @@
 <?php
-
 namespace App\Models;
-
+use App\Traits\ShopScoped;
 use Illuminate\Database\Eloquent\Model;
 
 class SmsSetting extends Model
 {
-    protected $fillable = ['api_url', 'api_key', 'sender_id', 'enabled'];
+    use ShopScoped;
+
+    protected $fillable = ['shop_id','api_url','api_key','sender_id','enabled'];
 
     protected $casts = [
         'enabled' => 'boolean',
@@ -14,11 +15,16 @@ class SmsSetting extends Model
 
     public static function current(): self
     {
-        return self::first() ?? self::create([
-            'api_url'   => '',
-            'api_key'   => '',
-            'sender_id' => '',
-            'enabled'   => false,
-        ]);
+        $shopId = session('shop_id');
+        return static::withoutGlobalScope('shop')
+                     ->where('shop_id', $shopId)
+                     ->first()
+            ?? static::withoutGlobalScope('shop')->create([
+                'shop_id'   => $shopId,
+                'api_url'   => '',
+                'api_key'   => '',
+                'sender_id' => '',
+                'enabled'   => false,
+            ]);
     }
 }

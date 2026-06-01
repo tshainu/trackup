@@ -85,6 +85,130 @@
   </div>
 </div>
 
+{{-- ── STICKER PRINT ── --}}
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<script>
+(function(){
+  const SHOP_NAME    = @json($shopName);
+  const LABEL_W_MM   = {{ $labelSettings->width_mm }};
+  const LABEL_H_MM   = {{ $labelSettings->height_mm }};
+  const FONT_SIZE_PT = {{ $labelSettings->font_size }};
+
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.sticker-btn').forEach(btn => {
+      btn.addEventListener('click', function(){
+        const orderNo = this.dataset.order;
+        const fault   = this.dataset.fault || 'N/A';
+        const device  = this.dataset.device || '';
+
+        const svgNS  = 'http://www.w3.org/2000/svg';
+        const tmpSvg = document.createElementNS(svgNS, 'svg');
+        tmpSvg.style.position = 'absolute';
+        tmpSvg.style.left = '-9999px';
+        tmpSvg.style.top  = '-9999px';
+        document.body.appendChild(tmpSvg);
+
+        JsBarcode(tmpSvg, orderNo, {
+          format: 'CODE128',
+          width: 2,
+          height: 50,
+          displayValue: false,
+          margin: 2,
+        });
+
+        const svgHtml = tmpSvg.outerHTML;
+        document.body.removeChild(tmpSvg);
+
+        const faultLine = device ? device + ' — ' + fault : fault;
+
+        const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Sticker</title>
+<style>
+  @page { size: ${LABEL_W_MM}mm ${LABEL_H_MM}mm; margin: 0; }
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body {
+    width: ${LABEL_W_MM}mm;
+    height: ${LABEL_H_MM}mm;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2mm 3mm;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+  }
+  .shop-name {
+    font-size: ${FONT_SIZE_PT + 2}pt;
+    font-weight: 700;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    line-height: 1.2;
+  }
+  .fault-line {
+    font-size: ${FONT_SIZE_PT}pt;
+    color: #333;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    line-height: 1.3;
+    margin-top: 1mm;
+  }
+  .barcode-wrap {
+    margin-top: 1.5mm;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+  .barcode-wrap svg { max-width: 100%; height: auto; }
+  .order-no {
+    font-size: ${Math.max(FONT_SIZE_PT - 1, 6)}pt;
+    color: #555;
+    margin-top: 0.5mm;
+    letter-spacing: 0.5px;
+  }
+</style>
+</head>
+<body>
+  <div class="shop-name">${SHOP_NAME}</div>
+  <div class="fault-line">${faultLine}</div>
+  <div class="barcode-wrap">
+    ${svgHtml}
+    <div class="order-no">${orderNo}</div>
+  </div>
+  <script>
+    window.onload = function() {
+      window.print();
+      window.onafterprint = function() { window.close(); };
+    };
+  <\/script>
+</body>
+</html>`;
+
+        const win = window.open('', '_blank',
+          `width=${Math.round(LABEL_W_MM * 3.78 + 60)},height=${Math.round(LABEL_H_MM * 3.78 + 120)}`
+        );
+        if (!win) {
+          alert('Popup blocked! Please allow popups for this site to print stickers.');
+          return;
+        }
+        win.document.open();
+        win.document.write(html);
+        win.document.close();
+      });
+    });
+  });
+})();
+</script>
+
 @endpush
 
 @section('content')
@@ -287,6 +411,12 @@
                 data-url="{{ route('admin.jobcards.payment', $job) }}"
                 data-post="{{ route('admin.jobcards.completePayment', $job) }}">
                 <i class='bx bx-dollar-circle'></i>
+              </button>
+              <button type="button" class="action-btn btn btn-outline-warning sticker-btn" title="Print Sticker"
+                data-order="{{ $job->order_no }}"
+                data-fault="{{ addslashes($job->device_fault ?? 'N/A') }}"
+                data-device="{{ addslashes($job->device_name ?? '') }}">
+                <i class='bx bx-barcode'></i>
               </button>
             </div>
           </td>
