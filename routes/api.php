@@ -31,6 +31,7 @@ Route::middleware(\App\Http\Middleware\TechnicianApiAuth::class)->group(function
     Route::post('/technician/field-jobs/{id}/extend',        [TechnicianController::class, 'extendFieldJob']);
     Route::post('/technician/field-jobs/{id}/cant-complete', [TechnicianController::class, 'cantCompleteFieldJob']);
     Route::post('/technician/field-jobs/{id}/update-gps',    [TechnicianController::class, 'updateGps']);
+    Route::post('/technician/change-password',             [TechnicianController::class, 'changePassword']);
 });
 
 // ── Admin ─────────────────────────────────────────────────────────────────────

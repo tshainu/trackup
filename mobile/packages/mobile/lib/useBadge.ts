@@ -1,12 +1,18 @@
 /**
- * useBadge — tracks "seen" job IDs per tab (in-memory, no native deps).
- * Red dot = there are new (unseen) jobs since app opened.
+ * useBadge — tracks new/pending jobs per tab.
+ *
+ * States:
+ *  - Red dot  = unseen new jobs (never opened this tab since jobs appeared)
+ *  - Green dot = opened tab, saw jobs, but jobs still active (not all cleared)
+ *  - No dot   = all jobs cleared (empty list or all completed)
  */
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 type TabKey = 'jobs' | 'field';
 
-// Module-level store so seen IDs persist across re-renders (but reset on app restart)
+export type BadgeState = 'red' | 'green' | 'none';
+
+// Module-level store — persists across re-renders, resets on app restart
 const seenStore: Record<string, Set<number>> = {};
 
 function getSeenSet(tab: TabKey): Set<number> {
@@ -15,24 +21,33 @@ function getSeenSet(tab: TabKey): Set<number> {
 }
 
 export function useBadge(tab: TabKey, currentIds: number[]) {
-  const [hasNew, setHasNew] = useState(false);
+  const [badge, setBadge] = useState<BadgeState>('none');
   const idsKey = currentIds.join(',');
 
   useEffect(() => {
     if (currentIds.length === 0) {
-      setHasNew(false);
+      setBadge('none');
       return;
     }
     const seen = getSeenSet(tab);
-    const anyNew = currentIds.some(id => !seen.has(id));
-    setHasNew(anyNew);
+    const anyUnseen = currentIds.some(id => !seen.has(id));
+    if (anyUnseen) {
+      setBadge('red');   // new jobs user hasn't seen
+    } else {
+      setBadge('green'); // seen but jobs still active
+    }
   }, [idsKey]);
 
   const markAllSeen = useCallback(() => {
     const seen = getSeenSet(tab);
     currentIds.forEach(id => seen.add(id));
-    setHasNew(false);
+    // If there are still active jobs → green, else none
+    setBadge(currentIds.length > 0 ? 'green' : 'none');
   }, [idsKey]);
 
-  return { hasNew, markAllSeen };
+  // Convenience booleans
+  const hasNew = badge === 'red';
+  const hasSeen = badge === 'green';
+
+  return { badge, hasNew, hasSeen, markAllSeen };
 }

@@ -291,4 +291,23 @@ class TechnicianController extends Controller
 
         return response()->json(['message' => 'GPS updated', 'job' => $job]);
     }
+
+    public function changePassword(Request $request)
+    {
+        $emp = $request->attributes->get('auth_employee');
+
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_password'     => 'required|string|min:6',
+        ]);
+
+        if (!\Hash::check($request->current_password, $emp->password)) {
+            return response()->json(['message' => 'Current password is incorrect.'], 422);
+        }
+
+        $emp->update(['password' => \Hash::make($request->new_password)]);
+
+        return response()->json(['message' => 'Password changed successfully.']);
+    }
+
 }

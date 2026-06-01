@@ -133,6 +133,9 @@ export const techApi = {
 
   updateGps: (id: number, gps_lat: number, gps_lng: number, gps_label?: string) =>
     request<{ message: string; job: FieldComplaint }>('POST', `/technician/field-jobs/${id}/update-gps`, { gps_lat, gps_lng, gps_label }),
+
+  changePassword: (current_password: string, new_password: string) =>
+    request<{ message: string }>('POST', '/technician/change-password', { current_password, new_password }),
 };
 
 // ── Types ──────────────────────────────────────────────────────────────────

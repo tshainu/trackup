@@ -7,19 +7,20 @@ import { useAuth } from '../../lib/auth';
 import { Colors } from '../../lib/colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { techApi } from '../../lib/api';
-import { useBadge } from '../../lib/useBadge';
+import { useBadge, BadgeState } from '../../lib/useBadge';
 
 function BadgeIcon({
-  name, color, size, hasNew,
-}: { name: any; color: string; size: number; hasNew: boolean }) {
+  name, color, size, badge,
+}: { name: any; color: string; size: number; badge: BadgeState }) {
+  const dotColor = badge === 'red' ? '#EF4444' : badge === 'green' ? '#22C55E' : null;
   return (
     <View>
       <Ionicons name={name} size={size} color={color} />
-      {hasNew && (
+      {dotColor && (
         <View style={{
           position: 'absolute', top: -2, right: -4,
           width: 9, height: 9, borderRadius: 5,
-          backgroundColor: Colors.danger,
+          backgroundColor: dotColor,
           borderWidth: 1.5, borderColor: '#fff',
         }} />
       )}
@@ -56,8 +57,8 @@ export default function TechLayout() {
   const jobIds   = (jobsData?.jobs  ?? []).map(j => j.id);
   const fieldIds = (fieldData?.jobs ?? []).map(j => j.id);
 
-  const { hasNew: jobsHasNew,  markAllSeen: markJobsSeen  } = useBadge('jobs',  jobIds);
-  const { hasNew: fieldHasNew, markAllSeen: markFieldSeen } = useBadge('field', fieldIds);
+  const { badge: jobsBadge,  markAllSeen: markJobsSeen  } = useBadge('jobs',  jobIds);
+  const { badge: fieldBadge, markAllSeen: markFieldSeen } = useBadge('field', fieldIds);
 
   return (
     <Tabs
@@ -90,7 +91,7 @@ export default function TechLayout() {
         options={{
           title: 'My Jobs',
           tabBarIcon: ({ color, size }) => (
-            <BadgeIcon name="briefcase-outline" color={color} size={size} hasNew={jobsHasNew} />
+            <BadgeIcon name="briefcase-outline" color={color} size={size} badge={jobsBadge} />
           ),
           headerShown: false,
         }}
@@ -108,7 +109,7 @@ export default function TechLayout() {
         options={{
           title: 'Field',
           tabBarIcon: ({ color, size }) => (
-            <BadgeIcon name="location-outline" color={color} size={size} hasNew={fieldHasNew} />
+            <BadgeIcon name="location-outline" color={color} size={size} badge={fieldBadge} />
           ),
           headerShown: false,
         }}

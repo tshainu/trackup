@@ -9,32 +9,21 @@ import { useRouter } from 'expo-router';
 import { techApi, FieldComplaint, FieldStats } from '../../../lib/api';
 import { Colors } from '../../../lib/colors';
 
-// ── Stat grid ──────────────────────────────────────────────────────────────
-interface StatTile {
-  label: string;
-  key: keyof FieldStats;
-  icon: keyof typeof Ionicons.glyphMap;
-  color: string;
-  bg: string;
-}
-
-const TILES: StatTile[] = [
-  { label: 'New Today',  key: 'new',         icon: 'add-circle-outline',    color: '#2563EB', bg: '#EFF6FF' },
-  { label: 'Pending',    key: 'pending',      icon: 'time-outline',          color: '#D97706', bg: '#FFFBEB' },
-  { label: 'In Progress',key: 'in_progress',  icon: 'construct-outline',     color: '#7C3AED', bg: '#F5F3FF' },
-  { label: 'Done',       key: 'completed',    icon: 'checkmark-circle-outline', color: '#059669', bg: '#ECFDF5' },
-  { label: 'Overdue',    key: 'overdue',      icon: 'alert-circle-outline',  color: '#DC2626', bg: '#FEF2F2' },
-  { label: 'Total',      key: 'total',        icon: 'list-outline',          color: '#475569', bg: '#F1F5F9' },
+// ── Compact stat row ───────────────────────────────────────────────────────
+const TILES = [
+  { label: 'New',        key: 'new'         as keyof FieldStats, color: '#2563EB' },
+  { label: 'Pending',    key: 'pending'      as keyof FieldStats, color: '#D97706' },
+  { label: 'In Progress',key: 'in_progress'  as keyof FieldStats, color: '#7C3AED' },
+  { label: 'Done',       key: 'completed'    as keyof FieldStats, color: '#059669' },
+  { label: 'Overdue',    key: 'overdue'      as keyof FieldStats, color: '#DC2626' },
+  { label: 'Total',      key: 'total'        as keyof FieldStats, color: '#475569' },
 ];
 
-function StatGrid({ stats }: { stats: FieldStats }) {
+function StatBar({ stats }: { stats: FieldStats }) {
   return (
-    <View style={sg.grid}>
+    <View style={sg.row}>
       {TILES.map(t => (
-        <View key={t.key} style={[sg.tile, { backgroundColor: t.bg }]}>
-          <View style={[sg.iconWrap, { backgroundColor: t.color + '22' }]}>
-            <Ionicons name={t.icon} size={18} color={t.color} />
-          </View>
+        <View key={t.key} style={sg.pill}>
           <Text style={[sg.count, { color: t.color }]}>{stats[t.key] ?? 0}</Text>
           <Text style={sg.label}>{t.label}</Text>
         </View>
@@ -112,21 +101,19 @@ export default function TechFieldScreen() {
 
   return (
     <View style={styles.root}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Field Complaints</Text>
-        <Text style={styles.headerSub}>Your assigned field jobs overview</Text>
-      </View>
-
       {isLoading
-        ? <ActivityIndicator style={{ marginTop: 40 }} color={Colors.primary} />
+        ? <ActivityIndicator style={{ marginTop: 60 }} color={Colors.primary} />
         : (
           <FlatList
             data={jobs}
             keyExtractor={j => String(j.id)}
             contentContainerStyle={{ padding: 12, paddingBottom: 80 }}
             refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
-            ListHeaderComponent={stats ? <StatGrid stats={stats} /> : null}
+            ListHeaderComponent={stats ? (
+              <View style={styles.statsWrap}>
+                <StatBar stats={stats} />
+              </View>
+            ) : null}
             renderItem={({ item }) => (
               <FieldJobItem
                 job={item}
@@ -149,49 +136,41 @@ export default function TechFieldScreen() {
 
 // ── Styles ─────────────────────────────────────────────────────────────────
 const sg = StyleSheet.create({
-  grid: {
+  row: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 14,
+    gap: 6,
   },
-  tile: {
-    width: '30.5%',
-    borderRadius: 12,
-    padding: 12,
+  pill: {
+    flex: 1,
+    minWidth: '14%',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
     alignItems: 'center',
-    gap: 4,
     elevation: 1,
     shadowColor: '#000',
     shadowOpacity: 0.04,
-    shadowRadius: 3,
-  },
-  iconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 2,
+    shadowRadius: 2,
   },
   count: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '800',
-    lineHeight: 26,
+    lineHeight: 22,
   },
   label: {
-    fontSize: 11,
+    fontSize: 9,
     fontWeight: '600',
-    color: '#64748B',
+    color: '#94A3B8',
     textAlign: 'center',
+    marginTop: 1,
   },
 });
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.bg },
-  header: { backgroundColor: Colors.primary, paddingHorizontal: 20, paddingTop: 18, paddingBottom: 18 },
-  headerTitle: { fontSize: 20, fontWeight: '800', color: '#fff' },
-  headerSub: { fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
+  statsWrap: { marginBottom: 12 },
   card: {
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -204,9 +183,7 @@ const styles = StyleSheet.create({
     borderLeftWidth: 3,
     borderLeftColor: 'transparent',
   },
-  cardOverdue: {
-    borderLeftColor: '#DC2626',
-  },
+  cardOverdue: { borderLeftColor: '#DC2626' },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
   complaintNo: { fontSize: 13, fontWeight: '700', color: Colors.primary },
   badge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6 },
