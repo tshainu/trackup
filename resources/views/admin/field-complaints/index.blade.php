@@ -180,7 +180,7 @@
       <a href="{{ route('admin.field-complaints.create') }}"
          class="btn btn-light fw-bold ms-2"
          style="border-radius:10px;color:#696cff;">
-        <i class="bx bx-plus me-1"></i>New Complaint
+        <i class="bx bx-plus me-1"></i>New Ticket
       </a>
     </div>
   </div>

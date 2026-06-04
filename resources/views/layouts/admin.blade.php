@@ -264,17 +264,17 @@
         <li class="menu-item {{ Request::routeIs('admin.field-complaints.*') ? 'open active' : '' }}">
           <a href="javascript:void(0);" class="menu-link menu-toggle">
             <i class="menu-icon tf-icons bx bx-map-pin"></i>
-            <div>Field Complaints</div>
+            <div>Field Tickets</div>
           </a>
           <ul class="menu-sub">
             <li class="menu-item {{ Request::routeIs('admin.field-complaints.index') ? 'active' : '' }}">
               <a href="{{ route('admin.field-complaints.index') }}" class="menu-link">
-                <div>All Complaints</div>
+                <div>All Tickets</div>
               </a>
             </li>
             <li class="menu-item {{ Request::routeIs('admin.field-complaints.create') ? 'active' : '' }}">
               <a href="{{ route('admin.field-complaints.create') }}" class="menu-link">
-                <div>New Complaint</div>
+                <div>New Ticket</div>
               </a>
             </li>
           </ul>

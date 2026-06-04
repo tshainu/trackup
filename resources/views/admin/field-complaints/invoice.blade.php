@@ -192,7 +192,7 @@
               <div class="section-label">Service Details</div>
               <div class="d-flex flex-column gap-1" style="font-size:.85rem;">
                 <div class="d-flex justify-content-between">
-                  <span class="text-muted">Complaint #</span>
+                  <span class="text-muted">Ticket #</span>
                   <span class="fw-semibold font-monospace text-primary">{{ $fc->complaint_no }}</span>
                 </div>
                 <div class="d-flex justify-content-between">

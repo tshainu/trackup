@@ -187,7 +187,7 @@
 </div>
 @endif
 
-{{-- ── Field Complaints Unpaid ── --}}
+{{-- ── Field Tickets Unpaid ── --}}
 @if(isset($fieldCompleted) && $fieldCompleted->count() > 0)
 <div class="card mb-4">
   <div class="card-header d-flex align-items-center gap-2 py-3">
@@ -196,14 +196,14 @@
     </div>
     <div>
       <h6 class="mb-0 fw-bold">Field Services — Payment Pending</h6>
-      <small class="text-muted">Completed field complaints awaiting payment</small>
+      <small class="text-muted">Completed field tickets awaiting payment</small>
     </div>
     <span class="badge ms-auto" style="background:#f59e0b;color:#fff;">{{ $fieldCompleted->count() }}</span>
   </div>
   <div class="table-responsive">
     <table class="table table-hover mb-0">
       <thead class="table-light">
-        <tr><th>Complaint No</th><th>Customer</th><th>Service</th><th>Paid So Far</th><th>Action</th></tr>
+        <tr><th>Ticket No</th><th>Customer</th><th>Service</th><th>Paid So Far</th><th>Action</th></tr>
       </thead>
       <tbody>
         @foreach($fieldCompleted as $fc)
