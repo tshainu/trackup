@@ -15,10 +15,11 @@ class CctvLead extends Model
 
     public static function nextLeadNo(): string
     {
-        $yymm   = now()->format('ym');
-        $shopId = session('shop_id');
-        $last   = static::withoutGlobalScope('shop')->where('shop_id', $shopId)
-                        ->where('lead_no', 'like', "LED-{$yymm}%")->max('lead_no');
+        $yymm = now()->format('ym');
+        // Look across ALL shops to avoid unique constraint violations
+        $last = static::withoutGlobalScope('shop')
+                      ->where('lead_no', 'like', "LED-{$yymm}%")
+                      ->max('lead_no');
         $seq = $last ? ((int)substr($last, -3) + 1) : 1;
         return 'LED-' . $yymm . '-' . str_pad($seq, 3, '0', STR_PAD_LEFT);
     }
