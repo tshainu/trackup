@@ -170,6 +170,109 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
     });
 });
 
+// ── CCTV Module Routes ────────────────────────────────────────────────────────
+use App\Http\Controllers\Admin\Cctv\CctvDashboardController;
+use App\Http\Controllers\Admin\Cctv\CctvLeadController;
+use App\Http\Controllers\Admin\Cctv\CctvSurveyController;
+use App\Http\Controllers\Admin\Cctv\CctvQuotationController;
+use App\Http\Controllers\Admin\Cctv\CctvProjectController;
+use App\Http\Controllers\Admin\Cctv\CctvAssetController;
+use App\Http\Controllers\Admin\Cctv\CctvServiceTicketController;
+use App\Http\Controllers\Admin\Cctv\CctvAmcController;
+use App\Http\Controllers\Admin\Cctv\CctvRepairController;
+use App\Http\Controllers\Admin\Cctv\CctvInventoryController;
+
+Route::prefix('admin/cctv')->name('admin.cctv.')->middleware(\App\Http\Middleware\AdminAuth::class)->group(function () {
+    Route::get('/dashboard', [CctvDashboardController::class, 'index'])->name('dashboard');
+
+    // Leads
+    Route::get('/leads',                 [CctvLeadController::class, 'index'])->name('leads.index');
+    Route::get('/leads/create',          [CctvLeadController::class, 'create'])->name('leads.create');
+    Route::post('/leads',                [CctvLeadController::class, 'store'])->name('leads.store');
+    Route::get('/leads/{lead}',          [CctvLeadController::class, 'show'])->name('leads.show');
+    Route::get('/leads/{lead}/edit',     [CctvLeadController::class, 'edit'])->name('leads.edit');
+    Route::put('/leads/{lead}',          [CctvLeadController::class, 'update'])->name('leads.update');
+    Route::delete('/leads/{lead}',       [CctvLeadController::class, 'destroy'])->name('leads.destroy');
+
+    // Surveys
+    Route::get('/surveys',               [CctvSurveyController::class, 'index'])->name('surveys.index');
+    Route::get('/surveys/create',        [CctvSurveyController::class, 'create'])->name('surveys.create');
+    Route::post('/surveys',              [CctvSurveyController::class, 'store'])->name('surveys.store');
+    Route::get('/surveys/{survey}',      [CctvSurveyController::class, 'show'])->name('surveys.show');
+    Route::get('/surveys/{survey}/edit', [CctvSurveyController::class, 'edit'])->name('surveys.edit');
+    Route::put('/surveys/{survey}',      [CctvSurveyController::class, 'update'])->name('surveys.update');
+    Route::delete('/surveys/{survey}',   [CctvSurveyController::class, 'destroy'])->name('surveys.destroy');
+
+    // Quotations
+    Route::get('/quotations',                   [CctvQuotationController::class, 'index'])->name('quotations.index');
+    Route::get('/quotations/create',            [CctvQuotationController::class, 'create'])->name('quotations.create');
+    Route::post('/quotations',                  [CctvQuotationController::class, 'store'])->name('quotations.store');
+    Route::get('/quotations/{quotation}',       [CctvQuotationController::class, 'show'])->name('quotations.show');
+    Route::get('/quotations/{quotation}/edit',  [CctvQuotationController::class, 'edit'])->name('quotations.edit');
+    Route::put('/quotations/{quotation}',       [CctvQuotationController::class, 'update'])->name('quotations.update');
+    Route::get('/quotations/{quotation}/pdf',   [CctvQuotationController::class, 'pdf'])->name('quotations.pdf');
+    Route::delete('/quotations/{quotation}',    [CctvQuotationController::class, 'destroy'])->name('quotations.destroy');
+
+    // Projects
+    Route::get('/projects',                  [CctvProjectController::class, 'index'])->name('projects.index');
+    Route::get('/projects/create',           [CctvProjectController::class, 'create'])->name('projects.create');
+    Route::post('/projects',                 [CctvProjectController::class, 'store'])->name('projects.store');
+    Route::get('/projects/{project}',        [CctvProjectController::class, 'show'])->name('projects.show');
+    Route::get('/projects/{project}/edit',   [CctvProjectController::class, 'edit'])->name('projects.edit');
+    Route::put('/projects/{project}',        [CctvProjectController::class, 'update'])->name('projects.update');
+    Route::patch('/projects/{project}/stage',[CctvProjectController::class, 'updateStage'])->name('projects.updateStage');
+    Route::delete('/projects/{project}',     [CctvProjectController::class, 'destroy'])->name('projects.destroy');
+
+    // Assets
+    Route::get('/assets',                [CctvAssetController::class, 'index'])->name('assets.index');
+    Route::get('/assets/create',         [CctvAssetController::class, 'create'])->name('assets.create');
+    Route::post('/assets',               [CctvAssetController::class, 'store'])->name('assets.store');
+    Route::get('/assets/{asset}',        [CctvAssetController::class, 'show'])->name('assets.show');
+    Route::get('/assets/{asset}/edit',   [CctvAssetController::class, 'edit'])->name('assets.edit');
+    Route::put('/assets/{asset}',        [CctvAssetController::class, 'update'])->name('assets.update');
+    Route::delete('/assets/{asset}',     [CctvAssetController::class, 'destroy'])->name('assets.destroy');
+
+    // Service Tickets
+    Route::get('/service-tickets',                          [CctvServiceTicketController::class, 'index'])->name('service-tickets.index');
+    Route::get('/service-tickets/create',                   [CctvServiceTicketController::class, 'create'])->name('service-tickets.create');
+    Route::post('/service-tickets',                         [CctvServiceTicketController::class, 'store'])->name('service-tickets.store');
+    Route::get('/service-tickets/{serviceTicket}',          [CctvServiceTicketController::class, 'show'])->name('service-tickets.show');
+    Route::get('/service-tickets/{serviceTicket}/edit',     [CctvServiceTicketController::class, 'edit'])->name('service-tickets.edit');
+    Route::put('/service-tickets/{serviceTicket}',          [CctvServiceTicketController::class, 'update'])->name('service-tickets.update');
+    Route::patch('/service-tickets/{serviceTicket}/status', [CctvServiceTicketController::class, 'updateStatus'])->name('service-tickets.updateStatus');
+    Route::delete('/service-tickets/{serviceTicket}',       [CctvServiceTicketController::class, 'destroy'])->name('service-tickets.destroy');
+
+    // AMC Contracts
+    Route::get('/amc',                [CctvAmcController::class, 'index'])->name('amc.index');
+    Route::get('/amc/create',         [CctvAmcController::class, 'create'])->name('amc.create');
+    Route::post('/amc',               [CctvAmcController::class, 'store'])->name('amc.store');
+    Route::get('/amc/{amc}',          [CctvAmcController::class, 'show'])->name('amc.show');
+    Route::get('/amc/{amc}/edit',     [CctvAmcController::class, 'edit'])->name('amc.edit');
+    Route::put('/amc/{amc}',          [CctvAmcController::class, 'update'])->name('amc.update');
+    Route::post('/amc/{amc}/visit',   [CctvAmcController::class, 'addVisit'])->name('amc.addVisit');
+    Route::delete('/amc/{amc}',       [CctvAmcController::class, 'destroy'])->name('amc.destroy');
+
+    // Repairs
+    Route::get('/repairs',               [CctvRepairController::class, 'index'])->name('repairs.index');
+    Route::get('/repairs/create',        [CctvRepairController::class, 'create'])->name('repairs.create');
+    Route::post('/repairs',              [CctvRepairController::class, 'store'])->name('repairs.store');
+    Route::get('/repairs/{repair}',      [CctvRepairController::class, 'show'])->name('repairs.show');
+    Route::get('/repairs/{repair}/edit', [CctvRepairController::class, 'edit'])->name('repairs.edit');
+    Route::put('/repairs/{repair}',      [CctvRepairController::class, 'update'])->name('repairs.update');
+    Route::delete('/repairs/{repair}',   [CctvRepairController::class, 'destroy'])->name('repairs.destroy');
+
+    // Inventory
+    Route::get('/inventory',                          [CctvInventoryController::class, 'index'])->name('inventory.index');
+    Route::get('/inventory/create',                   [CctvInventoryController::class, 'create'])->name('inventory.create');
+    Route::post('/inventory',                         [CctvInventoryController::class, 'store'])->name('inventory.store');
+    Route::get('/inventory/{inventory}',              [CctvInventoryController::class, 'show'])->name('inventory.show');
+    Route::get('/inventory/{inventory}/edit',         [CctvInventoryController::class, 'edit'])->name('inventory.edit');
+    Route::put('/inventory/{inventory}',              [CctvInventoryController::class, 'update'])->name('inventory.update');
+    Route::post('/inventory/{inventory}/stock-in',    [CctvInventoryController::class, 'stockIn'])->name('inventory.stockIn');
+    Route::post('/inventory/{inventory}/stock-out',   [CctvInventoryController::class, 'stockOut'])->name('inventory.stockOut');
+    Route::delete('/inventory/{inventory}',           [CctvInventoryController::class, 'destroy'])->name('inventory.destroy');
+});
+
 // Ajax endpoints
 Route::get('/ajax/brands',            [AjaxController::class, 'brands'])->name('ajax.brands');
 Route::get('/ajax/faults',            [AjaxController::class, 'faults'])->name('ajax.faults');

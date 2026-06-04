@@ -379,6 +379,72 @@
 
         <div class="menu-divider"></div>
 
+        {{-- ── CCTV MODULE ── --}}
+        @php $onCctv = Request::routeIs('admin.cctv.*'); @endphp
+        <li class="menu-section-label">CCTV Business</li>
+        <li class="menu-item {{ $onCctv && Request::routeIs('admin.cctv.dashboard') ? 'active' : '' }}">
+          <a href="{{ route('admin.cctv.dashboard') }}" class="menu-link">
+            <i class="menu-icon tf-icons bx bx-cctv"></i>
+            <div>CCTV Dashboard</div>
+          </a>
+        </li>
+        <li class="menu-item {{ $onCctv && Request::routeIs('admin.cctv.leads.*') ? 'open active' : '' }}">
+          <a href="{{ route('admin.cctv.leads.index') }}" class="menu-link">
+            <i class="menu-icon tf-icons bx bx-user-plus"></i>
+            <div>Leads & Enquiry</div>
+          </a>
+        </li>
+        <li class="menu-item {{ $onCctv && Request::routeIs('admin.cctv.surveys.*') ? 'open active' : '' }}">
+          <a href="{{ route('admin.cctv.surveys.index') }}" class="menu-link">
+            <i class="menu-icon tf-icons bx bx-map-alt"></i>
+            <div>Site Surveys</div>
+          </a>
+        </li>
+        <li class="menu-item {{ $onCctv && Request::routeIs('admin.cctv.quotations.*') ? 'open active' : '' }}">
+          <a href="{{ route('admin.cctv.quotations.index') }}" class="menu-link">
+            <i class="menu-icon tf-icons bx bx-receipt"></i>
+            <div>Quotations</div>
+          </a>
+        </li>
+        <li class="menu-item {{ $onCctv && Request::routeIs('admin.cctv.projects.*') ? 'open active' : '' }}">
+          <a href="{{ route('admin.cctv.projects.index') }}" class="menu-link">
+            <i class="menu-icon tf-icons bx bx-hard-hat"></i>
+            <div>Installations</div>
+          </a>
+        </li>
+        <li class="menu-item {{ $onCctv && Request::routeIs('admin.cctv.assets.*') ? 'open active' : '' }}">
+          <a href="{{ route('admin.cctv.assets.index') }}" class="menu-link">
+            <i class="menu-icon tf-icons bx bx-server"></i>
+            <div>Asset Register</div>
+          </a>
+        </li>
+        <li class="menu-item {{ $onCctv && Request::routeIs('admin.cctv.service-tickets.*') ? 'open active' : '' }}">
+          <a href="{{ route('admin.cctv.service-tickets.index') }}" class="menu-link">
+            <i class="menu-icon tf-icons bx bx-support"></i>
+            <div>Service Tickets</div>
+          </a>
+        </li>
+        <li class="menu-item {{ $onCctv && Request::routeIs('admin.cctv.amc.*') ? 'open active' : '' }}">
+          <a href="{{ route('admin.cctv.amc.index') }}" class="menu-link">
+            <i class="menu-icon tf-icons bx bx-refresh"></i>
+            <div>AMC Contracts</div>
+          </a>
+        </li>
+        <li class="menu-item {{ $onCctv && Request::routeIs('admin.cctv.repairs.*') ? 'open active' : '' }}">
+          <a href="{{ route('admin.cctv.repairs.index') }}" class="menu-link">
+            <i class="menu-icon tf-icons bx bx-wrench"></i>
+            <div>Repairs</div>
+          </a>
+        </li>
+        <li class="menu-item {{ $onCctv && Request::routeIs('admin.cctv.inventory.*') ? 'open active' : '' }}">
+          <a href="{{ route('admin.cctv.inventory.index') }}" class="menu-link">
+            <i class="menu-icon tf-icons bx bx-package"></i>
+            <div>Inventory</div>
+          </a>
+        </li>
+
+        <div class="menu-divider"></div>
+
         {{-- ── ALERTS ── --}}
         <li class="menu-section-label">Alerts</li>
         <li class="menu-item {{ Request::routeIs('admin.notifications.*') ? 'active' : '' }}">
