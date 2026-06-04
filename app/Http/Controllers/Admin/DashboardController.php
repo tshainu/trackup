@@ -19,6 +19,7 @@ class DashboardController extends Controller
             'employees'   => Employee::where('status', 'active')->count(),
             'revenue'     => JobCard::where('status', 'Completed')->sum('rupees'),
             'today'       => JobCard::whereDate('created_at', today())->count(),
+            'uncollected' => JobCard::where('status', 'Completed')->where('payment_received', 0)->count(),
         ];
 
         $recentJobs = JobCard::with('employee')->latest()->take(10)->get();

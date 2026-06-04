@@ -9,7 +9,7 @@ class FieldComplaint extends Model
 
     protected $fillable = [
         'shop_id',
-        'complaint_no', 'customer_db_id', 'customer_name', 'phone_no', 'address', 'location_notes',
+        'complaint_no', 'reference_no', 'customer_db_id', 'customer_name', 'phone_no', 'address', 'location_notes',
         'gps_lat', 'gps_lng', 'gps_label',
         'service_type_id', 'service_type_name', 'description', 'priority', 'status',
         'assigned_to', 'assigned_at', 'scheduled_date', 'completed_at', 'completion_notes',
@@ -94,5 +94,22 @@ class FieldComplaint extends Model
     public function paymentLogs()
     {
         return $this->hasMany(FieldPaymentLog::class);
+    }
+
+    public function milestones()
+    {
+        return $this->hasMany(\App\Models\TicketMilestone::class, 'field_complaint_id')->orderBy('order');
+    }
+
+    public static function nextReferenceNo(): string
+    {
+        $yymm   = now()->format('ym');
+        $shopId = session('shop_id');
+        $last   = static::withoutGlobalScope('shop')
+                        ->where('shop_id', $shopId)
+                        ->where('reference_no', 'like', "REF-{$yymm}%")
+                        ->max('reference_no');
+        $seq = $last ? ((int)substr($last, -3) + 1) : 1;
+        return 'REF-' . $yymm . '-' . str_pad($seq, 3, '0', STR_PAD_LEFT);
     }
 }

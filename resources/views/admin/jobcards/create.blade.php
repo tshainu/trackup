@@ -465,7 +465,7 @@
 @endpush
 
 @section('content')
-<form action="{{ route('admin.jobcards.store') }}" method="POST" id="joForm">
+<form action="{{ route('admin.jobcards.store') }}" method="POST" id="joForm" enctype="multipart/form-data">
 @csrf
 
 {{-- ═══ PAGE HEADER ═══ --}}
@@ -705,6 +705,11 @@
               <input type="text" name="serial_no" id="serial_no" class="form-control"
                 value="{{ old('serial_no') }}" placeholder="Serial or IMEI number" />
             </div>
+          </div>
+
+          <div class="col-md-6">
+            <label for="device_photo" class="form-label">Device Photo <small class="text-muted">(optional)</small></label>
+            <input type="file" name="device_photo" id="device_photo" class="form-control" accept="image/*">
           </div>
 
           <div class="col-md-6">

@@ -1,5 +1,5 @@
 @extends('layouts.admin')
-@section('title', 'Complaint ' . $fieldComplaint->complaint_no)
+@section('title', 'Ticket ' . $fieldComplaint->complaint_no)
 
 @push('styles')
 <style>
@@ -154,6 +154,9 @@
     <div class="flex-grow-1">
       <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
         <span class="fw-bold font-monospace" style="font-size:1.3rem;letter-spacing:.04em;">{{ $fc->complaint_no }}</span>
+        @if($fc->reference_no)
+          <span class="badge" style="background:rgba(255,255,255,.18);font-size:.7rem;font-family:monospace;">{{ $fc->reference_no }}</span>
+        @endif
         <span class="badge bg-white text-dark fw-bold" style="font-size:.78rem;">{{ $fc->status }}</span>
         <span class="badge" style="background:rgba(255,255,255,.25);font-size:.72rem;">{{ $fc->priority }} Priority</span>
       </div>
@@ -376,6 +379,135 @@
       </div>
       @endif
 
+      {{-- ── Milestone Timeline ─────────────────────────────────────────── --}}
+      <div class="card section-card">
+        <div class="card-header" style="background:#f8f8fc;">
+          <div class="header-icon" style="background:#7367f020;color:#7367f0;"><i class="bx bx-list-check"></i></div>
+          <span>Ticket Milestones</span>
+          <button class="btn btn-sm btn-outline-primary ms-auto" data-bs-toggle="modal" data-bs-target="#addMilestoneModal">
+            <i class="bx bx-plus me-1"></i>Add Step
+          </button>
+        </div>
+        <div class="card-body py-3">
+          @if($fc->milestones->isEmpty())
+            <p class="text-muted text-center py-3" style="font-size:.85rem;">No milestones yet. Add steps or define them in the service type.</p>
+          @else
+          <div class="timeline-wrapper">
+            @foreach($fc->milestones as $ms)
+            @php
+              $msColor = match($ms->status) {
+                'completed'   => '#28a745',
+                'in_progress' => '#7367f0',
+                'skipped'     => '#adb5bd',
+                default       => '#dee2e6',
+              };
+              $msIcon = match($ms->status) {
+                'completed'   => 'bx-check-circle',
+                'in_progress' => 'bx-loader-circle',
+                'skipped'     => 'bx-minus-circle',
+                default       => 'bx-circle',
+              };
+            @endphp
+            <div class="d-flex gap-3 mb-3 align-items-start">
+              <div style="width:30px;flex-shrink:0;text-align:center;padding-top:2px;">
+                <i class="bx {{ $msIcon }}" style="font-size:1.3rem;color:{{ $msColor }};"></i>
+              </div>
+              <div class="flex-grow-1">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <span class="fw-semibold" style="font-size:.9rem;">{{ $ms->title }}</span>
+                  @if($ms->help_requested)
+                    <span class="badge bg-danger" style="font-size:.67rem;">Help Needed</span>
+                  @endif
+                  @if($ms->transferred_to)
+                    <span class="badge bg-info" style="font-size:.67rem;">Transferred → {{ $ms->transferredEmployee?->employee_name }}</span>
+                  @endif
+                </div>
+                @if($ms->staff)
+                  <div class="text-muted" style="font-size:.78rem;"><i class="bx bx-user me-1"></i>{{ $ms->staff->employee_name }}</div>
+                @endif
+                @if($ms->notes)
+                  <div class="text-muted mt-1" style="font-size:.8rem;">{{ $ms->notes }}</div>
+                @endif
+                @if($ms->completed_at)
+                  <div class="text-success" style="font-size:.75rem;"><i class="bx bx-check me-1"></i>{{ $ms->completed_at->format('d M Y, g:i A') }}</div>
+                @endif
+                {{-- Quick update form --}}
+                <form action="{{ route('admin.milestones.update', $ms) }}" method="POST" class="d-flex gap-2 mt-2 align-items-center flex-wrap">
+                  @csrf @method('PATCH')
+                  <select name="status" class="form-select form-select-sm" style="width:auto;">
+                    @foreach(['pending','in_progress','completed','skipped'] as $st)
+                      <option value="{{ $st }}" @selected($ms->status === $st)>{{ ucwords(str_replace('_',' ',$st)) }}</option>
+                    @endforeach
+                  </select>
+                  <input type="text" name="notes" class="form-control form-control-sm" placeholder="Notes…" value="{{ $ms->notes }}" style="min-width:120px;max-width:180px;">
+                  <button class="btn btn-sm btn-outline-secondary">Save</button>
+                  {{-- Help --}}
+                  <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#helpModal{{ $ms->id }}">
+                    <i class="bx bx-help-circle"></i>
+                  </button>
+                  {{-- Transfer --}}
+                  <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#transferModal{{ $ms->id }}">
+                    <i class="bx bx-transfer-alt"></i>
+                  </button>
+                  {{-- Delete --}}
+                  <button type="button" class="btn btn-sm btn-outline-danger"
+                    onclick="if(confirm('Remove this milestone?')) document.getElementById('del-ms-{{ $ms->id }}').submit()">
+                    <i class="bx bx-trash"></i>
+                  </button>
+                </form>
+                {{-- Delete form OUTSIDE the update form to avoid invalid nested forms --}}
+                <form id="del-ms-{{ $ms->id }}" action="{{ route('admin.milestones.destroy', $ms) }}" method="POST" style="display:none;">
+                  @csrf @method('DELETE')
+                </form>
+              </div>
+            </div>
+            @if(!$loop->last)
+              <div style="margin-left:14px;border-left:2px dashed #dee2e6;height:10px;"></div>
+            @endif
+
+            {{-- Help Modal --}}
+            <div class="modal fade" id="helpModal{{ $ms->id }}" tabindex="-1">
+              <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                  <form action="{{ route('admin.milestones.help', $ms) }}" method="POST">
+                    @csrf
+                    <div class="modal-header"><h6 class="modal-title">Request Help</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                    <div class="modal-body">
+                      <textarea name="help_notes" class="form-control" rows="3" placeholder="Describe what help is needed…">{{ $ms->help_notes }}</textarea>
+                    </div>
+                    <div class="modal-footer"><button class="btn btn-danger btn-sm">Flag for Help</button></div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            {{-- Transfer Modal --}}
+            <div class="modal fade" id="transferModal{{ $ms->id }}" tabindex="-1">
+              <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                  <form action="{{ route('admin.milestones.transfer', $ms) }}" method="POST">
+                    @csrf
+                    <div class="modal-header"><h6 class="modal-title">Transfer Milestone</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                    <div class="modal-body">
+                      <select name="transferred_to" class="form-select form-select-sm mb-2" required>
+                        <option value="">— Select Staff —</option>
+                        @foreach($fieldStaff as $emp)
+                          <option value="{{ $emp->id }}" @selected($ms->transferred_to == $emp->id)>{{ $emp->employee_name }}</option>
+                        @endforeach
+                      </select>
+                      <textarea name="transfer_reason" class="form-control form-control-sm" rows="2" placeholder="Reason…">{{ $ms->transfer_reason }}</textarea>
+                    </div>
+                    <div class="modal-footer"><button class="btn btn-info btn-sm text-white">Transfer</button></div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            @endforeach
+          </div>
+          @endif
+        </div>
+      </div>
+
     </div>{{-- /left --}}
 
     {{-- ═══ RIGHT COLUMN ═══ --}}
@@ -505,10 +637,10 @@
       {{-- Delete --}}
       @if(in_array($fc->status, ['Pending','Cancelled']))
       <form method="POST" action="{{ route('admin.field-complaints.destroy', $fc) }}"
-            onsubmit="return confirm('Delete complaint {{ $fc->complaint_no }}? This cannot be undone.')">
+            onsubmit="return confirm('Delete ticket {{ $fc->complaint_no }}? This cannot be undone.')">
         @csrf @method('DELETE')
         <button class="btn btn-outline-danger w-100" style="border-radius:10px;">
-          <i class="bx bx-trash me-1"></i>Delete Complaint
+          <i class="bx bx-trash me-1"></i>Delete Ticket
         </button>
       </form>
       @endif
@@ -609,5 +741,36 @@ document.getElementById('itemsContainer').addEventListener('click', function (e)
   if (e.target.closest('.removeItem')) e.target.closest('.item-row').remove();
 });
 </script>
+@endpush
+
+@push('modals')
+{{-- Add Milestone Modal --}}
+<div class="modal fade" id="addMilestoneModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <form action="{{ route('admin.field-complaints.milestones.store', $fc) }}" method="POST">
+        @csrf
+        <div class="modal-header">
+          <h6 class="modal-title"><i class="bx bx-list-plus me-1"></i>Add Milestone Step</h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" name="title" class="form-control" placeholder="Step title e.g. Diagnose, Replace Part…" required>
+          <div class="mt-2">
+            <select name="staff_id" class="form-select form-select-sm">
+              <option value="">— Assign staff (optional) —</option>
+              @foreach($fieldStaff as $emp)
+                <option value="{{ $emp->id }}">{{ $emp->employee_name }}</option>
+              @endforeach
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary btn-sm"><i class="bx bx-plus me-1"></i>Add</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 @endpush
 @endsection

@@ -212,7 +212,9 @@
       'status'      => ['icon'=>'bx-pie-chart-alt-2','label'=>'Status'],
       'overdue'     => ['icon'=>'bx-alarm-exclamation','label'=>'Overdue'],
       'undelivered' => ['icon'=>'bx-package','label'=>'Undelivered'],
+      'uncollected' => ['icon'=>'bx-time-five','label'=>'Uncollected'],
       'staff'       => ['icon'=>'bx-group','label'=>'Staff'],
+      'milestones'  => ['icon'=>'bx-list-check','label'=>'Milestones'],
     ];
   @endphp
   @foreach($tabs as $key => $tab)
@@ -812,6 +814,120 @@
 @endif
 
 @endif {{-- end report switch --}}
+
+{{-- ══════════════════════════════════
+     UNCOLLECTED ITEMS REPORT
+     ══════════════════════════════════ --}}
+@if($report === 'uncollected')
+<div class="rpt-table-wrap">
+  <div class="rpt-table-head">
+    <h3><i class="bx bx-time-five" style="color:#ff6b35;"></i>Uncollected Items (Completed but not collected)</h3>
+    <span class="badge" style="background:#ff6b3520;color:#ff6b35;font-size:.78rem;">{{ $uncollectedJobs->count() }} items</span>
+  </div>
+  <table class="rpt-table">
+    <thead>
+      <tr>
+        <th>Order No</th>
+        <th>Customer</th>
+        <th>Phone</th>
+        <th>Device</th>
+        <th>Completed</th>
+        <th class="num">Days Waiting</th>
+        <th class="num">Balance</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      @forelse($uncollectedJobs as $j)
+      @php $days = now()->diffInDays($j->updated_at); @endphp
+      <tr class="{{ $days > 7 ? 'table-warning' : '' }}">
+        <td class="mono">{{ $j->order_no }}</td>
+        <td>{{ $j->customer_name }}</td>
+        <td>{{ $j->phone_no }}</td>
+        <td>{{ $j->device_name }}{{ $j->device_brand ? ' – '.$j->device_brand : '' }}</td>
+        <td>{{ $j->updated_at->format('d M Y') }}</td>
+        <td class="num fw-bold {{ $days > 7 ? 'text-danger' : '' }}">{{ $days }}</td>
+        <td class="num font-monospace">Rs. {{ number_format($j->balance, 2) }}</td>
+        <td>
+          <a href="{{ route('admin.jobcards.show', $j) }}" class="btn btn-xs btn-outline-primary" style="font-size:.73rem;padding:2px 8px;">View</a>
+          <form action="{{ route('admin.jobcards.send-uncollected-reminder', $j) }}" method="POST" style="display:inline;">
+            @csrf
+            <button class="btn btn-xs" style="font-size:.73rem;padding:2px 8px;background:#25D366;color:#fff;border:0;border-radius:6px;">
+              <i class="bx bxl-whatsapp"></i> Remind
+            </button>
+          </form>
+        </td>
+      </tr>
+      @empty
+      <tr><td colspan="8" class="text-center text-muted py-4">No uncollected items — great job!</td></tr>
+      @endforelse
+    </tbody>
+  </table>
+</div>
+@endif
+
+{{-- ══════════════════════════════════
+     MILESTONES / STAFF TIMELINE REPORT
+     ══════════════════════════════════ --}}
+@if($report === 'milestones')
+<div class="rpt-table-wrap mb-3">
+  <div class="rpt-table-head">
+    <h3><i class="bx bx-list-check" style="color:#7367f0;"></i>Staff Milestone Timeline</h3>
+  </div>
+  <div class="p-3">
+    <form method="GET" action="{{ route('admin.reports.index') }}" class="d-flex gap-2 align-items-center flex-wrap">
+      <input type="hidden" name="report" value="milestones">
+      <select name="employee_id" class="form-select form-select-sm" style="width:auto;">
+        <option value="">— Select Staff Member —</option>
+        @foreach($employees as $emp)
+          <option value="{{ $emp->id }}" @selected($selEmpId == $emp->id)>{{ $emp->employee_name }}</option>
+        @endforeach
+      </select>
+      <button class="btn btn-sm btn-primary">View Timeline</button>
+    </form>
+  </div>
+  @if($selEmpId && $mileData->isEmpty())
+    <div class="rpt-empty"><i class="bx bx-list-check"></i><p>No milestone data for this staff member.</p></div>
+  @elseif($selEmpId)
+  <table class="rpt-table">
+    <thead>
+      <tr>
+        <th>Ticket</th>
+        <th>Milestone</th>
+        <th>Status</th>
+        <th>Assigned/Transferred</th>
+        <th>Completed At</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      @foreach($mileData as $ms)
+      <tr>
+        <td class="mono"><a href="{{ route('admin.field-complaints.show', $ms->field_complaint_id) }}">{{ $ms->complaint?->complaint_no }}</a></td>
+        <td>{{ $ms->title }}</td>
+        <td>
+          @php
+            $stColor = match($ms->status) { 'completed'=>'success','in_progress'=>'primary','skipped'=>'secondary', default=>'warning' };
+          @endphp
+          <span class="badge bg-label-{{ $stColor }}">{{ ucwords(str_replace('_',' ',$ms->status)) }}</span>
+          @if($ms->help_requested)<span class="badge bg-danger ms-1" style="font-size:.67rem;">Help</span>@endif
+        </td>
+        <td>
+          @if($ms->transferred_to == $selEmpId)
+            <span class="badge bg-info text-white" style="font-size:.7rem;">Transferred to this staff</span>
+          @else
+            <span style="font-size:.8rem;">Assigned</span>
+          @endif
+        </td>
+        <td>{{ $ms->completed_at ? $ms->completed_at->format('d M Y, g:i A') : '—' }}</td>
+        <td class="text-muted" style="font-size:.78rem;">{{ $ms->notes ?: '—' }}</td>
+      </tr>
+      @endforeach
+    </tbody>
+  </table>
+  @endif
+</div>
+@endif
 
 </div>{{-- .rpt-wrap --}}
 @endsection

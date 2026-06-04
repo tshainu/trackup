@@ -380,13 +380,22 @@
         <i class='bx bx-plus me-1'></i> Add Line Item
       </button>
 
-      <div class="d-flex gap-2 mt-3 justify-content-end">
+      <div class="d-flex gap-2 mt-3 justify-content-end flex-wrap">
         <button type="button" onclick="toggleEdit()" class="btn btn-outline-secondary" style="border-radius:8px">Cancel</button>
         <button type="submit" class="btn btn-primary" style="border-radius:8px">
           <i class='bx bx-save me-1'></i> Save Invoice
         </button>
       </div>
     </form>
+    {{-- WhatsApp Quotation Button --}}
+    <div class="mt-2 d-flex justify-content-end">
+      <form action="{{ route('admin.jobcards.send-quotation', $jobCard) }}" method="POST">
+        @csrf
+        <button class="btn btn-sm" style="background:#25D366;color:#fff;border-radius:8px;">
+          <i class='bx bxl-whatsapp me-1'></i>Send Quotation via WhatsApp
+        </button>
+      </form>
+    </div>
   </div>
 
   {{-- ═══════════════════ SCREEN INVOICE ═══════════════════ --}}
@@ -433,12 +442,25 @@
           <div>
             <div class="inv-section-title"><i class='bx bx-chip'></i> Device Info</div>
             <div class="inv-info-row"><div class="inv-label">Order No.</div><div class="inv-val">{{ $jobCard->order_no }}</div></div>
+            @if($jobCard->reference_no)
+            <div class="inv-info-row"><div class="inv-label text-muted" style="font-size:.78rem;">Ref No.</div><div class="inv-val text-muted font-monospace" style="font-size:.78rem;">{{ $jobCard->reference_no }}</div></div>
+            @endif
             <div class="inv-info-row"><div class="inv-label">Device</div><div class="inv-val">{{ $jobCard->device_name }}{{ $jobCard->device_brand ? ' – '.$jobCard->device_brand : '' }}</div></div>
             @if($jobCard->serial_no)
             <div class="inv-info-row"><div class="inv-label">Serial/IMEI</div><div class="inv-val">{{ $jobCard->serial_no }}</div></div>
             @endif
             @if($jobCard->device_fault)
             <div class="inv-info-row"><div class="inv-label">Fault</div><div class="inv-val">{{ $jobCard->device_fault }}</div></div>
+            @endif
+            @if($jobCard->device_photo)
+            <div class="inv-info-row align-items-start"><div class="inv-label">Photo</div>
+              <div class="inv-val">
+                <a href="{{ Storage::url($jobCard->device_photo) }}" target="_blank">
+                  <img src="{{ Storage::url($jobCard->device_photo) }}" alt="Device Photo"
+                       style="max-width:120px;max-height:100px;border-radius:8px;object-fit:cover;border:1px solid #eee;cursor:zoom-in;">
+                </a>
+              </div>
+            </div>
             @endif
             <div class="inv-info-row"><div class="inv-label">Status</div>
               <div class="inv-val"><span class="badge bg-label-{{ $statusColors[$jobCard->status] ?? 'secondary' }}">{{ $jobCard->status }}</span></div>

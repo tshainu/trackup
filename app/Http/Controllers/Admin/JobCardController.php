@@ -86,13 +86,21 @@ class JobCardController extends Controller
             'priority'           => 'nullable|in:Low,Normal,High,Urgent',
             'estimated_delivery' => 'nullable|date',
             'accessories'        => 'nullable|string',
+            'device_photo'       => 'nullable|image|max:4096',
         ]);
 
         $validated['order_no']       = JobCard::nextOrderNo();
+        $validated['reference_no']   = JobCard::nextReferenceNo();
         $validated['customer_id']    = JobCard::nextCustomerId();
         $validated['status']         = 'Pending';
         $validated['priority']       = $request->input('priority', 'Normal');
         $validated['need_assistant'] = $request->has('need_assistant') ? 1 : 0;
+
+        // Device photo upload
+        if ($request->hasFile('device_photo')) {
+            $path = $request->file('device_photo')->store('device-photos', 'public');
+            $validated['device_photo'] = $path;
+        }
 
         // Advance amount counts as initial paid_amount
         $advance = (float)($validated['advance_amount'] ?? 0);
@@ -458,5 +466,32 @@ class JobCardController extends Controller
                 'remark'       => $job->remark,
             ]);
         }
+    }
+
+    // ── WhatsApp: Send Quotation ──────────────────────────────────────────────
+    public function sendQuotation(JobCard $jobCard)
+    {
+        $wa = new \App\Services\WhatsappService();
+        $sent = $wa->sendTemplate('quotation', $jobCard->phone_no, [
+            'customer_name' => $jobCard->customer_name,
+            'device'        => trim(($jobCard->device_name ?? '') . ' ' . ($jobCard->device_brand ?? '')),
+            'total'         => number_format($jobCard->grand_total, 2),
+            'order_no'      => $jobCard->order_no,
+        ]);
+        return back()->with($sent ? 'success' : 'warning', $sent ? 'Quotation sent via WhatsApp.' : 'WhatsApp not configured — message logged.');
+    }
+
+    // ── WhatsApp: Uncollected Reminder ────────────────────────────────────────
+    public function sendUncollectedReminder(JobCard $jobCard)
+    {
+        $wa = new \App\Services\WhatsappService();
+        $days = $jobCard->updated_at ? now()->diffInDays($jobCard->updated_at) : '—';
+        $sent = $wa->sendTemplate('uncollected_reminder', $jobCard->phone_no, [
+            'customer_name' => $jobCard->customer_name,
+            'device'        => trim(($jobCard->device_name ?? '') . ' ' . ($jobCard->device_brand ?? '')),
+            'order_no'      => $jobCard->order_no,
+            'days_waiting'  => $days,
+        ]);
+        return back()->with($sent ? 'success' : 'warning', $sent ? 'Reminder sent via WhatsApp.' : 'WhatsApp not configured — message logged.');
     }
 }

@@ -27,6 +27,9 @@ class WhatsappSettingsController extends Controller
             'templates'       => 'nullable|array',
             'templates.*.message' => 'nullable|string|max:1000',
             'templates.*.active'  => 'nullable|boolean',
+            'uncollected_reminder_enabled'        => 'nullable|boolean',
+            'uncollected_reminder_count'          => 'nullable|integer|min:1|max:10',
+            'uncollected_reminder_interval_hours' => 'nullable|integer|min:1|max:720',
         ]);
 
         $settings = WhatsappSetting::current();
@@ -36,6 +39,9 @@ class WhatsappSettingsController extends Controller
             'instance_id'     => $request->input('instance_id'),
             'phone_number_id' => $request->input('phone_number_id'),
             'enabled'         => $request->has('enabled') ? 1 : 0,
+            'uncollected_reminder_enabled'        => $request->has('uncollected_reminder_enabled') ? 1 : 0,
+            'uncollected_reminder_count'          => $request->input('uncollected_reminder_count', 3),
+            'uncollected_reminder_interval_hours' => $request->input('uncollected_reminder_interval_hours', 48),
         ]);
 
         if ($request->has('templates')) {

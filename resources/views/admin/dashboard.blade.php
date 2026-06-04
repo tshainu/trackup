@@ -197,6 +197,23 @@
     </div>
   </div>
 
+  {{-- Uncollected Items --}}
+  <div class="col-6 col-xl-3">
+    <a href="{{ route('admin.reports.index', ['report' => 'uncollected']) }}" class="text-decoration-none">
+      <div class="card stat-card h-100" style="border-left:3px solid #ff6b35;">
+        <div class="card-body d-flex align-items-center gap-3">
+          <div style="width:60px;height:60px;display:flex;align-items:center;justify-content:center;font-size:2rem;color:#ff6b35;">
+            <i class="bx bx-time-five"></i>
+          </div>
+          <div>
+            <p class="stat-label">Uncollected</p>
+            <h4 class="stat-value" style="color:#ff6b35;">{{ $stats['uncollected'] }}</h4>
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+
 </div>
 
 {{-- ── Line Chart ──────────────────────────────────────────────── --}}

@@ -173,6 +173,7 @@ class FieldComplaintController extends Controller
 
         $complaint = FieldComplaint::create([
             'complaint_no'      => FieldComplaint::nextComplaintNo(),
+            'reference_no'      => FieldComplaint::nextReferenceNo(),
             'customer_db_id'    => $customer->id,
             'customer_name'     => $request->customer_name,
             'phone_no'          => $request->phone_no,
@@ -221,9 +222,23 @@ class FieldComplaintController extends Controller
             }
         }
 
+        // Seed milestones from service type template
+        if ($serviceType && !empty($serviceType->milestones)) {
+            foreach ($serviceType->milestones as $i => $m) {
+                \App\Models\TicketMilestone::create([
+                    'shop_id'            => $complaint->shop_id,
+                    'field_complaint_id' => $complaint->id,
+                    'title'              => $m['title'] ?? 'Step ' . ($i + 1),
+                    'order'              => $i,
+                    'status'             => 'pending',
+                    'staff_id'           => $assignedEmployee?->id,
+                ]);
+            }
+        }
+
         $successMsg = $assignedEmployee
-            ? "Complaint {$complaint->complaint_no} logged and assigned to {$assignedEmployee->employee_name}."
-            : "Complaint {$complaint->complaint_no} logged successfully.";
+            ? "Ticket {$complaint->complaint_no} logged and assigned to {$assignedEmployee->employee_name}."
+            : "Ticket {$complaint->complaint_no} logged successfully.";
 
         return redirect()->route('admin.field-complaints.show', $complaint)
             ->with('success', $successMsg);
@@ -232,10 +247,74 @@ class FieldComplaintController extends Controller
     // ── Show ──────────────────────────────────────────────────────────────────
     public function show(FieldComplaint $fieldComplaint)
     {
-        $fieldComplaint->load(['serviceType','assignedEmployee','items','paymentLogs']);
-        $fieldStaff   = Employee::where('type','outbound')->where('status','active')->orderBy('employee_name')->get();
+        $fieldComplaint->load(['serviceType','assignedEmployee','items','paymentLogs','milestones.staff','milestones.transferredEmployee']);
+        $fieldStaff   = Employee::where('status','active')->orderBy('employee_name')->get();
         $serviceTypes = ServiceType::where('active', true)->orderBy('name')->get();
         return view('admin.field-complaints.show', compact('fieldComplaint','fieldStaff','serviceTypes'));
+    }
+
+    // ── Milestone: update status ──────────────────────────────────────────────
+    public function milestoneUpdate(Request $request, \App\Models\TicketMilestone $milestone)
+    {
+        $request->validate([
+            'status' => 'required|in:pending,in_progress,completed,skipped',
+            'notes'  => 'nullable|string',
+        ]);
+        $milestone->update([
+            'status'       => $request->status,
+            'notes'        => $request->notes,
+            'completed_at' => $request->status === 'completed' ? now() : $milestone->completed_at,
+        ]);
+        return back()->with('success', 'Milestone updated.');
+    }
+
+    // ── Milestone: transfer ───────────────────────────────────────────────────
+    public function milestoneTransfer(Request $request, \App\Models\TicketMilestone $milestone)
+    {
+        $request->validate([
+            'transferred_to'  => 'required|exists:employees,id',
+            'transfer_reason' => 'nullable|string|max:500',
+        ]);
+        $milestone->update([
+            'transferred_to'  => $request->transferred_to,
+            'transfer_reason' => $request->transfer_reason,
+            'status'          => 'in_progress',
+        ]);
+        return back()->with('success', 'Milestone transferred.');
+    }
+
+    // ── Milestone: request help ───────────────────────────────────────────────
+    public function milestoneHelp(Request $request, \App\Models\TicketMilestone $milestone)
+    {
+        $request->validate(['help_notes' => 'nullable|string|max:500']);
+        $milestone->update([
+            'help_requested' => true,
+            'help_notes'     => $request->help_notes,
+        ]);
+        return back()->with('success', 'Help request flagged.');
+    }
+
+    // ── Milestone: add manual milestone ──────────────────────────────────────
+    public function milestoneStore(Request $request, FieldComplaint $fieldComplaint)
+    {
+        $request->validate(['title' => 'required|string|max:200']);
+        $maxOrder = $fieldComplaint->milestones()->max('order') ?? -1;
+        \App\Models\TicketMilestone::create([
+            'shop_id'            => $fieldComplaint->shop_id,
+            'field_complaint_id' => $fieldComplaint->id,
+            'title'              => $request->title,
+            'order'              => $maxOrder + 1,
+            'status'             => 'pending',
+            'staff_id'           => $request->staff_id,
+        ]);
+        return back()->with('success', 'Milestone added.');
+    }
+
+    // ── Milestone: delete ─────────────────────────────────────────────────────
+    public function milestoneDestroy(\App\Models\TicketMilestone $milestone)
+    {
+        $milestone->delete();
+        return back()->with('success', 'Milestone removed.');
     }
 
     // ── Update (edit details) ─────────────────────────────────────────────────

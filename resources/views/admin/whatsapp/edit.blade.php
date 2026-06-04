@@ -220,6 +220,18 @@
               'label' => 'Payment Reminder',
               'chips' => ['{customer_name}', '{order_no}', '{balance}', '{store_name}'],
             ],
+            'quotation' => [
+              'icon'  => 'bx-receipt',
+              'color' => '#696cff',
+              'label' => 'Quotation / Estimate',
+              'chips' => ['{customer_name}', '{device}', '{total}', '{order_no}', '{store_name}'],
+            ],
+            'uncollected_reminder' => [
+              'icon'  => 'bx-time-five',
+              'color' => '#ff6b35',
+              'label' => 'Uncollected Item Reminder',
+              'chips' => ['{customer_name}', '{device}', '{order_no}', '{days_waiting}', '{store_name}'],
+            ],
           ];
           @endphp
 
@@ -266,6 +278,35 @@
           </div>
           @endforeach
 
+        </div>
+      </div>
+
+      {{-- Uncollected Reminder Schedule Settings --}}
+      <div class="card mb-3" style="border-radius:14px;border:1px solid #f0f0ff;">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3" style="color:#ff6b35;"><i class="bx bx-time-five me-2"></i>Auto Uncollected Reminder Schedule</h6>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" style="font-size:.83rem;">Enable Auto Reminders</label>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" name="uncollected_reminder_enabled" id="uncollRemEnabled"
+                       {{ $settings->uncollected_reminder_enabled ? 'checked' : '' }}>
+                <label class="form-check-label" for="uncollRemEnabled" style="font-size:.8rem;color:#aaa;">Active</label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" style="font-size:.83rem;">How many reminders</label>
+              <input type="number" name="uncollected_reminder_count" class="form-control form-control-sm"
+                     min="1" max="10" value="{{ $settings->uncollected_reminder_count ?? 3 }}">
+              <small class="text-muted" style="font-size:.72rem;">Max number of reminder messages per item</small>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" style="font-size:.83rem;">Interval (hours)</label>
+              <input type="number" name="uncollected_reminder_interval_hours" class="form-control form-control-sm"
+                     min="1" max="720" value="{{ $settings->uncollected_reminder_interval_hours ?? 48 }}">
+              <small class="text-muted" style="font-size:.72rem;">Hours between each reminder</small>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -231,7 +231,7 @@
               <button type="button"
                       class="action-btn btn btn-sm btn-outline-primary me-1"
                       title="Edit"
-                      onclick="openEdit({{ $st->id }}, '{{ addslashes($st->name) }}', {{ $st->base_charge }}, '{{ addslashes($st->description ?? '') }}')">
+                      onclick="openEdit({{ $st->id }}, '{{ addslashes($st->name) }}', {{ $st->base_charge }}, '{{ addslashes($st->description ?? '') }}', '{{ addslashes(json_encode($st->milestones ?? [])) }}')">
                 <i class="bx bx-edit-alt"></i>
               </button>
               <form method="POST" action="{{ route('admin.service-types.destroy', $st) }}"
@@ -289,11 +289,22 @@
                      value="{{ old('base_charge') }}">
             </div>
           </div>
+          {{-- Milestone Template Editor --}}
+          <div class="mt-4">
+            <label class="modal-form-label d-flex justify-content-between align-items-center">
+              Ticket Milestone Steps
+              <button type="button" class="btn btn-xs btn-outline-primary" onclick="addAddMilestoneRow()" style="font-size:.75rem;padding:2px 8px;">+ Add Step</button>
+            </label>
+            <div id="addMilestoneList" class="d-flex flex-column gap-2 mt-2"></div>
+            <input type="hidden" name="milestones" id="addMilestonesJson">
+            <p class="text-muted mt-1" style="font-size:.75rem;">These steps will auto-create on every new ticket for this service type.</p>
+          </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" onclick="resetAddMilestones()">Cancel</button>
           <button type="submit" class="btn fw-bold"
-                  style="background:linear-gradient(135deg,#03c3ec,#028bb6);color:#fff;border:0;border-radius:8px;">
+                  style="background:linear-gradient(135deg,#03c3ec,#028bb6);color:#fff;border:0;border-radius:8px;"
+                  onclick="serializeAddMilestones()">
             <i class="bx bx-check me-1"></i>Add Service Type
           </button>
         </div>
@@ -333,10 +344,20 @@
                      required class="form-control font-monospace">
             </div>
           </div>
+          {{-- Milestone Template Editor --}}
+          <div class="mt-4">
+            <label class="modal-form-label d-flex justify-content-between align-items-center">
+              Ticket Milestone Steps
+              <button type="button" class="btn btn-xs btn-outline-primary" onclick="addMilestoneRow()" style="font-size:.75rem;padding:2px 8px;">+ Add Step</button>
+            </label>
+            <input type="hidden" name="milestones" id="editMilestonesJson">
+            <div id="editMilestonesList" class="d-flex flex-column gap-2 mt-1"></div>
+            <p class="text-muted" style="font-size:.75rem;margin-top:4px;">These steps auto-create when a new ticket uses this service type.</p>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn fw-bold"
+          <button type="submit" class="btn fw-bold" onclick="serializeMilestones()"
                   style="background:linear-gradient(135deg,#03c3ec,#028bb6);color:#fff;border:0;border-radius:8px;">
             <i class="bx bx-save me-1"></i>Save Changes
           </button>
@@ -348,13 +369,73 @@
 
 @push('scripts')
 <script>
-function openEdit(id, name, charge, description) {
+let milestoneData = [];
+
+function openEdit(id, name, charge, description, milestonesJson) {
   document.getElementById('editForm').action = `/admin/service-types/${id}`;
   document.getElementById('editName').value        = name;
   document.getElementById('editCharge').value      = charge;
   document.getElementById('editDescription').value = description;
+  milestoneData = milestonesJson ? JSON.parse(milestonesJson) : [];
+  renderMilestones();
   new bootstrap.Modal(document.getElementById('editModal')).show();
 }
+
+function renderMilestones() {
+  const list = document.getElementById('editMilestonesList');
+  list.innerHTML = '';
+  milestoneData.forEach((m, i) => {
+    const row = document.createElement('div');
+    row.className = 'd-flex gap-2 align-items-center';
+    row.innerHTML = `<span class="text-muted" style="font-size:.8rem;min-width:20px;">${i+1}.</span>
+      <input type="text" class="form-control form-control-sm milestone-title" value="${m.title}" placeholder="Step title" oninput="updateMilestone(${i}, this.value)">
+      <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeMilestone(${i})" style="padding:2px 8px;"><i class="bx bx-x"></i></button>`;
+    list.appendChild(row);
+  });
+}
+
+function addMilestoneRow() {
+  milestoneData.push({ title: '' });
+  renderMilestones();
+  const inputs = document.querySelectorAll('.milestone-title');
+  if (inputs.length) inputs[inputs.length - 1].focus();
+}
+
+function updateMilestone(i, val) { milestoneData[i].title = val; }
+function removeMilestone(i) { milestoneData.splice(i, 1); renderMilestones(); }
+function serializeMilestones() {
+  document.getElementById('editMilestonesJson').value = JSON.stringify(milestoneData.filter(m => m.title.trim()));
+}
+
+// ── Add modal milestone editor ──
+let addMilestoneData = [];
+function addAddMilestoneRow() {
+  addMilestoneData.push({ title: '' });
+  renderAddMilestones();
+  const inputs = document.querySelectorAll('.add-milestone-title');
+  if (inputs.length) inputs[inputs.length - 1].focus();
+}
+function renderAddMilestones() {
+  const list = document.getElementById('addMilestoneList');
+  list.innerHTML = addMilestoneData.map((m, i) => `
+    <div class="d-flex gap-2 align-items-center">
+      <input type="text" class="form-control form-control-sm add-milestone-title" value="${m.title}"
+             placeholder="Step title" oninput="updateAddMilestone(${i}, this.value)">
+      <button type="button" class="btn btn-xs btn-outline-danger" onclick="removeAddMilestone(${i})"
+              style="font-size:.75rem;padding:2px 8px;white-space:nowrap;">✕</button>
+    </div>`).join('');
+}
+function updateAddMilestone(i, val) { addMilestoneData[i].title = val; }
+function removeAddMilestone(i) { addMilestoneData.splice(i, 1); renderAddMilestones(); }
+function serializeAddMilestones() {
+  document.getElementById('addMilestonesJson').value = JSON.stringify(addMilestoneData.filter(m => m.title.trim()));
+}
+function resetAddMilestones() { addMilestoneData = []; renderAddMilestones(); }
+// Reset add modal when it closes
+document.addEventListener('DOMContentLoaded', function() {
+  const addModal = document.getElementById('addModal');
+  if (addModal) addModal.addEventListener('hidden.bs.modal', resetAddMilestones);
+});
 </script>
 @endpush
 @endsection

@@ -1,5 +1,5 @@
 @extends('layouts.admin')
-@section('title', 'Field Complaints')
+@section('title', 'Field Tickets')
 
 @push('styles')
 <style>
@@ -168,7 +168,7 @@
   {{-- Hero header --}}
   <div class="fc-hero d-flex align-items-center justify-content-between flex-wrap gap-3">
     <div>
-      <h4><i class="bx bx-map-pin me-2"></i>Field Complaints</h4>
+      <h4><i class="bx bx-map-pin me-2"></i>Field Tickets</h4>
       <p>On-site repair &amp; service requests</p>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -310,7 +310,7 @@
           <div class="input-group" style="max-width:340px;">
             <span class="input-group-text bg-white border-end-0"><i class="bx bx-search text-muted"></i></span>
             <input type="text" name="q" value="{{ $search }}"
-                   placeholder="Complaint#, name, phone…"
+                   placeholder="Ticket#, name, phone…"
                    class="form-control border-start-0 ps-0" style="box-shadow:none;">
           </div>
           <button class="btn btn-primary btn-sm px-3">Search</button>
@@ -345,7 +345,7 @@
       <table class="table table-hover align-middle mb-0">
         <thead class="table-light">
           <tr>
-            <th class="ps-4">Complaint #</th>
+            <th class="ps-4">Ticket #</th>
             <th>Customer</th>
             <th>Service</th>
             <th>Assigned</th>

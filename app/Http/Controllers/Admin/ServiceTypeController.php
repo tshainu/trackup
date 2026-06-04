@@ -21,7 +21,14 @@ class ServiceTypeController extends Controller
             'description' => 'nullable|string|max:255',
             'icon'        => 'nullable|string|max:50',
             'base_charge' => 'nullable|numeric|min:0',
+            'milestones'  => 'nullable|string',
         ]);
+
+        $milestones = null;
+        if ($request->filled('milestones')) {
+            $decoded = json_decode($request->milestones, true);
+            $milestones = is_array($decoded) ? $decoded : null;
+        }
 
         ServiceType::create([
             'name'        => $request->name,
@@ -29,6 +36,7 @@ class ServiceTypeController extends Controller
             'icon'        => $request->input('icon', 'bx-wrench'),
             'base_charge' => $request->input('base_charge', 0),
             'active'      => true,
+            'milestones'  => $milestones,
         ]);
 
         return back()->with('success', "Service type '{$request->name}' added.");
@@ -42,7 +50,14 @@ class ServiceTypeController extends Controller
             'icon'        => 'nullable|string|max:50',
             'base_charge' => 'nullable|numeric|min:0',
             'active'      => 'nullable|boolean',
+            'milestones'  => 'nullable|string',
         ]);
+
+        $milestones = $serviceType->milestones;
+        if ($request->has('milestones')) {
+            $decoded = json_decode($request->milestones, true);
+            $milestones = is_array($decoded) ? $decoded : null;
+        }
 
         $serviceType->update([
             'name'        => $request->name,
@@ -50,6 +65,7 @@ class ServiceTypeController extends Controller
             'icon'        => $request->input('icon', $serviceType->icon),
             'base_charge' => $request->input('base_charge', 0),
             'active'      => $request->has('active') ? (bool)$request->active : $serviceType->active,
+            'milestones'  => $milestones,
         ]);
 
         return back()->with('success', "Service type updated.");

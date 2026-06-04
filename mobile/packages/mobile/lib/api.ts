@@ -2,7 +2,7 @@ import { Platform } from 'react-native';
 
 // On web (preview), use relative /api/* so requests go through Metro's proxy.
 // On native (Expo Go / APK), hit the server directly.
-const BASE_URL = Platform.OS === 'web' ? '/api' : 'http://69.169.97.195:8080/api';
+const BASE_URL = Platform.OS === 'web' ? '/api' : 'https://50ktgky-smi88-8081.exp.direct/api';
 
 let authToken: string | null = null;
 

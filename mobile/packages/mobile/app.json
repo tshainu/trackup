@@ -10,7 +10,11 @@
       "edgeToEdgeEnabled": true
     },
     "extra": {
-      "apiUrl": "http://69.169.97.195:8080"
+      "apiUrl": "http://127.0.0.1:8000",
+      "router": {},
+      "eas": {
+        "projectId": "31db1e8f-3a78-4f1f-a1a1-4bd0a3ab17a1"
+      }
     },
     "ios": {
       "bundleIdentifier": "com.trackup.mobile",
@@ -26,6 +30,7 @@
     },
     "name": "TrackUp",
     "slug": "trackup-mobile",
+    "owner": "smi88",
     "version": "1.0.0",
     "scheme": "trackup",
     "orientation": "portrait",

@@ -6,10 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class WhatsappSetting extends Model
 {
-    protected $fillable = ['api_url', 'api_key', 'instance_id', 'phone_number_id', 'enabled'];
+    protected $fillable = [
+        'shop_id', 'api_url', 'api_key', 'instance_id', 'phone_number_id', 'enabled',
+        'uncollected_reminder_enabled', 'uncollected_reminder_count', 'uncollected_reminder_interval_hours',
+    ];
 
     protected $casts = [
-        'enabled' => 'boolean',
+        'enabled'                     => 'boolean',
+        'uncollected_reminder_enabled'=> 'boolean',
     ];
 
     public static function current(): self

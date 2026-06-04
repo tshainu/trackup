@@ -5,11 +5,11 @@ use Illuminate\Database\Eloquent\Model;
 class JobCard extends Model
 {
     protected $fillable = [
-        'order_no','invoice_no','invoice_date','customer_id','customer_name','customer_address','customer_email',
+        'order_no','reference_no','invoice_no','invoice_date','customer_id','customer_name','customer_address','customer_email',
         'customer_nic','customer_dob','phone_no','device_name','device_brand','serial_no',
-        'device_age','device_fault','item_description','issue','date','rupees','advance_amount','discount','paid_amount','payment_status','status','priority',
+        'device_age','device_fault','device_photo','item_description','issue','date','rupees','advance_amount','discount','paid_amount','payment_status','status','priority',
         'estimated_delivery','accessories','remark','need_assistant','employee_id','payment_received',
-        'cancelled_reason','cancelled_at'
+        'cancelled_reason','cancelled_at','reminder_sent_count','last_reminder_sent_at',
     ];
 
     protected $appends = ['grand_total', 'balance', 'subtotal'];
@@ -20,7 +20,8 @@ class JobCard extends Model
         'date'            => 'date',
         'estimated_delivery' => 'date',
         'invoice_date'    => 'date',
-        'cancelled_at'    => 'datetime',
+        'cancelled_at'           => 'datetime',
+        'last_reminder_sent_at'  => 'datetime',
     ];
 
     public function employee()    { return $this->belongsTo(Employee::class); }
@@ -35,6 +36,16 @@ class JobCard extends Model
                        ->orderByDesc('id')->value('order_no');
         $serial = $last ? intval(substr($last, $prefixLen)) + 1 : 1;
         return $prefix . str_pad($serial, 3, '0', STR_PAD_LEFT);
+    }
+
+    public static function nextReferenceNo(): string
+    {
+        $yymm   = now()->format('ym');
+        $shopId = session('shop_id');
+        $query  = $shopId ? static::where('shop_id', $shopId) : static::query();
+        $last   = $query->where('reference_no', 'like', "REF-{$yymm}%")->max('reference_no');
+        $seq    = $last ? ((int)substr($last, -3) + 1) : 1;
+        return 'REF-' . $yymm . '-' . str_pad($seq, 3, '0', STR_PAD_LEFT);
     }
 
     public static function nextCustomerId(): string

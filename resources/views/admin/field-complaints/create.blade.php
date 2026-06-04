@@ -1,5 +1,5 @@
 @extends('layouts.admin')
-@section('title', 'New Field Complaint')
+@section('title', 'New Field Ticket')
 
 @push('styles')
 <style>
@@ -179,7 +179,7 @@
           <i class="bx bx-chevron-left"></i>
         </a>
         <div>
-          <h4><i class="bx bx-plus-circle me-2"></i>New Field Complaint</h4>
+          <h4><i class="bx bx-plus-circle me-2"></i>New Field Ticket</h4>
           <p>Log an on-site repair / service request</p>
         </div>
       </div>
@@ -451,7 +451,7 @@
           <a href="{{ route('admin.field-complaints.index') }}" class="btn btn-outline-secondary px-4">Cancel</a>
           <button type="submit" class="btn btn-primary px-4 fw-semibold"
                   style="background:linear-gradient(135deg,#696cff,#8c57ff);border:0;box-shadow:0 4px 12px rgba(105,108,255,.4);">
-            <i class="bx bx-check-circle me-1"></i>Log Complaint
+            <i class="bx bx-check-circle me-1"></i>Log Ticket
           </button>
         </div>
 

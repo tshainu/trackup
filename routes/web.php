@@ -93,6 +93,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/whatsapp-settings',       [WhatsappSettingsController::class, 'edit'])->name('whatsapp-settings.edit');
         Route::put('/whatsapp-settings',       [WhatsappSettingsController::class, 'update'])->name('whatsapp-settings.update');
         Route::post('/whatsapp-settings/test', [WhatsappSettingsController::class, 'test'])->name('whatsapp-settings.test');
+        Route::post('/jobcards/{jobCard}/send-quotation', [JobCardController::class, 'sendQuotation'])->name('jobcards.send-quotation');
+        Route::post('/jobcards/{jobCard}/send-uncollected-reminder', [JobCardController::class, 'sendUncollectedReminder'])->name('jobcards.send-uncollected-reminder');
 
         // Invoices
         Route::get('/invoices',                        [InvoiceController::class, 'index'])->name('invoices.index');
@@ -112,6 +114,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::patch('/field-complaints/{fieldComplaint}/status', [FieldComplaintController::class, 'updateStatus'])->name('field-complaints.status');
         Route::post('/field-complaints/{fieldComplaint}/payment', [FieldComplaintController::class, 'recordPayment'])->name('field-complaints.payment');
         Route::delete('/field-complaints/{fieldComplaint}',       [FieldComplaintController::class, 'destroy'])->name('field-complaints.destroy');
+        // Milestone routes
+        Route::post('/field-complaints/{fieldComplaint}/milestones',           [FieldComplaintController::class, 'milestoneStore'])->name('field-complaints.milestones.store');
+        Route::patch('/milestones/{milestone}',                                [FieldComplaintController::class, 'milestoneUpdate'])->name('milestones.update');
+        Route::post('/milestones/{milestone}/transfer',                        [FieldComplaintController::class, 'milestoneTransfer'])->name('milestones.transfer');
+        Route::post('/milestones/{milestone}/help',                            [FieldComplaintController::class, 'milestoneHelp'])->name('milestones.help');
+        Route::delete('/milestones/{milestone}',                               [FieldComplaintController::class, 'milestoneDestroy'])->name('milestones.destroy');
 
         // Service Types
         Route::get('/service-types',                             [ServiceTypeController::class, 'index'])->name('service-types.index');

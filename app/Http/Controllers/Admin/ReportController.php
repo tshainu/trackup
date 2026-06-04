@@ -7,6 +7,7 @@ use App\Models\Employee;
 use App\Models\PaymentLog;
 use App\Models\DeliveredOrder;
 use App\Models\StoreInfo;
+use App\Models\TicketMilestone;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Dompdf\Dompdf;
@@ -118,6 +119,25 @@ class ReportController extends Controller
         })->sortByDesc(fn($d) => $d['total']);
         $unassignedJobs = $staffJobs->whereNull('employee_id');
 
+        // 8. Uncollected — Completed but not paid/collected
+        $uncollectedJobs = JobCard::where('status', 'Completed')
+            ->where('payment_received', 0)
+            ->with('employee')
+            ->orderBy('updated_at')
+            ->get();
+
+        // 9. Milestones report — staff timeline
+        $selEmpId = $request->input('employee_id');
+        $mileData = collect();
+        if ($selEmpId) {
+            $mileData = TicketMilestone::with(['complaint', 'staff'])
+                ->where(function ($q) use ($selEmpId) {
+                    $q->where('staff_id', $selEmpId)->orWhere('transferred_to', $selEmpId);
+                })
+                ->orderByDesc('updated_at')
+                ->get();
+        }
+
         return compact(
             'report', 'period', 'from', 'to',
             'jobs', 'jobSummary',
@@ -126,7 +146,9 @@ class ReportController extends Controller
             'statusJobs', 'statusGroups',
             'overdueJobs',
             'undeliveredJobs', 'undeliveredSummary',
-            'employees', 'staffData', 'unassignedJobs'
+            'employees', 'staffData', 'unassignedJobs',
+            'uncollectedJobs',
+            'selEmpId', 'mileData'
         );
     }
 
