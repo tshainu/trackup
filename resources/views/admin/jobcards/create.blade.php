@@ -708,8 +708,26 @@
           </div>
 
           <div class="col-md-6">
-            <label for="device_photo" class="form-label">Device Photo <small class="text-muted">(optional)</small></label>
-            <input type="file" name="device_photo" id="device_photo" class="form-control" accept="image/*">
+            <label class="form-label">Device Photo <small class="text-muted">(optional)</small></label>
+            <div class="d-flex gap-2">
+              {{-- File/Gallery picker --}}
+              <label for="device_photo" class="btn btn-outline-secondary flex-fill mb-0" style="cursor:pointer;border-radius:8px;">
+                <i class="bx bx-image me-1"></i>Gallery
+              </label>
+              {{-- Direct camera --}}
+              <label for="device_photo_camera" class="btn btn-outline-primary flex-fill mb-0" style="cursor:pointer;border-radius:8px;">
+                <i class="bx bx-camera me-1"></i>Camera
+              </label>
+            </div>
+            {{-- Hidden inputs — only one will carry the file --}}
+            <input type="file" name="device_photo" id="device_photo" class="d-none" accept="image/*">
+            <input type="file" name="device_photo" id="device_photo_camera" class="d-none" accept="image/*" capture="environment">
+            {{-- Preview --}}
+            <div id="photoPreviewWrap" class="mt-2 d-none">
+              <img id="photoPreview" src="" alt="Preview"
+                   style="max-width:100%;max-height:140px;border-radius:8px;object-fit:cover;border:1px solid #ddd;">
+              <button type="button" class="btn btn-xs btn-outline-danger ms-2" onclick="clearPhoto()" style="font-size:.75rem;">✕ Remove</button>
+            </div>
           </div>
 
           <div class="col-md-6">
@@ -1140,5 +1158,36 @@ window.clearCustomerFill = function() {
 function escH(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+
+// ── Device Photo Preview ──
+function handlePhotoInput(src, clear) {
+  const file = src.files[0];
+  if (!file) return;
+  clear.value = '';
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('photoPreview').src = e.target.result;
+    document.getElementById('photoPreviewWrap').classList.remove('d-none');
+  };
+  reader.readAsDataURL(file);
+}
+function clearPhoto() {
+  document.getElementById('device_photo').value = '';
+  document.getElementById('device_photo_camera').value = '';
+  document.getElementById('photoPreviewWrap').classList.add('d-none');
+  document.getElementById('photoPreview').src = '';
+}
+(function() {
+  const gallery = document.getElementById('device_photo');
+  const camera  = document.getElementById('device_photo_camera');
+  if (!gallery || !camera) return;
+  gallery.addEventListener('change', () => handlePhotoInput(gallery, camera));
+  camera.addEventListener('change',  () => handlePhotoInput(camera, gallery));
+  // On submit: disable whichever is empty so only one file posts
+  document.getElementById('joForm').addEventListener('submit', function() {
+    if (!gallery.files.length) gallery.disabled = true;
+    if (!camera.files.length)  camera.disabled  = true;
+  }, true);
+})();
 </script>
 @endpush
