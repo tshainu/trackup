@@ -57,7 +57,7 @@
             </div>
             <div class="col-md-6">
               <label class="form-label fw-semibold">Inquiry Date</label>
-              <input type="date" name="inquiry_date" class="form-control" value="{{ old('inquiry_date', $lead->inquiry_date ? $lead->inquiry_date->format('Y-m-d') : '') }}">
+              <input type="date" name="inquiry_date" class="form-control" value="{{ old('inquiry_date', $lead->inquiry_date ? \Carbon\Carbon::parse($lead->inquiry_date)->format('Y-m-d') : '') }}">
             </div>
             <div class="col-12">
               <label class="form-label fw-semibold">Address</label>
