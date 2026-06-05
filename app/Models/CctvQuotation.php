@@ -41,6 +41,19 @@ class CctvQuotation extends Model
         return max(0, $subtotal - $this->discount + $this->tax);
     }
 
+    // ── Accessors: alias view field names → real DB columns ──────────
+    public function getQuotationNoAttribute()      { return $this->quote_no; }
+    public function getTotalAmountAttribute()      { return $this->grand_total; }
+    public function getDiscountAmountAttribute()   { return $this->discount; }
+    public function getInstallationChargeAttribute(){ return $this->installation_cost; }
+    public function getSubTotalAttribute() {
+        $items = collect($this->equipment_list ?? []);
+        return $items->sum(fn($i) => ($i['qty'] ?? 0) * ($i['unit_price'] ?? 0))
+             + ($this->labour_cost ?? 0)
+             + ($this->installation_cost ?? 0)
+             + ($this->transport_cost ?? 0);
+    }
+
     public function lead()     { return $this->belongsTo(CctvLead::class, 'lead_id'); }
     public function customer() { return $this->belongsTo(Customer::class); }
 }

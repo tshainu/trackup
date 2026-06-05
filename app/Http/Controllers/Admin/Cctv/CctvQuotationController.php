@@ -14,7 +14,10 @@ class CctvQuotationController extends Controller
         $tab    = $request->get('tab', 'all');
         $search = $request->get('q');
         $query  = CctvQuotation::latest();
-        if ($tab !== 'all') {
+        if ($tab === 'expired') {
+            $query->where('valid_until', '<', now()->toDateString())
+                  ->whereNotIn('status', ['Approved','Rejected']);
+        } elseif ($tab !== 'all') {
             $map = ['draft'=>'Draft','sent'=>'Sent','approved'=>'Approved','rejected'=>'Rejected'];
             if (isset($map[$tab])) $query->where('status', $map[$tab]);
         }
@@ -29,6 +32,8 @@ class CctvQuotationController extends Controller
             'sent'     => CctvQuotation::where('status','Sent')->count(),
             'approved' => CctvQuotation::where('status','Approved')->count(),
             'rejected' => CctvQuotation::where('status','Rejected')->count(),
+            'expired'  => CctvQuotation::where('valid_until', '<', now()->toDateString())
+                              ->whereNotIn('status', ['Approved','Rejected'])->count(),
         ];
         return view('admin.cctv.quotations.index', compact('quotations','tab','search','counts'));
     }
