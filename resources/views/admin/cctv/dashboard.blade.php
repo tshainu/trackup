@@ -111,7 +111,7 @@
             </div>
             <div>
               @php
-                $sc = ['New Lead'=>'bg-label-primary','Survey Scheduled'=>'bg-label-warning','Survey Completed'=>'bg-label-info','Quotation Sent'=>'bg-label-purple','Approved'=>'bg-label-success','Lost'=>'bg-label-danger'];
+                $sc = ['New Lead'=>'bg-label-primary','Survey Scheduled'=>'bg-label-warning','Survey Completed'=>'bg-label-info','Estimation Sent'=>'bg-label-purple','Approved'=>'bg-label-success','Lost'=>'bg-label-danger'];
               @endphp
               <span class="badge {{ $sc[$lead->status] ?? 'bg-label-secondary' }}" style="font-size:.7rem;">{{ $lead->status }}</span>
             </div>

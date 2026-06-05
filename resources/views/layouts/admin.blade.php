@@ -409,7 +409,7 @@
         <li class="menu-item {{ $onCctv && Request::routeIs('admin.cctv.quotations.*') ? 'open active' : '' }}">
           <a href="{{ route('admin.cctv.quotations.index') }}" class="menu-link">
             <i class="menu-icon tf-icons bx bx-receipt"></i>
-            <div>Quotations</div>
+            <div>Estimations</div>
           </a>
         </li>
         <li class="menu-item {{ $onCctv && Request::routeIs('admin.cctv.projects.*') ? 'open active' : '' }}">

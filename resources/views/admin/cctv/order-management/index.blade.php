@@ -35,7 +35,7 @@
         <small class="text-muted"><i class="bx bx-info-circle me-1"></i>Search across:</small>
         <span class="badge bg-label-primary rounded-pill">Leads (LED-)</span>
         <span class="badge bg-label-info rounded-pill">Surveys (SRV-)</span>
-        <span class="badge bg-label-warning rounded-pill">Quotations (QT-)</span>
+        <span class="badge bg-label-warning rounded-pill">Estimations (QT-)</span>
         <span class="badge bg-label-success rounded-pill">Projects (PRJ-)</span>
         <span class="badge bg-label-danger rounded-pill">Invoices (INV-)</span>
       </div>

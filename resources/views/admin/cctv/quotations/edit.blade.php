@@ -1,5 +1,5 @@
 @extends('layouts.admin')
-@section('title', 'Edit Quotation – ' . $quotation->quotation_no)
+@section('title', 'Edit Estimation – ' . $quotation->quotation_no)
 
 @push('styles')
 <style>
@@ -27,7 +27,7 @@
   <div class="hero-bar">
     <a href="{{ route('admin.cctv.quotations.show', $quotation) }}" class="back-btn"><i class="bx bx-arrow-back"></i></a>
     <div>
-      <h4>Edit Quotation – {{ $quotation->quotation_no }}</h4>
+      <h4>Edit Estimation – {{ $quotation->quotation_no }}</h4>
       <p>{{ $quotation->customer_name }}</p>
     </div>
   </div>

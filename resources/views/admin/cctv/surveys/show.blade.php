@@ -368,11 +368,11 @@
             </a>
             @if(!($quotation ?? null))
               <a href="{{ route('admin.cctv.quotations.create', array_filter(['lead_id'=>$survey->lead_id])) }}" class="btn btn-success btn-sm">
-                <i class="bx bx-file-blank me-1"></i> Create Quotation
+                <i class="bx bx-file-blank me-1"></i> Create Estimation
               </a>
             @else
               <a href="{{ route('admin.cctv.quotations.show', $quotation) }}" class="btn btn-outline-success btn-sm">
-                <i class="bx bx-file-blank me-1"></i> View Quotation
+                <i class="bx bx-file-blank me-1"></i> View Estimation
               </a>
             @endif
             <a href="{{ route('admin.cctv.surveys.print', $survey) }}" target="_blank" class="btn btn-outline-secondary btn-sm">

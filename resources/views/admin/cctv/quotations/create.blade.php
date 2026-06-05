@@ -1,5 +1,5 @@
 @extends('layouts.admin')
-@section('title', 'New Quotation')
+@section('title', 'New Estimation')
 
 @push('styles')
 <style>
@@ -28,8 +28,8 @@
   <div class="hero-bar">
     <a href="{{ route('admin.cctv.quotations.index') }}" class="back-btn"><i class="bx bx-arrow-back"></i></a>
     <div>
-      <h4>New Quotation</h4>
-      <p>Create a CCTV quotation for a customer</p>
+      <h4>New Estimation</h4>
+      <p>Create a CCTV estimation for a customer</p>
     </div>
   </div>
 
@@ -130,7 +130,7 @@
           <div class="card-body row g-3">
             <div class="col-12">
               <label class="form-label fw-600">Terms & Conditions</label>
-              <textarea name="terms" class="form-control" rows="3">{{ old('terms', '1. 50% advance payment required.\n2. Balance on completion.\n3. 1 year warranty on installation.\n4. Quotation valid for 30 days.') }}</textarea>
+              <textarea name="terms" class="form-control" rows="3">{{ old('terms', '1. 50% advance payment required.\n2. Balance on completion.\n3. 1 year warranty on installation.\n4. Estimation valid for 30 days.') }}</textarea>
             </div>
             <div class="col-12">
               <label class="form-label fw-600">Notes</label>
@@ -168,7 +168,7 @@
           <div class="card-header"><div class="section-icon"><i class="bx bx-save"></i></div> Save</div>
           <div class="card-body">
             <div class="d-grid gap-2">
-              <button type="submit" class="btn btn-primary"><i class="bx bx-save me-1"></i> Save Quotation</button>
+              <button type="submit" class="btn btn-primary"><i class="bx bx-save me-1"></i> Save Estimation</button>
               <a href="{{ route('admin.cctv.quotations.index') }}" class="btn btn-outline-secondary">Cancel</a>
             </div>
           </div>

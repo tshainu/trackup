@@ -37,18 +37,18 @@
       $project   = $row['project'];
       $invoice   = $row['invoice'];
 
-      $steps     = ['Lead', 'Survey', 'Quotation', 'Project', 'Invoice'];
+      $steps     = ['Lead', 'Survey', 'Estimation', 'Project', 'Invoice'];
       $stepsDone = [];
       if($lead)      $stepsDone[] = 'Lead';
       if($survey)    $stepsDone[] = 'Survey';
-      if($quotation) $stepsDone[] = 'Quotation';
+      if($quotation) $stepsDone[] = 'Estimation';
       if($project)   $stepsDone[] = 'Project';
       if($invoice)   $stepsDone[] = 'Invoice';
       $currentStep = end($stepsDone) ?: $row['type'];
 
       $statusColors = [
         'New Lead'         => 'secondary', 'Survey Scheduled' => 'info',
-        'Survey Completed' => 'info',      'Quotation Sent'   => 'warning',
+        'Survey Completed' => 'info',      'Estimation Sent'   => 'warning',
         'Approved'         => 'success',   'Installation'     => 'primary',
         'Completed'        => 'success',   'Cancelled'        => 'danger',
         'Rejected'         => 'danger',    'Postponed'        => 'warning',
@@ -84,7 +84,7 @@
               $ref = $link = '';
               if ($step==='Lead'       && $lead)      { $ref=$lead->lead_no;       $link=route('admin.cctv.leads.show',$lead->id); }
               if ($step==='Survey'     && $survey)    { $ref=$survey->survey_no;   $link=route('admin.cctv.surveys.show',$survey->id); }
-              if ($step==='Quotation'  && $quotation) { $ref=$quotation->quote_no; $link=route('admin.cctv.quotations.show',$quotation->id); }
+              if ($step==='Estimation'  && $quotation) { $ref=$quotation->quote_no; $link=route('admin.cctv.quotations.show',$quotation->id); }
               if ($step==='Project'    && $project)   { $ref=$project->project_no; $link=route('admin.cctv.projects.show',$project->id); }
               if ($step==='Invoice'    && $invoice)   { $ref=$invoice->invoice_no; $link=route('admin.cctv.invoices.show',$invoice->id); }
             @endphp
@@ -116,7 +116,7 @@
         <div class="d-flex flex-wrap gap-2 pt-2 border-top">
           @if($lead)      <a href="{{ route('admin.cctv.leads.show',$lead->id) }}"           class="btn btn-sm btn-outline-primary"><i class="bx bx-user-plus me-1"></i>Lead</a>@endif
           @if($survey)    <a href="{{ route('admin.cctv.surveys.show',$survey->id) }}"        class="btn btn-sm btn-outline-info"><i class="bx bx-map-alt me-1"></i>Survey</a>@endif
-          @if($quotation) <a href="{{ route('admin.cctv.quotations.show',$quotation->id) }}"  class="btn btn-sm btn-outline-warning"><i class="bx bx-receipt me-1"></i>Quotation</a>@endif
+          @if($quotation) <a href="{{ route('admin.cctv.quotations.show',$quotation->id) }}"  class="btn btn-sm btn-outline-warning"><i class="bx bx-receipt me-1"></i>Estimation</a>@endif
           @if($project)   <a href="{{ route('admin.cctv.projects.show',$project->id) }}"      class="btn btn-sm btn-outline-success"><i class="bx bx-hard-hat me-1"></i>Project</a>@endif
           @if($invoice)   <a href="{{ route('admin.cctv.invoices.show',$invoice->id) }}"      class="btn btn-sm btn-outline-danger"><i class="bx bx-file me-1"></i>Invoice</a>@endif
 
@@ -125,7 +125,7 @@
           @elseif(!$project && $quotation)
             <a href="{{ route('admin.cctv.projects.create',['quotation_id'=>$quotation->id]) }}" class="btn btn-sm btn-success ms-auto"><i class="bx bx-plus me-1"></i>Create Project</a>
           @elseif(!$quotation && $survey)
-            <a href="{{ route('admin.cctv.quotations.create',['survey_id'=>$survey->id]) }}" class="btn btn-sm btn-warning ms-auto"><i class="bx bx-plus me-1"></i>Create Quotation</a>
+            <a href="{{ route('admin.cctv.quotations.create',['survey_id'=>$survey->id]) }}" class="btn btn-sm btn-warning ms-auto"><i class="bx bx-plus me-1"></i>Create Estimation</a>
           @elseif(!$survey && $lead)
             <a href="{{ route('admin.cctv.surveys.create',['lead_id'=>$lead->id]) }}" class="btn btn-sm btn-info ms-auto"><i class="bx bx-plus me-1"></i>Schedule Survey</a>
           @endif

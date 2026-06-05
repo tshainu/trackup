@@ -41,13 +41,13 @@
   @php
     $pLead      = $invoice->lead      ?? ($invoice->project?->lead ?? null);
     $pProject   = $invoice->project   ?? null;
-    $pQuotation = $invoice->quotation ?? ($pProject?->quotation ?? null);
+    $pEstimation = $invoice->quotation ?? ($pProject?->quotation ?? null);
     $pSurvey    = $pLead ? $pLead->surveys()->first() : null;
   @endphp
   @include('admin.cctv._pipeline_banner', [
     'lead'      => $pLead,
     'survey'    => $pSurvey,
-    'quotation' => $pQuotation,
+    'quotation' => $pEstimation,
     'project'   => $pProject,
     'invoice'   => $invoice,
     'currentStep' => 'invoice',

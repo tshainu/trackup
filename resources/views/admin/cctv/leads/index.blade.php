@@ -115,7 +115,7 @@
                   'New Lead'           => 'bs-new',
                   'Survey Scheduled'   => 'bs-survey',
                   'Survey Completed'   => 'bs-surveyed',
-                  'Quotation Sent'     => 'bs-quoted',
+                  'Estimation Sent'     => 'bs-quoted',
                   'Approved'           => 'bs-approved',
                   'Lost'               => 'bs-lost',
                 ][$lead->status] ?? 'bg-secondary';

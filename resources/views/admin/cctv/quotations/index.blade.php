@@ -70,11 +70,11 @@
 <div class="container-xxl flex-grow-1 container-p-y">
   <div class="hero-bar">
     <div>
-      <h4><i class="bx bx-file me-2"></i>Quotations</h4>
+      <h4><i class="bx bx-file me-2"></i>Estimations</h4>
       <p>Manage all CCTV quotations</p>
     </div>
     <a href="{{ route('admin.cctv.quotations.create') }}" class="btn btn-light btn-sm fw-600">
-      <i class="bx bx-plus me-1"></i> New Quotation
+      <i class="bx bx-plus me-1"></i> New Estimation
     </a>
   </div>
 
@@ -168,7 +168,7 @@
             </td>
           </tr>
           @empty
-          <tr><td colspan="8" class="text-center text-muted py-4">No quotations found.</td></tr>
+          <tr><td colspan="8" class="text-center text-muted py-4">No estimations found.</td></tr>
           @endforelse
         </tbody>
       </table>

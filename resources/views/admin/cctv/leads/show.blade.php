@@ -29,7 +29,7 @@
             'New Lead'           => 'secondary',
             'Survey Scheduled'   => 'info',
             'Survey Completed'   => 'primary',
-            'Quotation Sent'     => 'warning',
+            'Estimation Sent'     => 'warning',
             'Approved'           => 'success',
             'Installation'       => 'warning',
             'Completed'          => 'success',
@@ -126,10 +126,10 @@
       </div>
       @endif
 
-      {{-- Linked Quotations --}}
+      {{-- Linked Estimations --}}
       @if(($lead->quotations ?? collect())->count())
       <div class="card section-card">
-        <div class="card-header"><div class="section-icon" style="background:#f3eeff;color:#8c57ff;"><i class="bx bx-file-blank"></i></div> Quotations</div>
+        <div class="card-header"><div class="section-icon" style="background:#f3eeff;color:#8c57ff;"><i class="bx bx-file-blank"></i></div> Estimations</div>
         <div class="card-body p-0">
           <div class="table-responsive">
             <table class="table table-sm table-hover mb-0">
@@ -169,7 +169,7 @@
               <a href="{{ route('admin.cctv.surveys.create', ['lead_id'=>$lead->id]) }}" class="btn btn-outline-info btn-sm"><i class="bx bx-clipboard me-1"></i> Create Survey</a>
             @endif
             @if(!($quotation ?? null))
-              <a href="{{ route('admin.cctv.quotations.create', ['lead_id'=>$lead->id]) }}" class="btn btn-outline-secondary btn-sm"><i class="bx bx-file-blank me-1"></i> Create Quotation</a>
+              <a href="{{ route('admin.cctv.quotations.create', ['lead_id'=>$lead->id]) }}" class="btn btn-outline-secondary btn-sm"><i class="bx bx-file-blank me-1"></i> Create Estimation</a>
             @endif
           </div>
         </div>
@@ -185,7 +185,7 @@
             <input type="hidden" name="customer_name" value="{{ $lead->customer_name }}">
             <input type="hidden" name="mobile"        value="{{ $lead->mobile }}">
             <select name="status" class="form-select form-select-sm mb-2">
-              @foreach(['New Lead','Survey Scheduled','Survey Completed','Quotation Sent','Approved','Installation','Completed','Cancelled','Rejected','Postponed','Rescheduled','Lost'] as $st)
+              @foreach(['New Lead','Survey Scheduled','Survey Completed','Estimation Sent','Approved','Installation','Completed','Cancelled','Rejected','Postponed','Rescheduled','Lost'] as $st)
                 <option value="{{ $st }}" @selected($lead->status === $st)>{{ $st }}</option>
               @endforeach
             </select>

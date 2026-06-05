@@ -1,5 +1,5 @@
 {{--
-  Pipeline banner — shows the full Lead → Survey → Quotation → Project → Invoice chain.
+  Pipeline banner — shows the full Lead → Survey → Estimation → Project → Invoice chain.
   Pass: $lead, $survey, $quotation, $project, $invoice (any can be null)
   Pass: $currentStep = 'lead'|'survey'|'quotation'|'project'|'invoice'
 --}}
@@ -7,7 +7,7 @@
   $steps = [
     ['key'=>'lead',      'label'=>'Lead',       'icon'=>'bx-user-plus',   'model'=>$lead      ?? null, 'routeShow'=>'admin.cctv.leads.show',       'routeCreate'=>null],
     ['key'=>'survey',    'label'=>'Survey',     'icon'=>'bx-clipboard',   'model'=>$survey    ?? null, 'routeShow'=>'admin.cctv.surveys.show',     'routeCreate'=>'admin.cctv.surveys.create'],
-    ['key'=>'quotation', 'label'=>'Quotation',  'icon'=>'bx-file-blank',  'model'=>$quotation ?? null, 'routeShow'=>'admin.cctv.quotations.show',  'routeCreate'=>'admin.cctv.quotations.create'],
+    ['key'=>'quotation', 'label'=>'Estimation',  'icon'=>'bx-file-blank',  'model'=>$quotation ?? null, 'routeShow'=>'admin.cctv.quotations.show',  'routeCreate'=>'admin.cctv.quotations.create'],
     ['key'=>'project',   'label'=>'Project',    'icon'=>'bx-wrench',      'model'=>$project   ?? null, 'routeShow'=>'admin.cctv.projects.show',    'routeCreate'=>'admin.cctv.projects.create'],
     ['key'=>'invoice',   'label'=>'Invoice',    'icon'=>'bx-receipt',     'model'=>$invoice   ?? null, 'routeShow'=>'admin.cctv.invoices.show',    'routeCreate'=>'admin.cctv.invoices.create'],
   ];

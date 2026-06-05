@@ -130,7 +130,7 @@
       <div class="card section-card">
         <div class="card-header"><div class="section-icon"><i class="bx bx-info-circle"></i></div> Details</div>
         <div class="card-body">
-          <div class="mb-3"><div class="info-label">Quotation No</div><div class="fw-700 font-monospace text-primary">{{ $quotation->quotation_no }}</div></div>
+          <div class="mb-3"><div class="info-label">Estimation No</div><div class="fw-700 font-monospace text-primary">{{ $quotation->quotation_no }}</div></div>
           <div class="mb-3"><div class="info-label">Status</div><span class="badge bg-label-{{ $sc }}">{{ ucfirst($quotation->status) }}</span></div>
           <div class="mb-3"><div class="info-label">Valid Until</div><div class="info-value">{{ $quotation->valid_until ? \Carbon\Carbon::parse($quotation->valid_until)->format('d M Y') : '—' }}</div></div>
           <div class="mb-3"><div class="info-label">Grand Total</div><div class="fw-700 fs-5 text-primary">Rs. {{ number_format($quotation->total_amount ?? 0, 2) }}</div></div>

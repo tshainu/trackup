@@ -685,6 +685,9 @@
   {{-- Submit --}}
   <div class="d-flex justify-content-end gap-2 pb-5">
     <a href="{{ route('admin.cctv.surveys.index') }}" class="btn btn-outline-secondary">Cancel</a>
+    <a href="{{ isset($lead) ? route('admin.cctv.leads.show', $lead) : route('admin.cctv.surveys.index') }}" class="btn btn-outline-warning px-4">
+      <i class="bx bx-skip-next me-1"></i> Skip
+    </a>
     <button type="submit" class="btn btn-primary px-4">
       <i class="bx bx-save me-1"></i> Save Survey
     </button>

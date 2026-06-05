@@ -65,7 +65,7 @@
   <div class="alert alert-success d-flex align-items-center gap-2 mb-3" style="border-radius:12px;">
     <i class="bx bx-link-alt fs-5"></i>
     <div>
-      <strong>Pre-filled from Quotation {{ $quotation->quotation_no }}</strong> —
+      <strong>Pre-filled from Estimation {{ $quotation->quotation_no }}</strong> —
       customer details, contract amount, and equipment list have been auto-filled. Review and confirm before saving.
     </div>
   </div>
