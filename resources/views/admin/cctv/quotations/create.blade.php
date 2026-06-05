@@ -45,7 +45,7 @@
               <label class="form-label fw-600">Mobile <span class="text-danger">*</span></label>
               <div class="position-relative">
                 <input type="text" id="mobileSearch" name="mobile" autocomplete="off"
-                  class="form-control" value="{{ old('mobile') }}" placeholder="07X XXX XXXX" required>
+                  class="form-control" value="{{ old('mobile', $survey?->mobile ?? $lead?->mobile ?? '') }}" placeholder="07X XXX XXXX" required>
                 <div id="mobileDropdown" class="search-drop d-none"></div>
               </div>
             </div>
@@ -53,19 +53,22 @@
               <label class="form-label fw-600">Customer Name <span class="text-danger">*</span></label>
               <div class="position-relative">
                 <input type="text" id="customerSearch" autocomplete="off"
-                  class="form-control" value="{{ old('customer_name') }}" placeholder="Type to search or enter name" required>
-                <input type="hidden" name="customer_name" id="customerNameHidden" value="{{ old('customer_name') }}">
+                  class="form-control" value="{{ old('customer_name', $survey?->customer_name ?? $lead?->customer_name ?? '') }}" placeholder="Type to search or enter name" required>
+                <input type="hidden" name="customer_name" id="customerNameHidden" value="{{ old('customer_name', $survey?->customer_name ?? $lead?->customer_name ?? '') }}">
                 <div id="customerDropdown" class="search-drop d-none"></div>
               </div>
             </div>
             <div class="col-md-6">
               <label class="form-label fw-600">Email</label>
-              <input type="email" name="email" class="form-control" value="{{ old('email') }}">
+              <input type="email" name="email" class="form-control" value="{{ old('email', $survey?->email ?? '') }}">
             </div>
             <div class="col-12">
               <label class="form-label fw-600">Address</label>
-              <textarea name="address" class="form-control" rows="2">{{ old('address') }}</textarea>
+              <textarea name="address" class="form-control" rows="2">{{ old('address', $survey?->building_name ?? $lead?->address ?? '') }}</textarea>
             </div>
+            {{-- Hidden IDs --}}
+            <input type="hidden" name="lead_id"      value="{{ $lead?->id ?? '' }}">
+            <input type="hidden" name="customer_id"  value="{{ $lead?->customer_id ?? $survey?->customer_id ?? '' }}">
           </div>
         </div>
 
@@ -157,7 +160,7 @@
               <label class="form-label fw-600">Installation Charge (Rs.)</label>
               <input type="number" name="installation_charge" class="form-control" value="{{ old('installation_charge', 0) }}" step="0.01">
             </div>
-            <input type="hidden" name="survey_id" value="{{ request('survey_id') }}">
+            <input type="hidden" name="survey_id" value="{{ $survey?->id ?? request('survey_id') }}">
           </div>
         </div>
 

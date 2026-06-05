@@ -40,10 +40,16 @@ class CctvQuotationController extends Controller
 
     public function create(Request $request)
     {
-        $leads  = CctvLead::whereIn('status',['Survey Completed','Quotation Sent'])->orderBy('customer_name')->get();
-        $leadId = $request->get('lead_id');
-        $lead   = $leadId ? CctvLead::find($leadId) : null;
-        return view('admin.cctv.quotations.create', compact('leads','lead'));
+        $leads    = CctvLead::whereIn('status',['Survey Completed','Quotation Sent'])->orderBy('customer_name')->get();
+        $leadId   = $request->get('lead_id');
+        $surveyId = $request->get('survey_id');
+        $lead     = $leadId   ? CctvLead::find($leadId)     : null;
+        $survey   = $surveyId ? \App\Models\CctvSurvey::find($surveyId) : null;
+        // If only survey_id passed, derive lead from survey
+        if (!$lead && $survey && $survey->lead_id) {
+            $lead = CctvLead::find($survey->lead_id);
+        }
+        return view('admin.cctv.quotations.create', compact('leads','lead','survey'));
     }
 
     public function store(Request $request)

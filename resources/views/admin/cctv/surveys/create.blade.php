@@ -212,7 +212,7 @@
       <div class="card-body row g-3">
         <div class="col-md-6">
           <label class="form-label fw-semibold">Building Name / Address</label>
-          <input type="text" name="building_name" value="{{ old('building_name', $lead?->site_address ?? '') }}" class="form-control">
+          <input type="text" name="building_name" value="{{ old('building_name', $lead?->address ?? $lead?->site_address ?? '') }}" class="form-control">
         </div>
         <div class="col-md-6">
           <label class="form-label fw-semibold">Building Type</label>
