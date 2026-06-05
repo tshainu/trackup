@@ -59,76 +59,61 @@
        DOCUMENT HEADER
     ════════════════════════════════ */
     .doc-header {
-      background: linear-gradient(135deg, #1e1e2d 0%, #2d2b55 60%, #3a3575 100%);
+      background: #fff;
+      border-bottom: 1px solid #ebebff;
       padding: 0;
       position: relative;
       overflow: hidden;
     }
-    .doc-header::before {
-      content: '';
-      position: absolute; top: -60px; right: -60px;
-      width: 240px; height: 240px;
-      background: radial-gradient(circle, rgba(105,108,255,.25) 0%, transparent 70%);
-      border-radius: 50%;
-    }
-    .doc-header::after {
-      content: '';
-      position: absolute; bottom: -40px; left: 30%;
-      width: 160px; height: 160px;
-      background: radial-gradient(circle, rgba(105,108,255,.12) 0%, transparent 70%);
-      border-radius: 50%;
-    }
     .header-inner {
-      position: relative; z-index: 1;
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      padding: 28px 36px 24px;
+      padding: 28px 36px 22px;
     }
-    .brand-block {}
     .brand-logo-row {
       display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
     }
     .brand-icon {
-      width: 36px; height: 36px;
+      width: 38px; height: 38px;
       background: #696cff;
-      border-radius: 8px;
+      border-radius: 9px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 18px; font-weight: 900; color: #fff;
+      font-size: 19px; font-weight: 900; color: #fff;
       flex-shrink: 0;
     }
-    .brand-name   { font-size: 20px; font-weight: 800; color: #fff; letter-spacing: -.2px; }
-    .brand-tagline { font-size: 10px; color: rgba(255,255,255,.5); text-transform: uppercase; letter-spacing: .1em; }
-    .brand-contact { margin-top: 10px; font-size: 10.5px; color: rgba(255,255,255,.65); line-height: 1.8; }
-    .brand-contact strong { color: rgba(255,255,255,.9); }
+    .brand-name    { font-size: 20px; font-weight: 800; color: #1e1e2d; letter-spacing: -.2px; }
+    .brand-tagline { font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: .1em; }
+    .brand-contact { margin-top: 10px; font-size: 10.5px; color: #666; line-height: 1.8; }
+    .brand-contact strong { color: #444; }
 
     .doc-title-block { text-align: right; }
     .doc-type-label {
       display: inline-block;
-      background: rgba(255,255,255,.1);
-      border: 1px solid rgba(255,255,255,.2);
-      color: rgba(255,255,255,.7);
+      background: #eef0ff;
+      border: 1px solid #d0d3ff;
+      color: #696cff;
       font-size: 9.5px; font-weight: 700;
       text-transform: uppercase; letter-spacing: .12em;
       padding: 3px 10px; border-radius: 20px;
       margin-bottom: 6px;
     }
     .doc-type-main {
-      font-size: 26px; font-weight: 900; color: #fff;
+      font-size: 26px; font-weight: 900; color: #1e1e2d;
       letter-spacing: -.5px; line-height: 1;
     }
-    .doc-type-sub { font-size: 12px; color: rgba(255,255,255,.5); margin-top: 2px; }
+    .doc-type-sub { font-size: 12px; color: #aaa; margin-top: 2px; }
     .doc-no-box {
       margin-top: 10px;
       display: inline-block;
-      background: rgba(105,108,255,.3);
-      border: 1px solid rgba(105,108,255,.5);
+      background: #eef0ff;
+      border: 1px solid #c5c7ff;
       border-radius: 6px;
       padding: 5px 14px;
-      font-size: 14px; font-weight: 700; color: #fff;
+      font-size: 14px; font-weight: 700; color: #696cff;
       letter-spacing: .04em;
     }
-    .doc-date-row { margin-top: 6px; font-size: 10.5px; color: rgba(255,255,255,.5); }
+    .doc-date-row { margin-top: 6px; font-size: 10.5px; color: #aaa; }
 
     /* Header accent bar */
     .header-accent {
@@ -424,7 +409,6 @@
       .toolbar { display: none !important; }
       .page-wrap { margin: 0; box-shadow: none; border-radius: 0; max-width: 100%; }
       .doc-body { padding: 20px 28px; }
-      .doc-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       .doc-footer { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       .stat-row  { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       .data-table thead tr { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
