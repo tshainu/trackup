@@ -301,13 +301,5 @@
 
 </div>
 
-<script>
-// Live search on enter or after 1s of no typing
-document.getElementById('searchInput').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    document.getElementById('searchForm').submit();
-  }
-});
-</script>
+
 @endsection
