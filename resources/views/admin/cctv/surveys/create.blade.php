@@ -105,57 +105,57 @@
     </div>
   </div>
 
+  {{-- ── SHARED: Basic Info (always visible) ── --}}
+  <div class="card survey-card" id="s0">
+    <div class="card-header">
+      <span class="sec-icon bg-label-primary">0</span> Basic Information
+    </div>
+    <div class="card-body row g-3">
+      {{-- Mobile first — live search triggers on it --}}
+      <div class="col-md-4">
+        <label class="form-label fw-semibold">Mobile <span class="text-danger">*</span></label>
+        <div class="position-relative">
+          <input type="text" id="mobileSearch" name="mobile" autocomplete="off" placeholder="07X XXX XXXX"
+            class="form-control" value="{{ old('mobile', $lead?->mobile ?? '') }}">
+          <div id="mobileDropdown" class="search-drop d-none"></div>
+        </div>
+      </div>
+      {{-- Customer name fills automatically after picking from dropdown --}}
+      <div class="col-md-8">
+        <label class="form-label fw-semibold">Customer Name <span class="text-danger">*</span></label>
+        <div class="position-relative">
+          <input type="text" id="customerSearch" autocomplete="off" placeholder="Auto-filled or type name…"
+            class="form-control" value="{{ old('customer_name', $lead?->customer_name ?? '') }}">
+          <input type="hidden" name="customer_name" id="customerNameHidden" value="{{ old('customer_name', $lead?->customer_name ?? '') }}">
+          <input type="hidden" name="customer_id"   id="customerIdHidden">
+          <input type="hidden" name="lead_id"       id="leadIdHidden" value="{{ old('lead_id', $lead?->id ?? '') }}">
+          <div id="customerDropdown" class="search-drop d-none"></div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label fw-semibold">Survey Date</label>
+        <input type="date" name="survey_date" value="{{ old('survey_date', now()->toDateString()) }}" class="form-control">
+      </div>
+      <div class="col-md-8">
+        <label class="form-label fw-semibold">Technician</label>
+        <div class="position-relative">
+          <input type="text" id="techSearch" autocomplete="off" placeholder="Search technician…"
+            class="form-control" value="{{ old('technician_name') }}">
+          <input type="hidden" name="technician_id" id="techIdHidden" value="{{ old('technician_id') }}">
+          <div id="techDropdown" class="search-drop d-none"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   {{-- ── DETAILED SURVEY ── --}}
   <div id="detailedSurvey" class="{{ old('survey_mode','Detailed')==='Simple'?'d-none':'' }}">
 
     {{-- Sticky nav --}}
     <div class="section-nav">
-      @foreach([['s0','Basic'],['s1','Customer'],['s2','Site'],['s3','Purpose'],['s4','Cameras'],['s5','Network'],['s6','Power'],['s7','Install'],['s8','Materials'],['s9','Photos'],['s10','Risks'],['s11','Notes']] as [$id,$lbl])
+      @foreach([['s1','Customer'],['s2','Site'],['s3','Purpose'],['s4','Cameras'],['s5','Network'],['s6','Power'],['s7','Install'],['s8','Materials'],['s9','Photos'],['s10','Risks'],['s11','Notes']] as [$id,$lbl])
       <a href="#{{ $id }}">{{ $lbl }}</a>
       @endforeach
-    </div>
-
-    {{-- ── S0: Basic ── --}}
-    <div class="card survey-card" id="s0">
-      <div class="card-header">
-        <span class="sec-icon bg-label-primary">0</span> Basic Information
-      </div>
-      <div class="card-body row g-3">
-        {{-- Mobile first — live search triggers on it --}}
-        <div class="col-md-4">
-          <label class="form-label fw-semibold">Mobile <span class="text-danger">*</span></label>
-          <div class="position-relative">
-            <input type="text" id="mobileSearch" name="mobile" autocomplete="off" placeholder="07X XXX XXXX"
-              class="form-control" value="{{ old('mobile', $lead?->mobile ?? '') }}">
-            <div id="mobileDropdown" class="search-drop d-none"></div>
-          </div>
-        </div>
-        {{-- Customer name fills automatically after picking from dropdown --}}
-        <div class="col-md-8">
-          <label class="form-label fw-semibold">Customer Name <span class="text-danger">*</span></label>
-          <div class="position-relative">
-            <input type="text" id="customerSearch" autocomplete="off" placeholder="Auto-filled or type name…"
-              class="form-control" value="{{ old('customer_name', $lead?->customer_name ?? '') }}">
-            <input type="hidden" name="customer_name" id="customerNameHidden" value="{{ old('customer_name', $lead?->customer_name ?? '') }}">
-            <input type="hidden" name="customer_id"   id="customerIdHidden">
-            <input type="hidden" name="lead_id"       id="leadIdHidden" value="{{ old('lead_id', $lead?->id ?? '') }}">
-            <div id="customerDropdown" class="search-drop d-none"></div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <label class="form-label fw-semibold">Survey Date</label>
-          <input type="date" name="survey_date" value="{{ old('survey_date', now()->toDateString()) }}" class="form-control">
-        </div>
-        <div class="col-md-8">
-          <label class="form-label fw-semibold">Technician</label>
-          <div class="position-relative">
-            <input type="text" id="techSearch" autocomplete="off" placeholder="Search technician…"
-              class="form-control" value="{{ old('technician_name') }}">
-            <input type="hidden" name="technician_id" id="techIdHidden" value="{{ old('technician_id') }}">
-            <div id="techDropdown" class="search-drop d-none"></div>
-          </div>
-        </div>
-      </div>
     </div>
 
     {{-- ── S1: Customer Details ── --}}
@@ -668,17 +668,6 @@
             <select name="status" class="form-select" id="simpleStatusSelect">
               @foreach(['Scheduled','Completed','Need More Time','Cancelled'] as $s)
               <option value="{{ $s }}" {{ old('status','Scheduled')===$s?'selected':'' }}>{{ $s }}</option>
-              @endforeach
-            </select>
-          </div>
-          <div class="col-md-4">
-            <label class="form-label fw-semibold small">Survey By</label>
-            <select name="technician_id" class="form-select" id="simpleTechSelect">
-              <option value="">-- Select Technician --</option>
-              @foreach($employees as $emp)
-              <option value="{{ $emp->id }}" {{ old('technician_id')==$emp->id?'selected':'' }}>
-                {{ $emp->employee_name }}
-              </option>
               @endforeach
             </select>
           </div>
