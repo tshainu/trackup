@@ -136,8 +136,8 @@ class CctvSurveyController extends Controller
 
         $survey = CctvSurvey::create(array_merge([
             'survey_no'   => CctvSurvey::nextSurveyNo(),
-            'lead_id'     => $request->lead_id,
-            'customer_id' => $request->customer_id,
+            'lead_id'     => $request->filled('lead_id') ? (int)$request->lead_id : null,
+            'customer_id' => $request->filled('customer_id') ? (int)$request->customer_id : null,
             'status'      => $request->status ?? ($isSimple ? 'Scheduled' : 'Completed'),
             'survey_type' => $request->survey_type,
             'survey_mode' => $request->survey_mode,
