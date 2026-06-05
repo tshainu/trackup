@@ -12,63 +12,160 @@ class CctvSurveyController extends Controller
 {
     public function index(Request $request)
     {
-        $search   = $request->get('q');
-        $query    = CctvSurvey::with('technician')->latest();
+        $search = $request->get('q');
+        $query  = CctvSurvey::with('technician')->latest();
         if ($search) {
-            $query->where(fn($q) => $q->where('customer_name','like',"%$search%")
-                ->orWhere('survey_no','like',"%$search%")
-                ->orWhere('mobile','like',"%$search%"));
+            $query->where(fn($q) => $q->where('customer_name', 'like', "%$search%")
+                ->orWhere('survey_no', 'like', "%$search%")
+                ->orWhere('mobile', 'like', "%$search%"));
         }
         $surveys = $query->paginate(20)->withQueryString();
-        return view('admin.cctv.surveys.index', compact('surveys','search'));
+        return view('admin.cctv.surveys.index', compact('surveys', 'search'));
     }
 
     public function create(Request $request)
     {
-        $employees = Employee::where('status','active')->orderBy('employee_name')->get();
-        $leads     = CctvLead::whereIn('status',['New Lead','Survey Scheduled'])->orderBy('customer_name')->get();
+        $employees = Employee::where('status', 'active')->orderBy('employee_name')->get();
+        $leads     = CctvLead::whereIn('status', ['New Lead', 'Survey Scheduled'])->orderBy('customer_name')->get();
         $leadId    = $request->get('lead_id');
         $lead      = $leadId ? CctvLead::find($leadId) : null;
-        return view('admin.cctv.surveys.create', compact('employees','leads','lead'));
+        return view('admin.cctv.surveys.create', compact('employees', 'leads', 'lead'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'customer_name'   => 'required|string|max:150',
-            'mobile'          => 'nullable|string|max:20',
-            'survey_date'     => 'nullable|date',
-            'technician_id'   => 'nullable|exists:employees,id',
-            'num_floors'      => 'nullable|integer|min:1',
-            'indoor_cameras'  => 'nullable|integer|min:0',
-            'outdoor_cameras' => 'nullable|integer|min:0',
-            'special_notes'   => 'nullable|string',
+            'customer_name' => 'required|string|max:150',
+            'mobile'        => 'nullable|string|max:20',
+            'survey_date'   => 'nullable|date',
+            'technician_id' => 'nullable|exists:employees,id',
+            'survey_type'   => 'required|in:New Site,Upgrading,Modification,Service',
+            'survey_mode'   => 'required|in:Detailed,Simple',
+            'email'         => 'nullable|email|max:150',
         ]);
 
+        // Handle site photos upload
         $photos = [];
         if ($request->hasFile('site_photos')) {
             foreach ($request->file('site_photos') as $photo) {
-                $path = $photo->store('cctv/surveys', 'public');
-                $photos[] = $path;
+                $photos[] = $photo->store('cctv/surveys', 'public');
             }
         }
 
+        // Parse camera_locations repeater rows
+        $cameraLocations = [];
+        if ($request->has('cam_location')) {
+            $locs       = $request->input('cam_location', []);
+            $io         = $request->input('cam_io', []);
+            $types      = $request->input('cam_type', []);
+            $mps        = $request->input('cam_mp', []);
+            $nvs        = $request->input('cam_nv', []);
+            $audios     = $request->input('cam_audio', []);
+            foreach ($locs as $i => $loc) {
+                if (trim($loc) === '') continue;
+                $cameraLocations[] = [
+                    'location'       => $loc,
+                    'indoor_outdoor' => $io[$i] ?? 'Indoor',
+                    'camera_type'    => $types[$i] ?? '',
+                    'mp'             => $mps[$i] ?? '',
+                    'night_vision'   => isset($nvs[$i]) ? true : false,
+                    'audio'          => isset($audios[$i]) ? true : false,
+                ];
+            }
+        }
+
+        // Parse accessories repeater
+        $accessories = [];
+        if ($request->has('acc_name')) {
+            $accNames = $request->input('acc_name', []);
+            $accQtys  = $request->input('acc_qty', []);
+            foreach ($accNames as $i => $name) {
+                if (trim($name) === '') continue;
+                $accessories[] = ['name' => $name, 'qty' => (int)($accQtys[$i] ?? 1)];
+            }
+        }
+
+        // Purposes & risks are checkboxes → arrays
+        $purposes = $request->input('purposes', []);
+        $risks    = $request->input('risks', []);
+
         $survey = CctvSurvey::create([
-            'survey_no'        => CctvSurvey::nextSurveyNo(),
-            'lead_id'          => $request->lead_id,
-            'customer_id'      => $request->customer_id,
-            'customer_name'    => $request->customer_name,
-            'mobile'           => $request->mobile,
-            'survey_date'      => $request->survey_date ?? now()->toDateString(),
-            'technician_id'    => $request->technician_id,
-            'site_photos'      => $photos ?: null,
-            'num_floors'       => $request->num_floors ?? 1,
-            'indoor_cameras'   => $request->indoor_cameras ?? 0,
-            'outdoor_cameras'  => $request->outdoor_cameras ?? 0,
-            'internet_available' => $request->boolean('internet_available'),
-            'existing_cctv'    => $request->boolean('existing_cctv'),
-            'special_notes'    => $request->special_notes,
-            'status'           => 'Completed',
+            'survey_no'   => CctvSurvey::nextSurveyNo(),
+            'lead_id'     => $request->lead_id,
+            'customer_id' => $request->customer_id,
+            'status'      => 'Completed',
+            'survey_type' => $request->survey_type,
+            'survey_mode' => $request->survey_mode,
+
+            // Basic
+            'customer_name' => $request->customer_name,
+            'mobile'        => $request->mobile,
+            'survey_date'   => $request->survey_date ?? now()->toDateString(),
+            'technician_id' => $request->technician_id,
+            'special_notes' => $request->special_notes,
+
+            // Section 1
+            'contact_person'     => $request->contact_person,
+            'alt_mobile'         => $request->alt_mobile,
+            'email'              => $request->email,
+            'gps_location'       => $request->gps_location,
+            'customer_type'      => $request->customer_type,
+            'customer_type_other'=> $request->customer_type_other,
+
+            // Section 2
+            'building_name'            => $request->building_name,
+            'building_type'            => $request->building_type,
+            'site_size'                => $request->site_size,
+            'existing_security_system' => $request->boolean('existing_security_system'),
+            'construction_status'      => $request->construction_status,
+
+            // Section 3
+            'purposes' => $purposes ?: null,
+
+            // Section 4
+            'camera_locations' => $cameraLocations ?: null,
+
+            // Section 5
+            'internet_status' => $request->internet_status,
+            'isp'             => $request->isp,
+            'isp_other'       => $request->isp_other,
+            'wifi_coverage'   => $request->boolean('wifi_coverage'),
+            'lan_available'   => $request->boolean('lan_available'),
+
+            // Section 6
+            'power_availability'       => $request->power_availability,
+            'ups_required'             => $request->boolean('ups_required'),
+            'electrical_work_required' => $request->boolean('electrical_work_required'),
+            'voltage_issues'           => $request->boolean('voltage_issues'),
+
+            // Section 7
+            'cable_route'             => $request->cable_route,
+            'ceiling_type'            => $request->ceiling_type,
+            'wall_type'               => $request->wall_type,
+            'ladder_required'         => $request->boolean('ladder_required'),
+            'scaffolding_required'    => $request->boolean('scaffolding_required'),
+            'height_risk'             => (int)($request->height_risk ?? 0),
+            'special_safety_equipment'=> $request->special_safety_equipment,
+
+            // Section 8
+            'cameras_qty'      => (int)($request->cameras_qty ?? 0),
+            'dvr_channels'     => (int)($request->dvr_channels ?? 0),
+            'hdd_storage_days' => (int)($request->hdd_storage_days ?? 30),
+            'cable_meters'     => (int)($request->cable_meters ?? 0),
+            'accessories'      => $accessories ?: null,
+
+            // Section 9
+            'site_photos'  => $photos ?: null,
+
+            // Section 10
+            'risks' => $risks ?: null,
+
+            // Legacy
+            'num_floors'        => $request->num_floors ?? 1,
+            'indoor_cameras'    => $request->indoor_cameras ?? 0,
+            'outdoor_cameras'   => $request->outdoor_cameras ?? 0,
+            'internet_available'=> $request->boolean('internet_available'),
+            'existing_cctv'     => $request->boolean('existing_cctv'),
         ]);
 
         // Update lead status
@@ -82,24 +179,28 @@ class CctvSurveyController extends Controller
 
     public function show(CctvSurvey $survey)
     {
-        $survey->load('technician','lead');
+        $survey->load('technician', 'lead');
         return view('admin.cctv.surveys.show', compact('survey'));
     }
 
     public function edit(CctvSurvey $survey)
     {
-        $employees = Employee::where('status','active')->orderBy('employee_name')->get();
-        return view('admin.cctv.surveys.edit', compact('survey','employees'));
+        $employees = Employee::where('status', 'active')->orderBy('employee_name')->get();
+        return view('admin.cctv.surveys.edit', compact('survey', 'employees'));
     }
 
     public function update(Request $request, CctvSurvey $survey)
     {
         $request->validate([
-            'customer_name'  => 'required|string|max:150',
-            'survey_date'    => 'nullable|date',
-            'technician_id'  => 'nullable|exists:employees,id',
+            'customer_name' => 'required|string|max:150',
+            'survey_date'   => 'nullable|date',
+            'technician_id' => 'nullable|exists:employees,id',
         ]);
-        $survey->update($request->only(['customer_name','mobile','survey_date','technician_id','num_floors','indoor_cameras','outdoor_cameras','internet_available','existing_cctv','special_notes','status']));
+        $survey->update($request->only([
+            'customer_name', 'mobile', 'survey_date', 'technician_id',
+            'num_floors', 'indoor_cameras', 'outdoor_cameras',
+            'internet_available', 'existing_cctv', 'special_notes', 'status',
+        ]));
         return redirect()->route('admin.cctv.surveys.show', $survey)->with('success', 'Survey updated.');
     }
 
