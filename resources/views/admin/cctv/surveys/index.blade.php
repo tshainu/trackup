@@ -46,8 +46,8 @@
       <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
         <div class="filter-tabs">
           <a href="{{ route('admin.cctv.surveys.index') }}" class="filter-tab {{ !request('status') ? 'active' : '' }}">All</a>
-          @foreach(['pending','completed','quoted'] as $s)
-            <a href="{{ route('admin.cctv.surveys.index', ['status'=>$s]) }}" class="filter-tab {{ request('status')===$s ? 'active' : '' }}">{{ ucfirst($s) }}</a>
+          @foreach(['Pending','Completed','Quoted'] as $s)
+            <a href="{{ route('admin.cctv.surveys.index', ['status'=>$s]) }}" class="filter-tab {{ request('status')===$s ? 'active' : '' }}">{{ $s }}</a>
           @endforeach
         </div>
         <form method="GET" class="d-flex gap-2">
@@ -81,10 +81,10 @@
             <td class="font-monospace small">{{ $survey->mobile }}</td>
             <td>{{ $survey->survey_date ? \Carbon\Carbon::parse($survey->survey_date)->format('d M Y') : '—' }}</td>
             <td>
-              @php $sc = ['pending'=>'warning','completed'=>'success','quoted'=>'info'][$survey->status] ?? 'secondary' @endphp
+              @php $sc = ['Pending'=>'warning','Completed'=>'success','Quoted'=>'info'][$survey->status] ?? 'secondary' @endphp
               <span class="badge bg-label-{{ $sc }}">{{ ucfirst($survey->status) }}</span>
             </td>
-            <td>{{ $survey->technician_name ?? '—' }}</td>
+            <td>{{ $survey->technician?->employee_name ?? '—' }}</td>
             <td class="text-end">
               <a href="{{ route('admin.cctv.surveys.show', $survey) }}" class="btn btn-sm btn-outline-primary py-1 px-2"><i class="bx bx-show"></i></a>
               <a href="{{ route('admin.cctv.surveys.edit', $survey) }}" class="btn btn-sm btn-outline-secondary py-1 px-2"><i class="bx bx-edit"></i></a>

@@ -13,14 +13,27 @@ class CctvSurveyController extends Controller
     public function index(Request $request)
     {
         $search = $request->get('q');
+        $status = $request->get('status');
         $query  = CctvSurvey::with('technician')->latest();
         if ($search) {
             $query->where(fn($q) => $q->where('customer_name', 'like', "%$search%")
                 ->orWhere('survey_no', 'like', "%$search%")
                 ->orWhere('mobile', 'like', "%$search%"));
         }
+        if ($status) {
+            $query->where('status', $status);
+        }
         $surveys = $query->paginate(20)->withQueryString();
-        return view('admin.cctv.surveys.index', compact('surveys', 'search'));
+
+        $allStats  = CctvSurvey::selectRaw('status, count(*) as cnt')->groupBy('status')->pluck('cnt', 'status');
+        $stats = [
+            'total'     => $allStats->sum(),
+            'pending'   => $allStats->get('Pending', 0),
+            'completed' => $allStats->get('Completed', 0),
+            'quoted'    => $allStats->get('Quoted', 0),
+        ];
+
+        return view('admin.cctv.surveys.index', compact('surveys', 'search', 'stats'));
     }
 
     public function create(Request $request)
