@@ -47,7 +47,9 @@ class CctvProjectController extends Controller
         $quotations = CctvQuotation::where('status','Approved')->orderBy('customer_name')->get();
         $leadId     = $request->get('lead_id');
         $lead       = $leadId ? CctvLead::find($leadId) : null;
-        return view('admin.cctv.projects.create', compact('employees','leads','quotations','lead'));
+        $quotationId = $request->get('quotation_id');
+        $quotation   = $quotationId ? CctvQuotation::find($quotationId) : null;
+        return view('admin.cctv.projects.create', compact('employees','leads','quotations','lead','quotation'));
     }
 
     public function store(Request $request)

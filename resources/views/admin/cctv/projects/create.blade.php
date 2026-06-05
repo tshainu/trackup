@@ -21,6 +21,16 @@
     <div><h4>New Installation Project</h4><p>Schedule a CCTV installation</p></div>
   </div>
 
+  @if($quotation)
+  <div class="alert alert-success d-flex align-items-center gap-2 mb-3" style="border-radius:12px;">
+    <i class="bx bx-link-alt fs-5"></i>
+    <div>
+      <strong>Pre-filled from Quotation {{ $quotation->quotation_no }}</strong> —
+      customer details and contract amount have been auto-filled. Review and confirm before saving.
+    </div>
+  </div>
+  @endif
+
   <form method="POST" action="{{ route('admin.cctv.projects.store') }}">
     @csrf
     <div class="row g-3">
@@ -30,15 +40,15 @@
           <div class="card-body row g-3">
             <div class="col-md-6">
               <label class="form-label fw-600">Customer Name <span class="text-danger">*</span></label>
-              <input type="text" name="customer_name" class="form-control" value="{{ old('customer_name') }}" required>
+              <input type="text" name="customer_name" class="form-control" value="{{ old('customer_name', $quotation?->customer_name ?? $lead?->customer_name ?? '') }}" required>
             </div>
             <div class="col-md-6">
               <label class="form-label fw-600">Mobile <span class="text-danger">*</span></label>
-              <input type="text" name="mobile" class="form-control" value="{{ old('mobile') }}" required>
+              <input type="text" name="mobile" class="form-control" value="{{ old('mobile', $quotation?->mobile ?? $lead?->mobile ?? '') }}" required>
             </div>
             <div class="col-12">
               <label class="form-label fw-600">Address</label>
-              <textarea name="address" class="form-control" rows="2">{{ old('address') }}</textarea>
+              <textarea name="address" class="form-control" rows="2">{{ old('address', $quotation?->address ?? $lead?->address ?? '') }}</textarea>
             </div>
           </div>
         </div>
@@ -72,7 +82,7 @@
             </div>
             <div class="col-md-6">
               <label class="form-label fw-600">Contract Amount (Rs.)</label>
-              <input type="number" name="contract_amount" step="0.01" class="form-control" value="{{ old('contract_amount') }}">
+              <input type="number" name="contract_amount" step="0.01" class="form-control" value="{{ old('contract_amount', $quotation?->grand_total ?? '') }}">
             </div>
             <div class="col-md-6">
               <label class="form-label fw-600">Advance Paid (Rs.)</label>
@@ -94,7 +104,9 @@
         <div class="card form-card">
           <div class="card-header"><div class="section-icon"><i class="bx bx-save"></i></div> Save</div>
           <div class="card-body">
-            <input type="hidden" name="quotation_id" value="{{ request('quotation_id') }}">
+            <input type="hidden" name="quotation_id" value="{{ $quotation?->id ?? request('quotation_id') }}">
+            <input type="hidden" name="lead_id" value="{{ $quotation?->lead_id ?? $lead?->id ?? '' }}">
+            <input type="hidden" name="customer_id" value="{{ $quotation?->customer_id ?? '' }}">
             <p class="text-muted small mb-3">Project number auto-generated.</p>
             <div class="d-grid gap-2">
               <button type="submit" class="btn btn-primary"><i class="bx bx-save me-1"></i> Save Project</button>
