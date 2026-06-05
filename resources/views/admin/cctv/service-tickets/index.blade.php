@@ -81,7 +81,7 @@
             <td><span class="fw-700 text-primary font-monospace">{{ $ticket->ticket_no }}</span></td>
             <td><div class="fw-600">{{ $ticket->customer_name }}</div></td>
             <td class="font-monospace small">{{ $ticket->mobile }}</td>
-            <td>{{ $ticket->issue_type ?? '—' }}</td>
+            <td>{{ $ticket->ticket_type ?? '—' }}</td>
             <td>
               @php $pc = ['low'=>'success','medium'=>'info','high'=>'warning','urgent'=>'danger'][$ticket->priority ?? 'low'] ?? 'secondary' @endphp
               <span class="badge bg-label-{{ $pc }}">{{ ucfirst($ticket->priority ?? 'low') }}</span>
@@ -90,8 +90,8 @@
               @php $sc = ['open'=>'warning','in_progress'=>'info','resolved'=>'success','closed'=>'secondary'][$ticket->status] ?? 'secondary' @endphp
               <span class="badge bg-label-{{ $sc }}">{{ ucwords(str_replace('_',' ',$ticket->status)) }}</span>
             </td>
-            <td>{{ $ticket->technician_name ?? '—' }}</td>
-            <td>{{ $ticket->created_at->format('d M Y') }}</td>
+            <td>{{ $ticket->technician?->employee_name ?? '—' }}</td>
+            <td>{{ $ticket->created_at?->format('d M Y') ?? '—' }}</td>
             <td class="text-end">
               <a href="{{ route('admin.cctv.service-tickets.show', $ticket) }}" class="btn btn-sm btn-outline-primary py-1 px-2"><i class="bx bx-show"></i></a>
               <a href="{{ route('admin.cctv.service-tickets.edit', $ticket) }}" class="btn btn-sm btn-outline-secondary py-1 px-2"><i class="bx bx-edit"></i></a>
