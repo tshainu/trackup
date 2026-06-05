@@ -122,7 +122,7 @@
             <div class="col-12">
               <label class="form-label fw-600">Status</label>
               <select name="status" class="form-select">
-                @foreach(['draft','sent','approved','rejected','expired'] as $s)
+                @foreach(['Draft','Sent','Approved','Rejected','Postponed','Rescheduled'] as $s)
                   <option value="{{ $s }}" {{ old('status',$quotation->status)===$s?'selected':'' }}>{{ ucfirst($s) }}</option>
                 @endforeach
               </select>
