@@ -48,7 +48,11 @@ class CctvProjectController extends Controller
         $leadId     = $request->get('lead_id');
         $lead       = $leadId ? CctvLead::find($leadId) : null;
         $quotationId = $request->get('quotation_id');
-        $quotation   = $quotationId ? CctvQuotation::find($quotationId) : null;
+        $quotation   = $quotationId ? CctvQuotation::with('lead')->find($quotationId) : null;
+        // If address not on quotation, pull from the linked lead
+        if ($quotation && !$lead && $quotation->lead_id) {
+            $lead = $quotation->lead;
+        }
         return view('admin.cctv.projects.create', compact('employees','leads','quotations','lead','quotation'));
     }
 
