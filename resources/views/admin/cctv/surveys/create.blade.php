@@ -121,10 +121,20 @@
         <span class="sec-icon bg-label-primary">0</span> Basic Information
       </div>
       <div class="card-body row g-3">
-        <div class="col-12">
+        {{-- Mobile first — live search triggers on it --}}
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Mobile <span class="text-danger">*</span></label>
+          <div class="position-relative">
+            <input type="text" id="mobileSearch" name="mobile" autocomplete="off" placeholder="07X XXX XXXX"
+              class="form-control" value="{{ old('mobile', $lead?->mobile ?? '') }}">
+            <div id="mobileDropdown" class="search-drop d-none"></div>
+          </div>
+        </div>
+        {{-- Customer name fills automatically after picking from dropdown --}}
+        <div class="col-md-8">
           <label class="form-label fw-semibold">Customer Name <span class="text-danger">*</span></label>
           <div class="position-relative">
-            <input type="text" id="customerSearch" autocomplete="off" placeholder="Search or type customer name…"
+            <input type="text" id="customerSearch" autocomplete="off" placeholder="Auto-filled or type name…"
               class="form-control" value="{{ old('customer_name', $lead?->customer_name ?? '') }}">
             <input type="hidden" name="customer_name" id="customerNameHidden" value="{{ old('customer_name', $lead?->customer_name ?? '') }}">
             <input type="hidden" name="customer_id"   id="customerIdHidden">
@@ -133,14 +143,10 @@
           </div>
         </div>
         <div class="col-md-4">
-          <label class="form-label fw-semibold">Mobile</label>
-          <input type="text" name="mobile" value="{{ old('mobile', $lead?->mobile ?? '') }}" class="form-control" placeholder="07X XXX XXXX">
-        </div>
-        <div class="col-md-4">
           <label class="form-label fw-semibold">Survey Date</label>
           <input type="date" name="survey_date" value="{{ old('survey_date', now()->toDateString()) }}" class="form-control">
         </div>
-        <div class="col-md-4">
+        <div class="col-md-8">
           <label class="form-label fw-semibold">Technician</label>
           <div class="position-relative">
             <input type="text" id="techSearch" autocomplete="off" placeholder="Search technician…"
@@ -527,38 +533,69 @@ $leadsJson = $leads->map(function($l){ return ['id'=>$l->id,'name'=>$l->customer
 $techJson  = $employees->map(function($e){ return ['id'=>$e->id,'name'=>$e->employee_name]; })->values();
 @endphp
 <script>
-// ── Customer live search ─────────────────────────────────────────
+// ── Live search helpers ──────────────────────────────────────────
 const leadsData   = @json($leadsJson);
-const custSearch  = document.getElementById('customerSearch');
 const custNameHid = document.getElementById('customerNameHidden');
 const custIdHid   = document.getElementById('customerIdHidden');
 const leadIdHid   = document.getElementById('leadIdHidden');
-const custDrop    = document.getElementById('customerDropdown');
 
-custSearch.addEventListener('input', function() {
-    const q = this.value.trim().toLowerCase();
-    custNameHid.value = this.value;
-    custIdHid.value = '';
-    leadIdHid.value = '';
-    if (!q) { custDrop.classList.add('d-none'); return; }
-    const hits = leadsData.filter(l => l.name.toLowerCase().includes(q) || (l.mobile && l.mobile.includes(q))).slice(0,8);
-    if (!hits.length) { custDrop.classList.add('d-none'); return; }
-    custDrop.innerHTML = hits.map(l =>
-        `<div data-name="${l.name}" data-lead="${l.lead_id}" data-mobile="${l.mobile||''}">
+function fillCustomer(lead) {
+    const mobInput  = document.getElementById('mobileSearch');
+    const nameInput = document.getElementById('customerSearch');
+    if (mobInput  && !mobInput.value)  mobInput.value  = lead.mobile || '';
+    if (nameInput) nameInput.value = lead.name || '';
+    custNameHid.value = lead.name  || '';
+    leadIdHid.value   = lead.lead_id || '';
+}
+
+function buildDrop(drop, hits, onPick) {
+    drop.innerHTML = hits.map(l =>
+        `<div data-id="${l.lead_id}" data-name="${l.name}" data-mobile="${l.mobile||''}">
             <span class="fw-semibold">${l.name}</span>
             <span class="text-muted small float-end">${l.mobile||''}</span>
          </div>`
     ).join('');
-    custDrop.classList.remove('d-none');
-    custDrop.querySelectorAll('[data-name]').forEach(el => {
-        el.addEventListener('click', function() {
-            custSearch.value  = this.dataset.name;
-            custNameHid.value = this.dataset.name;
-            leadIdHid.value   = this.dataset.lead;
-            custDrop.classList.add('d-none');
-            const mob = document.querySelector('input[name="mobile"]');
-            if (mob && !mob.value) mob.value = this.dataset.mobile;
-        });
+    drop.classList.remove('d-none');
+    drop.querySelectorAll('[data-id]').forEach(el => el.addEventListener('click', function() {
+        onPick(this);
+        drop.classList.add('d-none');
+    }));
+}
+
+// ── Mobile search (primary) ──────────────────────────────────────
+const mobSearch = document.getElementById('mobileSearch');
+const mobDrop   = document.getElementById('mobileDropdown');
+
+mobSearch.addEventListener('input', function() {
+    const q = this.value.trim();
+    leadIdHid.value = '';
+    custNameHid.value = '';
+    if (q.length < 2) { mobDrop.classList.add('d-none'); return; }
+    const hits = leadsData.filter(l => l.mobile && l.mobile.includes(q)).slice(0,8);
+    if (!hits.length) { mobDrop.classList.add('d-none'); return; }
+    buildDrop(mobDrop, hits, function(el) {
+        mobSearch.value = el.dataset.mobile;
+        fillCustomer({ name: el.dataset.name, mobile: el.dataset.mobile, lead_id: el.dataset.id });
+    });
+});
+document.addEventListener('click', e => {
+    if (!mobSearch.contains(e.target) && !mobDrop.contains(e.target)) mobDrop.classList.add('d-none');
+});
+
+// ── Customer name search (secondary) ─────────────────────────────
+const custSearch = document.getElementById('customerSearch');
+const custDrop   = document.getElementById('customerDropdown');
+
+custSearch.addEventListener('input', function() {
+    const q = this.value.trim().toLowerCase();
+    custNameHid.value = this.value;
+    leadIdHid.value   = '';
+    if (q.length < 1) { custDrop.classList.add('d-none'); return; }
+    const hits = leadsData.filter(l => l.name.toLowerCase().includes(q)).slice(0,8);
+    if (!hits.length) { custDrop.classList.add('d-none'); return; }
+    buildDrop(custDrop, hits, function(el) {
+        custSearch.value  = el.dataset.name;
+        fillCustomer({ name: el.dataset.name, mobile: el.dataset.mobile, lead_id: el.dataset.id });
     });
 });
 document.addEventListener('click', e => {
