@@ -202,6 +202,7 @@ Route::prefix('admin/cctv')->name('admin.cctv.')->middleware(\App\Http\Middlewar
     Route::get('/surveys/{survey}/edit', [CctvSurveyController::class, 'edit'])->name('surveys.edit');
     Route::put('/surveys/{survey}',      [CctvSurveyController::class, 'update'])->name('surveys.update');
     Route::delete('/surveys/{survey}',   [CctvSurveyController::class, 'destroy'])->name('surveys.destroy');
+    Route::get('/surveys/{survey}/print',[CctvSurveyController::class, 'print'])->name('surveys.print');
 
     // Quotations
     Route::get('/quotations',                   [CctvQuotationController::class, 'index'])->name('quotations.index');

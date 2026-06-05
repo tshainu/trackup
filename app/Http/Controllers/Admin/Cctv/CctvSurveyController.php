@@ -217,6 +217,13 @@ class CctvSurveyController extends Controller
         return view('admin.cctv.surveys.show', compact('survey'));
     }
 
+    public function print(CctvSurvey $survey)
+    {
+        $survey->load('technician', 'lead');
+        $store = \App\Models\StoreInfo::current();
+        return view('admin.cctv.surveys.print', compact('survey', 'store'));
+    }
+
     public function edit(CctvSurvey $survey)
     {
         $employees = Employee::where('status', 'active')->orderBy('employee_name')->get();

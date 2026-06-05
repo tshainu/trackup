@@ -356,6 +356,13 @@
             <a href="{{ route('admin.cctv.surveys.edit', $survey) }}" class="btn btn-primary btn-sm">
               <i class="bx bx-edit me-1"></i> Edit Survey
             </a>
+            <a href="{{ route('admin.cctv.surveys.print', $survey) }}" target="_blank" class="btn btn-outline-secondary btn-sm">
+              <i class="bx bx-printer me-1"></i> Print / PDF
+            </a>
+            <a href="https://wa.me/?text={{ urlencode('CCTV Survey Report: '.$survey->survey_no.' – '.$survey->customer_name.'. View: '.route('admin.cctv.surveys.print', $survey)) }}"
+               target="_blank" class="btn btn-outline-success btn-sm">
+              <i class="bx bxl-whatsapp me-1"></i> Share via WhatsApp
+            </a>
           </div>
         </div>
       </div>
