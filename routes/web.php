@@ -214,6 +214,7 @@ Route::prefix('admin/cctv')->name('admin.cctv.')->middleware(\App\Http\Middlewar
     Route::get('/quotations/{quotation}/edit',  [CctvQuotationController::class, 'edit'])->name('quotations.edit');
     Route::put('/quotations/{quotation}',       [CctvQuotationController::class, 'update'])->name('quotations.update');
     Route::get('/quotations/{quotation}/pdf',   [CctvQuotationController::class, 'pdf'])->name('quotations.pdf');
+    Route::patch('/quotations/{quotation}/status', [CctvQuotationController::class, 'updateStatus'])->name('quotations.updateStatus');
     Route::delete('/quotations/{quotation}',    [CctvQuotationController::class, 'destroy'])->name('quotations.destroy');
 
     // Projects

@@ -197,6 +197,29 @@ class CctvQuotationController extends Controller
         return redirect()->route('admin.cctv.quotations.show', $quotation)->with('success', 'Quotation updated.');
     }
 
+    public function updateStatus(Request $request, CctvQuotation $quotation)
+    {
+        $request->validate([
+            'status' => 'required|in:Draft,Sent,Approved,Rejected,Postponed,Rescheduled',
+        ]);
+
+        $quotation->update(['status' => $request->status]);
+
+        if ($quotation->lead_id) {
+            $leadStatus = match($request->status) {
+                'Approved'    => 'Approved',
+                'Rejected'    => 'Rejected',
+                'Postponed'   => 'Postponed',
+                'Rescheduled' => 'Rescheduled',
+                'Sent'        => 'Quotation Sent',
+                default       => null,
+            };
+            if ($leadStatus) CctvLead::find($quotation->lead_id)?->update(['status' => $leadStatus]);
+        }
+
+        return redirect()->route('admin.cctv.quotations.show', $quotation)->with('success', 'Status updated to '.$request->status.'.');
+    }
+
     public function pdf(CctvQuotation $quotation)
     {
         $store = StoreInfo::current();
