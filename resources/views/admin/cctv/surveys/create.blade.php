@@ -178,7 +178,14 @@
         </div>
         <div class="col-md-6">
           <label class="form-label fw-semibold">GPS Location</label>
-          <input type="text" name="gps_location" value="{{ old('gps_location') }}" class="form-control" placeholder="Google Maps link or coordinates">
+          <div class="input-group">
+            <input type="text" name="gps_location" id="gpsInput" value="{{ old('gps_location') }}" class="form-control" placeholder="Latitude, Longitude">
+            <button type="button" id="gpsBtn" class="btn btn-outline-secondary d-flex align-items-center gap-1" title="Auto-fetch location">
+              <i class="bx bx-current-location" id="gpsIcon"></i>
+              <span id="gpsBtnText">Fetch</span>
+            </button>
+          </div>
+          <div id="gpsStatus" class="form-text d-none"></div>
         </div>
         <div class="col-12">
           <label class="form-label fw-semibold d-block mb-2">Customer Type</label>
@@ -730,5 +737,62 @@ function handleFiles(files) {
         reader.readAsDataURL(file);
     });
 }
+
+// ── GPS auto-fetch ───────────────────────────────────────────────
+document.getElementById('gpsBtn').addEventListener('click', function() {
+    const btn      = this;
+    const icon     = document.getElementById('gpsIcon');
+    const txt      = document.getElementById('gpsBtnText');
+    const status   = document.getElementById('gpsStatus');
+    const input    = document.getElementById('gpsInput');
+
+    if (!navigator.geolocation) {
+        status.textContent = 'Geolocation not supported by this browser.';
+        status.className   = 'form-text text-danger';
+        status.classList.remove('d-none');
+        return;
+    }
+
+    // Loading state
+    btn.disabled   = true;
+    icon.className = 'bx bx-loader-alt bx-spin';
+    txt.textContent = 'Fetching…';
+    status.classList.add('d-none');
+
+    navigator.geolocation.getCurrentPosition(
+        function(pos) {
+            const lat = pos.coords.latitude.toFixed(6);
+            const lng = pos.coords.longitude.toFixed(6);
+            input.value       = lat + ', ' + lng;
+            icon.className    = 'bx bx-check';
+            txt.textContent   = 'Got it';
+            btn.disabled      = false;
+            btn.classList.replace('btn-outline-secondary', 'btn-outline-success');
+            status.innerHTML  = `<a href="https://maps.google.com/?q=${lat},${lng}" target="_blank" class="text-primary">View on Google Maps ↗</a>`;
+            status.className  = 'form-text';
+            status.classList.remove('d-none');
+            // Reset button after 3s
+            setTimeout(() => {
+                icon.className  = 'bx bx-current-location';
+                txt.textContent = 'Fetch';
+                btn.classList.replace('btn-outline-success', 'btn-outline-secondary');
+            }, 3000);
+        },
+        function(err) {
+            icon.className  = 'bx bx-x';
+            txt.textContent = 'Failed';
+            btn.disabled    = false;
+            const msgs = { 1:'Permission denied.', 2:'Position unavailable.', 3:'Request timed out.' };
+            status.textContent = msgs[err.code] || 'Could not get location.';
+            status.className   = 'form-text text-danger';
+            status.classList.remove('d-none');
+            setTimeout(() => {
+                icon.className  = 'bx bx-current-location';
+                txt.textContent = 'Fetch';
+            }, 2000);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+    );
+});
 </script>
 @endpush
