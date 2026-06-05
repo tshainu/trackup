@@ -108,7 +108,7 @@
   {{-- ── SHARED: Basic Info (always visible) ── --}}
   <div class="card survey-card" id="s0">
     <div class="card-header">
-      <span class="sec-icon bg-label-primary">0</span> Basic Information
+      <span class="sec-icon bg-label-primary"><i class="bx bx-user"></i></span> Basic Information
     </div>
     <div class="card-body row g-3">
       {{-- Mobile first — live search triggers on it --}}
