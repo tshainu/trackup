@@ -567,9 +567,13 @@
 @endsection
 
 @push('scripts')
+@php
+$leadsJson = $leads->map(function($l){ return ['id'=>$l->id,'name'=>$l->customer_name,'mobile'=>$l->mobile,'lead_id'=>$l->id]; })->values();
+$techJson  = $employees->map(function($e){ return ['id'=>$e->id,'name'=>$e->employee_name]; })->values();
+@endphp
 <script>
 // ─── Leads / Mobile live search ───────────────────────────────────
-const leadsData = @json($leads->map(fn($l) => ['id' => $l->id, 'name' => $l->customer_name, 'mobile' => $l->mobile, 'lead_id' => $l->id]));
+const leadsData = @json($leadsJson);
 
 const custSearch    = document.getElementById('customerSearch');
 const custNameHid   = document.getElementById('customerNameHidden');
@@ -610,7 +614,7 @@ custSearch.addEventListener('input', function() {
 document.addEventListener('click', e => { if (!custSearch.contains(e.target) && !custDrop.contains(e.target)) custDrop.classList.add('hidden'); });
 
 // ─── Technician live search ───────────────────────────────────────
-const techData = @json($employees->map(fn($e) => ['id' => $e->id, 'name' => $e->employee_name]));
+const techData = @json($techJson);
 const techSearch = document.getElementById('techSearch');
 const techIdHid  = document.getElementById('techIdHidden');
 const techDrop   = document.getElementById('techDropdown');
