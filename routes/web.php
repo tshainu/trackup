@@ -182,6 +182,7 @@ use App\Http\Controllers\Admin\Cctv\CctvAmcController;
 use App\Http\Controllers\Admin\Cctv\CctvRepairController;
 use App\Http\Controllers\Admin\Cctv\CctvInventoryController;
 use App\Http\Controllers\Admin\Cctv\CctvInvoiceController;
+use App\Http\Controllers\Admin\Cctv\CctvOrderManagementController;
 
 Route::prefix('admin/cctv')->name('admin.cctv.')->middleware(\App\Http\Middleware\AdminAuth::class)->group(function () {
     Route::get('/dashboard', [CctvDashboardController::class, 'index'])->name('dashboard');
@@ -225,6 +226,9 @@ Route::prefix('admin/cctv')->name('admin.cctv.')->middleware(\App\Http\Middlewar
     Route::patch('/projects/{project}/stage', [CctvProjectController::class, 'updateStage'])->name('projects.updateStage');
     Route::patch('/projects/{project}/status',[CctvProjectController::class, 'updateStatus'])->name('projects.updateStatus');
     Route::delete('/projects/{project}',      [CctvProjectController::class, 'destroy'])->name('projects.destroy');
+
+    // Order Management
+    Route::get('/order-management', [CctvOrderManagementController::class, 'index'])->name('order-management.index');
 
     // Invoices
     Route::get('/invoices',                        [CctvInvoiceController::class, 'index'])->name('invoices.index');

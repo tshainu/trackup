@@ -388,6 +388,12 @@
             <div>CCTV Dashboard</div>
           </a>
         </li>
+        <li class="menu-item {{ $onCctv && Request::routeIs('admin.cctv.order-management.*') ? 'active' : '' }}">
+          <a href="{{ route('admin.cctv.order-management.index') }}" class="menu-link">
+            <i class="menu-icon tf-icons bx bx-search-alt"></i>
+            <div>Order Management</div>
+          </a>
+        </li>
         <li class="menu-item {{ $onCctv && Request::routeIs('admin.cctv.leads.*') ? 'open active' : '' }}">
           <a href="{{ route('admin.cctv.leads.index') }}" class="menu-link">
             <i class="menu-icon tf-icons bx bx-user-plus"></i>
@@ -434,6 +440,12 @@
           <a href="{{ route('admin.cctv.repairs.index') }}" class="menu-link">
             <i class="menu-icon tf-icons bx bx-wrench"></i>
             <div>Repairs</div>
+          </a>
+        </li>
+        <li class="menu-item {{ $onCctv && Request::routeIs('admin.cctv.invoices.*') ? 'open active' : '' }}">
+          <a href="{{ route('admin.cctv.invoices.index') }}" class="menu-link">
+            <i class="menu-icon tf-icons bx bx-file"></i>
+            <div>Invoices</div>
           </a>
         </li>
         <li class="menu-item {{ $onCctv && Request::routeIs('admin.cctv.inventory.*') ? 'open active' : '' }}">
