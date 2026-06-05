@@ -19,6 +19,50 @@
   .filter-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:1rem; }
   .filter-tab { padding:6px 16px; border-radius:20px; font-size:.8rem; font-weight:600; border:1.5px solid #d9dee3; color:#697a8d; background:#fff; cursor:pointer; text-decoration:none; transition:all .15s; }
   .filter-tab.active, .filter-tab:hover { background:#8c57ff; color:#fff; border-color:#8c57ff; }
+
+  /* Inline status changer */
+  .status-badge-btn {
+    cursor: pointer;
+    user-select: none;
+    border: none;
+    background: none;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .status-badge-btn .badge { transition: opacity .15s; }
+  .status-badge-btn:hover .badge { opacity: .75; }
+  .status-badge-btn .caret-icon { font-size: .65rem; opacity: .6; }
+
+  .status-popover {
+    display: none;
+    position: absolute;
+    z-index: 1080;
+    background: #fff;
+    border: 1px solid #e0e3e7;
+    border-radius: 10px;
+    box-shadow: 0 6px 24px rgba(0,0,0,.13);
+    min-width: 160px;
+    padding: 6px 0;
+  }
+  .status-popover.open { display: block; }
+  .status-popover-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    font-size: .82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .1s;
+    white-space: nowrap;
+  }
+  .status-popover-item:hover { background: #f5f5f9; }
+  .status-popover-item.current { opacity: .45; cursor: default; pointer-events: none; }
+  .status-popover-item .dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
 </style>
 @endpush
 
@@ -81,9 +125,39 @@
             <td><div class="fw-600">{{ $q->customer_name }}</div></td>
             <td class="font-monospace small">{{ $q->mobile }}</td>
             <td class="fw-600">{{ number_format($q->total_amount, 2) }}</td>
-            <td>
-              @php $sc = ['draft'=>'secondary','sent'=>'info','approved'=>'success','rejected'=>'danger','expired'=>'warning'][$q->status] ?? 'secondary' @endphp
-              <span class="badge bg-label-{{ $sc }}">{{ ucfirst($q->status) }}</span>
+            <td style="position:relative;">
+              @php $sc = ['draft'=>'secondary','sent'=>'info','approved'=>'success','rejected'=>'danger','expired'=>'warning'][strtolower($q->status)] ?? 'secondary' @endphp
+              <button type="button"
+                class="status-badge-btn"
+                data-id="{{ $q->id }}"
+                data-current="{{ strtolower($q->status) }}"
+                data-url="{{ route('admin.cctv.quotations.updateStatus', $q) }}"
+                title="Click to change status">
+                <span class="badge bg-label-{{ $sc }}">{{ ucfirst($q->status) }}</span>
+                <span class="caret-icon"><i class="bx bx-chevron-down"></i></span>
+              </button>
+              <div class="status-popover" id="sp-{{ $q->id }}">
+                @php
+                  $statusOptions = [
+                    'draft'       => ['label'=>'Draft',       'color'=>'#8592a3'],
+                    'sent'        => ['label'=>'Sent',        'color'=>'#00cfe8'],
+                    'approved'    => ['label'=>'Approved',    'color'=>'#28c76f'],
+                    'rejected'    => ['label'=>'Rejected',    'color'=>'#ea5455'],
+                    'postponed'   => ['label'=>'Postponed',   'color'=>'#ff9f43'],
+                    'rescheduled' => ['label'=>'Rescheduled', 'color'=>'#7367f0'],
+                  ];
+                @endphp
+                @foreach($statusOptions as $val => $opt)
+                  <div class="status-popover-item {{ strtolower($q->status) === $val ? 'current' : '' }}"
+                       data-value="{{ ucfirst($val) }}">
+                    <span class="dot" style="background:{{ $opt['color'] }};"></span>
+                    {{ $opt['label'] }}
+                    @if(strtolower($q->status) === $val)
+                      <i class="bx bx-check ms-auto text-success"></i>
+                    @endif
+                  </div>
+                @endforeach
+              </div>
             </td>
             <td>{{ $q->valid_until ? \Carbon\Carbon::parse($q->valid_until)->format('d M Y') : '—' }}</td>
             <td>{{ $q->created_at->format('d M Y') }}</td>
@@ -104,4 +178,101 @@
     @endif
   </div>
 </div>
+
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+  let activePopover = null;
+
+  // Toggle popover on badge click
+  document.querySelectorAll('.status-badge-btn').forEach(btn => {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      const id  = this.dataset.id;
+      const pop = document.getElementById('sp-' + id);
+
+      if (activePopover && activePopover !== pop) {
+        activePopover.classList.remove('open');
+      }
+
+      pop.classList.toggle('open');
+      activePopover = pop.classList.contains('open') ? pop : null;
+
+      if (pop.classList.contains('open')) {
+        pop.style.top  = (this.offsetHeight + 4) + 'px';
+        pop.style.left = '0px';
+      }
+    });
+  });
+
+  // Click outside to close
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.status-popover.open').forEach(p => p.classList.remove('open'));
+    activePopover = null;
+  });
+
+  // Handle option click → PATCH via fetch
+  document.querySelectorAll('.status-popover-item').forEach(item => {
+    item.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (this.classList.contains('current')) return;
+
+      const popover   = this.closest('.status-popover');
+      const id        = popover.id.replace('sp-', '');
+      const btn       = document.querySelector(`.status-badge-btn[data-id="${id}"]`);
+      const url       = btn.dataset.url;
+      const newStatus = this.dataset.value;
+
+      const colorMap = {
+        'Draft':       'secondary',
+        'Sent':        'info',
+        'Approved':    'success',
+        'Rejected':    'danger',
+        'Postponed':   'warning',
+        'Rescheduled': 'primary',
+      };
+
+      // Optimistic UI
+      const badge = btn.querySelector('.badge');
+      badge.className = `badge bg-label-${colorMap[newStatus] || 'secondary'}`;
+      badge.textContent = newStatus;
+      btn.dataset.current = newStatus.toLowerCase();
+
+      // Update checkmark
+      popover.querySelectorAll('.status-popover-item').forEach(i => {
+        i.classList.remove('current');
+        const chk = i.querySelector('.bx-check');
+        if (chk) chk.remove();
+        if (i.dataset.value === newStatus) {
+          i.classList.add('current');
+          i.insertAdjacentHTML('beforeend', '<i class="bx bx-check ms-auto text-success"></i>');
+        }
+      });
+
+      popover.classList.remove('open');
+      activePopover = null;
+
+      // PATCH request
+      fetch(url, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      }).then(res => {
+        if (!res.ok) {
+          alert('Failed to update status. Please try again.');
+          location.reload();
+        }
+      }).catch(() => {
+        alert('Network error. Please try again.');
+        location.reload();
+      });
+    });
+  });
+})();
+</script>
+@endpush
