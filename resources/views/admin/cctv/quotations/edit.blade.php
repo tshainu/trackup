@@ -14,6 +14,11 @@
   .del-row { background:none; border:none; color:#ea5455; padding:4px 8px; border-radius:6px; }
   .del-row:hover { background:#fdeaea; }
   .total-row { background:#f8f9fa; font-weight:700; }
+  /* Live search dropdown */
+  .search-drop { position:absolute; z-index:200; width:100%; background:#fff; border:1px solid #e0e0e0; border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,.1); max-height:200px; overflow-y:auto; margin-top:3px; }
+  .search-drop div { padding:.5rem .85rem; font-size:.875rem; cursor:pointer; border-bottom:1px solid #f4f4f4; }
+  .search-drop div:last-child { border-bottom:0; }
+  .search-drop div:hover { background:#eef0ff; }
 </style>
 @endpush
 
@@ -36,12 +41,21 @@
           <div class="card-header"><div class="section-icon"><i class="bx bx-user"></i></div> Customer Details</div>
           <div class="card-body row g-3">
             <div class="col-md-6">
-              <label class="form-label fw-600">Customer Name <span class="text-danger">*</span></label>
-              <input type="text" name="customer_name" class="form-control" value="{{ old('customer_name', $quotation->customer_name) }}" required>
+              <label class="form-label fw-600">Mobile</label>
+              <div class="position-relative">
+                <input type="text" id="mobileSearch" name="mobile" autocomplete="off"
+                  class="form-control" value="{{ old('mobile', $quotation->mobile) }}" placeholder="07X XXX XXXX">
+                <div id="mobileDropdown" class="search-drop d-none"></div>
+              </div>
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-600">Mobile</label>
-              <input type="text" name="mobile" class="form-control" value="{{ old('mobile', $quotation->mobile) }}">
+              <label class="form-label fw-600">Customer Name <span class="text-danger">*</span></label>
+              <div class="position-relative">
+                <input type="text" id="customerSearch" autocomplete="off"
+                  class="form-control" value="{{ old('customer_name', $quotation->customer_name) }}" placeholder="Type to search or enter name" required>
+                <input type="hidden" name="customer_name" id="customerNameHidden" value="{{ old('customer_name', $quotation->customer_name) }}">
+                <div id="customerDropdown" class="search-drop d-none"></div>
+              </div>
             </div>
             <div class="col-md-6">
               <label class="form-label fw-600">Email</label>
@@ -179,5 +193,78 @@
   function removeRow(btn) {
     if (document.querySelectorAll('.item-row').length > 1) { btn.closest('.item-row').remove(); calcTotals(); }
   }
+
+  // ── Phone live search ────────────────────────────────────────────
+  const mobSearch   = document.getElementById('mobileSearch');
+  const mobDrop     = document.getElementById('mobileDropdown');
+  const custSearch  = document.getElementById('customerSearch');
+  const custDrop    = document.getElementById('customerDropdown');
+  const custNameHid = document.getElementById('customerNameHidden');
+
+  function fillCustomer(result) {
+    if (mobSearch && !mobSearch.value) mobSearch.value = result.phone || '';
+    if (custSearch) custSearch.value = result.name || '';
+    custNameHid.value = result.name || '';
+    const emailEl = document.querySelector('input[name="email"]');
+    const addrEl  = document.querySelector('textarea[name="address"]');
+    if (emailEl && result.email) emailEl.value = result.email;
+    if (addrEl  && result.address) addrEl.value = result.address;
+  }
+
+  function buildDrop(drop, hits, onPick) {
+    drop.innerHTML = hits.map(r =>
+      `<div data-name="${r.name}" data-phone="${r.phone||''}" data-email="${r.email||''}" data-address="${r.address||''}">
+          <span class="fw-semibold">${r.name}</span>
+          <span class="text-muted small float-end">${r.phone||''}</span>
+       </div>`
+    ).join('');
+    drop.classList.remove('d-none');
+    drop.querySelectorAll('[data-name]').forEach(el => el.addEventListener('click', function() {
+      onPick(this);
+      drop.classList.add('d-none');
+    }));
+  }
+
+  let mobTimer;
+  mobSearch.addEventListener('input', function() {
+    const q = this.value.trim();
+    clearTimeout(mobTimer);
+    if (q.length < 2) { mobDrop.classList.add('d-none'); return; }
+    mobTimer = setTimeout(() => {
+      fetch(`/ajax/customer-lookup?phone=${encodeURIComponent(q)}&multi=1`)
+        .then(r => r.json()).then(hits => {
+          if (!hits.length) { mobDrop.classList.add('d-none'); return; }
+          buildDrop(mobDrop, hits, function(el) {
+            mobSearch.value = el.dataset.phone;
+            fillCustomer({ name: el.dataset.name, phone: el.dataset.phone, email: el.dataset.email, address: el.dataset.address });
+          });
+        });
+    }, 250);
+  });
+
+  let nameTimer;
+  custSearch.addEventListener('input', function() {
+    custNameHid.value = this.value;
+    const q = this.value.trim();
+    clearTimeout(nameTimer);
+    if (q.length < 2) { custDrop.classList.add('d-none'); return; }
+    nameTimer = setTimeout(() => {
+      fetch(`/ajax/customer-lookup?phone=${encodeURIComponent(q)}&multi=1`)
+        .then(r => r.json()).then(hits => {
+          if (!hits.length) { custDrop.classList.add('d-none'); return; }
+          buildDrop(custDrop, hits, function(el) {
+            custSearch.value = el.dataset.name;
+            fillCustomer({ name: el.dataset.name, phone: el.dataset.phone, email: el.dataset.email, address: el.dataset.address });
+          });
+        });
+    }, 250);
+  });
+
+  document.addEventListener('click', e => {
+    if (!mobSearch.contains(e.target) && !mobDrop.contains(e.target)) mobDrop.classList.add('d-none');
+    if (!custSearch.contains(e.target) && !custDrop.contains(e.target)) custDrop.classList.add('d-none');
+  });
+
+  custSearch.addEventListener('change', () => { custNameHid.value = custSearch.value; });
 </script>
 @endpush
