@@ -11,11 +11,17 @@ class CctvProject extends Model
         'shop_id', 'project_no', 'lead_id', 'quotation_id', 'customer_id',
         'customer_name', 'mobile', 'address', 'installation_date', 'completion_date',
         'team_assigned', 'signature_path', 'stage', 'notes',
+        'status', 'start_date', 'end_date', 'technician_name', 'technician_ids',
+        'camera_count', 'contract_amount', 'advance_paid', 'scope', 'equipment_list',
     ];
     protected $casts = [
         'team_assigned'     => 'array',
+        'technician_ids'    => 'array',
+        'equipment_list'    => 'array',
         'installation_date' => 'date',
         'completion_date'   => 'date',
+        'start_date'        => 'date',
+        'end_date'          => 'date',
     ];
 
     public static function nextProjectNo(): string

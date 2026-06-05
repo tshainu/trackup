@@ -55,23 +55,52 @@ class CctvProjectController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'customer_name'     => 'required|string|max:150',
-            'mobile'            => 'nullable|string|max:20',
-            'installation_date' => 'nullable|date',
+            'customer_name' => 'required|string|max:150',
+            'mobile'        => 'nullable|string|max:20',
+            'start_date'    => 'nullable|date',
+            'end_date'      => 'nullable|date',
         ]);
 
+        // Resolve technician names from selected IDs
+        $techIds   = array_filter((array) $request->input('technician_ids', []));
+        $techNames = [];
+        if (!empty($techIds)) {
+            $techNames = Employee::whereIn('id', $techIds)->pluck('employee_name')->toArray();
+        }
+
+        // Build equipment_list from submitted items[]
+        $rawItems = $request->input('items', []);
+        $equipmentList = [];
+        foreach ($rawItems as $row) {
+            if (empty($row['description'])) continue;
+            $equipmentList[] = [
+                'name'       => trim($row['description']),
+                'qty'        => (int)($row['qty'] ?? 1),
+                'unit_price' => (float)($row['unit_price'] ?? 0),
+                'total'      => (int)($row['qty'] ?? 1) * (float)($row['unit_price'] ?? 0),
+            ];
+        }
+
         $project = CctvProject::create([
-            'project_no'       => CctvProject::nextProjectNo(),
-            'lead_id'          => $request->lead_id,
-            'quotation_id'     => $request->quotation_id,
-            'customer_id'      => $request->customer_id,
-            'customer_name'    => $request->customer_name,
-            'mobile'           => $request->mobile,
-            'address'          => $request->address,
-            'installation_date'=> $request->installation_date,
-            'team_assigned'    => $request->team_assigned ?? [],
-            'stage'            => 'Survey Complete',
-            'notes'            => $request->notes,
+            'project_no'      => CctvProject::nextProjectNo(),
+            'lead_id'         => $request->lead_id ?: null,
+            'quotation_id'    => $request->quotation_id ?: null,
+            'customer_id'     => $request->customer_id ?: null,
+            'customer_name'   => $request->customer_name,
+            'mobile'          => $request->mobile,
+            'address'         => $request->address,
+            'status'          => $request->input('status', 'scheduled'),
+            'start_date'      => $request->start_date ?: null,
+            'end_date'        => $request->end_date ?: null,
+            'technician_ids'  => $techIds ?: null,
+            'technician_name' => implode(', ', $techNames),
+            'camera_count'    => (int) $request->input('camera_count', 0),
+            'contract_amount' => (float) $request->input('contract_amount', 0),
+            'advance_paid'    => (float) $request->input('advance_paid', 0),
+            'scope'           => $request->scope,
+            'equipment_list'  => !empty($equipmentList) ? $equipmentList : null,
+            'stage'           => 'Survey Complete',
+            'notes'           => $request->notes,
         ]);
 
         return redirect()->route('admin.cctv.projects.show', $project)
