@@ -217,6 +217,9 @@ class CctvQuotationController extends Controller
             if ($leadStatus) CctvLead::find($quotation->lead_id)?->update(['status' => $leadStatus]);
         }
 
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'status' => $request->status]);
+        }
         return redirect()->route('admin.cctv.quotations.show', $quotation)->with('success', 'Status updated to '.$request->status.'.');
     }
 
