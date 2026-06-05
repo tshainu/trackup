@@ -9,6 +9,7 @@ use App\Models\CctvAmcContract;
 use App\Models\CctvRepair;
 use App\Models\CctvAsset;
 use App\Models\CctvInventory;
+use Carbon\Carbon;
 
 class CctvDashboardController extends Controller
 {
@@ -42,6 +43,15 @@ class CctvDashboardController extends Controller
                             ->whereDate('end_date','<=',now()->addDays(60))
                             ->orderBy('end_date')->limit(5)->get();
 
-        return view('admin.cctv.dashboard', compact('stats','recentLeads','recentTickets','recentProjects','upcomingAmc'));
+        // Last 7 days chart data
+        $leadsChart   = [];
+        $ticketsChart = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::today()->subDays($i)->toDateString();
+            $leadsChart[]   = CctvLead::whereDate('created_at', $date)->count();
+            $ticketsChart[] = CctvServiceTicket::whereDate('created_at', $date)->count();
+        }
+
+        return view('admin.cctv.dashboard', compact('stats','recentLeads','recentTickets','recentProjects','upcomingAmc','leadsChart','ticketsChart'));
     }
 }

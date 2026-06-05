@@ -94,6 +94,41 @@
     </a>
   </div>
 
+
+  {{-- ── Line Charts ────────────────────────────────────────────── --}}
+  <div class="row g-4 mb-4">
+    {{-- Leads Chart --}}
+    <div class="col-md-6">
+      <div class="card" style="border-radius:14px;border:0;box-shadow:0 2px 12px rgba(0,0,0,.06);">
+        <div class="card-header d-flex justify-content-between align-items-center bg-white border-0 pt-3 pb-0">
+          <div>
+            <h6 class="mb-0 fw-bold"><i class="bx bx-trending-up me-1 text-primary"></i>New Leads</h6>
+            <small class="text-muted">Last 7 days</small>
+          </div>
+          <span><span class="d-inline-block me-1" style="width:10px;height:10px;border-radius:50%;background:#696cff;"></span><small>Leads</small></span>
+        </div>
+        <div class="card-body pt-2" style="height:220px;position:relative;">
+          <canvas id="leadsLineChart"></canvas>
+        </div>
+      </div>
+    </div>
+    {{-- Tickets Chart --}}
+    <div class="col-md-6">
+      <div class="card" style="border-radius:14px;border:0;box-shadow:0 2px 12px rgba(0,0,0,.06);">
+        <div class="card-header d-flex justify-content-between align-items-center bg-white border-0 pt-3 pb-0">
+          <div>
+            <h6 class="mb-0 fw-bold"><i class="bx bx-support me-1 text-danger"></i>Service Tickets</h6>
+            <small class="text-muted">Last 7 days</small>
+          </div>
+          <span><span class="d-inline-block me-1" style="width:10px;height:10px;border-radius:50%;background:#ea5455;"></span><small>Tickets</small></span>
+        </div>
+        <div class="card-body pt-2" style="height:220px;position:relative;">
+          <canvas id="ticketsLineChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="row g-4">
     {{-- Recent Leads --}}
     <div class="col-md-6">
@@ -207,3 +242,66 @@
 
 </div>
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+  const labels = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    labels.push(d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
+  }
+
+  const leadsData   = @json($leadsChart ?? []);
+  const ticketsData = @json($ticketsChart ?? []);
+
+  function makeChart(id, data, color) {
+    const ctx = document.getElementById(id).getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          data,
+          borderColor: color,
+          backgroundColor: color + '22',
+          borderWidth: 2.5,
+          pointBackgroundColor: color,
+          pointRadius: 4,
+          tension: 0.45,
+          fill: true,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#fff',
+            borderColor: '#e0e0e0',
+            borderWidth: 1,
+            titleColor: '#444',
+            bodyColor: '#555',
+            padding: 10,
+          }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+          y: {
+            beginAtZero: true,
+            ticks: { stepSize: 1, font: { size: 11 } },
+            grid: { color: 'rgba(0,0,0,.05)' }
+          }
+        }
+      }
+    });
+  }
+
+  makeChart('leadsLineChart',   leadsData,   '#696cff');
+  makeChart('ticketsLineChart', ticketsData, '#ea5455');
+})();
+</script>
+@endpush
