@@ -35,10 +35,10 @@
   </div>
 
   <div class="stat-grid">
-    <div class="stat-card sc-blue"><div class="stat-icon"><i class="bx bx-support"></i></div><div><div class="stat-num">{{ $stats['total'] ?? 0 }}</div><div class="stat-lbl">Total</div></div></div>
-    <div class="stat-card sc-orange"><div class="stat-icon"><i class="bx bx-time"></i></div><div><div class="stat-num">{{ $stats['open'] ?? 0 }}</div><div class="stat-lbl">Open</div></div></div>
-    <div class="stat-card sc-red"><div class="stat-icon"><i class="bx bx-error"></i></div><div><div class="stat-num">{{ $stats['in_progress'] ?? 0 }}</div><div class="stat-lbl">In Progress</div></div></div>
-    <div class="stat-card sc-green"><div class="stat-icon"><i class="bx bx-check-circle"></i></div><div><div class="stat-num">{{ $stats['closed'] ?? 0 }}</div><div class="stat-lbl">Closed</div></div></div>
+    <div class="stat-card sc-blue"><div class="stat-icon"><i class="bx bx-support"></i></div><div><div class="stat-num">{{ $counts['all'] ?? 0 }}</div><div class="stat-lbl">Total</div></div></div>
+    <div class="stat-card sc-orange"><div class="stat-icon"><i class="bx bx-time"></i></div><div><div class="stat-num">{{ $counts['open'] ?? 0 }}</div><div class="stat-lbl">Open</div></div></div>
+    <div class="stat-card sc-red"><div class="stat-icon"><i class="bx bx-error"></i></div><div><div class="stat-num">{{ $counts['progress'] ?? 0 }}</div><div class="stat-lbl">In Progress</div></div></div>
+    <div class="stat-card sc-green"><div class="stat-icon"><i class="bx bx-check-circle"></i></div><div><div class="stat-num">{{ $counts['completed'] ?? 0 }}</div><div class="stat-lbl">Closed</div></div></div>
   </div>
 
   <div class="card border-0 shadow-sm mb-3">
@@ -46,12 +46,12 @@
       <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
         <div class="filter-tabs">
           <a href="{{ route('admin.cctv.service-tickets.index') }}" class="filter-tab {{ !request('status') ? 'active' : '' }}">All</a>
-          @foreach(['open','in_progress','resolved','closed'] as $s)
-            <a href="{{ route('admin.cctv.service-tickets.index', ['status'=>$s]) }}" class="filter-tab {{ request('status')===$s ? 'active' : '' }}">{{ ucwords(str_replace('_',' ',$s)) }}</a>
+          @foreach(['open'=>'Open','assigned'=>'Assigned','progress'=>'In Progress','parts'=>'Waiting Parts','completed'=>'Completed','closed'=>'Closed'] as $k=>$label)
+            <a href="{{ route('admin.cctv.service-tickets.index', ['tab'=>$k]) }}" class="filter-tab {{ request('tab')===$k ? 'active' : '' }}">{{ $label }}</a>
           @endforeach
         </div>
         <form method="GET" class="d-flex gap-2">
-          @if(request('status'))<input type="hidden" name="status" value="{{ request('status') }}">@endif
+          @if(request('tab'))<input type="hidden" name="tab" value="{{ request('tab') }}">@endif
           <input type="text" name="q" value="{{ request('q') }}" class="form-control form-control-sm" placeholder="Search…" style="width:200px">
           <button class="btn btn-primary btn-sm"><i class="bx bx-search"></i></button>
         </form>
@@ -76,18 +76,18 @@
           </tr>
         </thead>
         <tbody>
-          @forelse($serviceTickets as $ticket)
+          @forelse($tickets as $ticket)
           <tr>
             <td><span class="fw-700 text-primary font-monospace">{{ $ticket->ticket_no }}</span></td>
             <td><div class="fw-600">{{ $ticket->customer_name }}</div></td>
             <td class="font-monospace small">{{ $ticket->mobile }}</td>
             <td>{{ $ticket->ticket_type ?? '—' }}</td>
             <td>
-              @php $pc = ['low'=>'success','medium'=>'info','high'=>'warning','urgent'=>'danger'][$ticket->priority ?? 'low'] ?? 'secondary' @endphp
+              @php $pc = ['Low'=>'success','Normal'=>'info','High'=>'warning','Urgent'=>'danger'][$ticket->priority ?? 'Low'] ?? 'secondary' @endphp
               <span class="badge bg-label-{{ $pc }}">{{ ucfirst($ticket->priority ?? 'low') }}</span>
             </td>
             <td>
-              @php $sc = ['open'=>'warning','in_progress'=>'info','resolved'=>'success','closed'=>'secondary'][$ticket->status] ?? 'secondary' @endphp
+              @php $sc = ['Open'=>'warning','Assigned'=>'info','In Progress'=>'primary','Waiting Parts'=>'danger','Completed'=>'success','Closed'=>'secondary'][$ticket->status] ?? 'secondary' @endphp
               <span class="badge bg-label-{{ $sc }}">{{ ucwords(str_replace('_',' ',$ticket->status)) }}</span>
             </td>
             <td>{{ $ticket->technician?->employee_name ?? '—' }}</td>
@@ -103,8 +103,8 @@
         </tbody>
       </table>
     </div>
-    @if($serviceTickets->hasPages())
-    <div class="card-footer bg-transparent d-flex justify-content-end">{{ $serviceTickets->withQueryString()->links() }}</div>
+    @if($tickets->hasPages())
+    <div class="card-footer bg-transparent d-flex justify-content-end">{{ $tickets->withQueryString()->links() }}</div>
     @endif
   </div>
 </div>
