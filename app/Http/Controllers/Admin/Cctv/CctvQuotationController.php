@@ -57,33 +57,45 @@ class CctvQuotationController extends Controller
         $equipList = [];
         if ($request->has('items')) {
             foreach ($request->items as $item) {
-                if (!empty($item['name'])) {
+                // form posts 'description', legacy/API may post 'name'
+                $desc = trim($item['description'] ?? $item['name'] ?? '');
+                if ($desc !== '') {
+                    $qty   = (int)($item['qty'] ?? 1);
+                    $price = (float)($item['unit_price'] ?? 0);
                     $equipList[] = [
-                        'name'       => $item['name'],
-                        'qty'        => (int)($item['qty'] ?? 1),
-                        'unit_price' => (float)($item['unit_price'] ?? 0),
-                        'total'      => (int)($item['qty'] ?? 1) * (float)($item['unit_price'] ?? 0),
+                        'name'       => $desc,
+                        'qty'        => $qty,
+                        'unit_price' => $price,
+                        'total'      => $qty * $price,
                     ];
                 }
             }
         }
 
+        // Field name aliases: forms post discount_amount / installation_charge
+        $discount     = (float)($request->discount_amount    ?? $request->discount            ?? 0);
+        $installCost  = (float)($request->installation_charge ?? $request->installation_cost  ?? 0);
+        $labourCost   = (float)($request->labour_cost   ?? 0);
+        $transportCost= (float)($request->transport_cost ?? 0);
+        // Merge terms into notes if notes blank
+        $notes = $request->notes ?? ($request->terms ?? null);
+
         $quot = new CctvQuotation();
         $quot->fill([
             'quote_no'          => CctvQuotation::nextQuoteNo(),
-            'lead_id'           => $request->lead_id,
-            'customer_id'       => $request->customer_id,
+            'lead_id'           => $request->lead_id ?: null,
+            'customer_id'       => $request->customer_id ?: null,
             'customer_name'     => $request->customer_name,
             'mobile'            => $request->mobile,
             'equipment_list'    => $equipList,
-            'labour_cost'       => $request->labour_cost ?? 0,
-            'installation_cost' => $request->installation_cost ?? 0,
-            'transport_cost'    => $request->transport_cost ?? 0,
-            'discount'          => $request->discount ?? 0,
-            'tax'               => $request->tax ?? 0,
-            'status'            => 'Draft',
+            'labour_cost'       => $labourCost,
+            'installation_cost' => $installCost,
+            'transport_cost'    => $transportCost,
+            'discount'          => $discount,
+            'tax'               => (float)($request->tax ?? 0),
+            'status'            => $request->status ?? 'Draft',
             'valid_until'       => $request->valid_until,
-            'notes'             => $request->notes,
+            'notes'             => $notes,
         ]);
         $quot->grand_total = $quot->computeTotal();
         $quot->save();
@@ -118,29 +130,38 @@ class CctvQuotationController extends Controller
         $equipList = [];
         if ($request->has('items')) {
             foreach ($request->items as $item) {
-                if (!empty($item['name'])) {
+                $desc = trim($item['description'] ?? $item['name'] ?? '');
+                if ($desc !== '') {
+                    $qty   = (int)($item['qty'] ?? 1);
+                    $price = (float)($item['unit_price'] ?? 0);
                     $equipList[] = [
-                        'name'       => $item['name'],
-                        'qty'        => (int)($item['qty'] ?? 1),
-                        'unit_price' => (float)($item['unit_price'] ?? 0),
-                        'total'      => (int)($item['qty'] ?? 1) * (float)($item['unit_price'] ?? 0),
+                        'name'       => $desc,
+                        'qty'        => $qty,
+                        'unit_price' => $price,
+                        'total'      => $qty * $price,
                     ];
                 }
             }
         }
 
+        $discount     = (float)($request->discount_amount    ?? $request->discount            ?? 0);
+        $installCost  = (float)($request->installation_charge ?? $request->installation_cost  ?? 0);
+        $labourCost   = (float)($request->labour_cost   ?? 0);
+        $transportCost= (float)($request->transport_cost ?? 0);
+        $notes = $request->notes ?? ($request->terms ?? null);
+
         $quotation->fill([
             'customer_name'     => $request->customer_name,
             'mobile'            => $request->mobile,
             'equipment_list'    => $equipList,
-            'labour_cost'       => $request->labour_cost ?? 0,
-            'installation_cost' => $request->installation_cost ?? 0,
-            'transport_cost'    => $request->transport_cost ?? 0,
-            'discount'          => $request->discount ?? 0,
-            'tax'               => $request->tax ?? 0,
+            'labour_cost'       => $labourCost,
+            'installation_cost' => $installCost,
+            'transport_cost'    => $transportCost,
+            'discount'          => $discount,
+            'tax'               => (float)($request->tax ?? 0),
             'status'            => $request->status,
             'valid_until'       => $request->valid_until,
-            'notes'             => $request->notes,
+            'notes'             => $notes,
         ]);
         $quotation->grand_total = $quotation->computeTotal();
         $quotation->save();
