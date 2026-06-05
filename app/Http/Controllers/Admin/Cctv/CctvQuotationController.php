@@ -139,7 +139,7 @@ class CctvQuotationController extends Controller
     {
         $request->validate([
             'customer_name' => 'required|string|max:150',
-            'status'        => 'required|in:Draft,Sent,Approved,Rejected',
+            'status'        => 'required|in:Draft,Sent,Approved,Rejected,Postponed,Rescheduled',
         ]);
 
         $equipList = [];

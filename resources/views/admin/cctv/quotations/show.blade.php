@@ -151,11 +151,21 @@
             @csrf @method('PUT')
             <input type="hidden" name="customer_name" value="{{ $quotation->customer_name }}">
             <input type="hidden" name="mobile"        value="{{ $quotation->mobile }}">
-            <input type="hidden" name="items"         value="{{ json_encode(is_array($quotation->items) ? $quotation->items : json_decode($quotation->items ?? '[]', true)) }}">
+            @php $eqList = is_array($quotation->equipment_list) ? $quotation->equipment_list : (json_decode($quotation->equipment_list ?? '[]', true) ?? []); @endphp
+            @foreach($eqList as $i => $item)
+              <input type="hidden" name="items[{{ $i }}][name]"       value="{{ $item['name'] ?? $item['description'] ?? '' }}">
+              <input type="hidden" name="items[{{ $i }}][description]" value="{{ $item['name'] ?? $item['description'] ?? '' }}">
+              <input type="hidden" name="items[{{ $i }}][qty]"        value="{{ $item['qty'] ?? 1 }}">
+              <input type="hidden" name="items[{{ $i }}][unit_price]" value="{{ $item['unit_price'] ?? 0 }}">
+            @endforeach
+            <input type="hidden" name="discount_amount"      value="{{ $quotation->discount ?? 0 }}">
+            <input type="hidden" name="installation_charge"  value="{{ $quotation->installation_cost ?? 0 }}">
+            <input type="hidden" name="tax"                  value="{{ $quotation->tax ?? 0 }}">
+            <input type="hidden" name="valid_until"          value="{{ $quotation->valid_until?->format('Y-m-d') }}">
             <div class="info-label mb-1">Update Status</div>
             <select name="status" class="form-select form-select-sm mb-2">
-              @foreach(['draft','sent','approved','rejected','expired','Postponed','Rescheduled'] as $st)
-                <option value="{{ $st }}" @selected($quotation->status === $st)>{{ ucfirst($st) }}</option>
+              @foreach(['Draft','Sent','Approved','Rejected','Postponed','Rescheduled'] as $st)
+                <option value="{{ $st }}" @selected($quotation->status === $st)>{{ $st }}</option>
               @endforeach
             </select>
             <button class="btn btn-sm btn-outline-warning w-100"><i class="bx bx-check me-1"></i> Save Status</button>
