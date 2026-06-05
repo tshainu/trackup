@@ -259,7 +259,7 @@
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+          'X-CSRF-TOKEN': (typeof csrfToken !== 'undefined' ? csrfToken : document.querySelector('meta[name="csrf-token"]').content),
         },
         body: JSON.stringify({ status: newStatus }),
       }).then(res => {
