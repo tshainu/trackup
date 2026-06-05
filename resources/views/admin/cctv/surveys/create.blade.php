@@ -1,568 +1,523 @@
 @extends('layouts.admin')
 @section('title', 'New Survey')
 
+@push('styles')
+<style>
+  .hero-bar { background:linear-gradient(135deg,#696cff,#8c57ff); border-radius:16px; padding:1.25rem 1.75rem; color:#fff; margin-bottom:1.25rem; display:flex; align-items:center; gap:1rem; }
+  .hero-bar .back-btn { width:38px; height:38px; border-radius:10px; background:rgba(255,255,255,.2); border:0; color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0; text-decoration:none; transition:background .15s; }
+  .hero-bar .back-btn:hover { background:rgba(255,255,255,.32); color:#fff; }
+  .hero-bar h4 { margin:0; font-size:1.2rem; font-weight:700; }
+  .hero-bar p  { margin:0; opacity:.85; font-size:.85rem; }
+
+  /* Cards */
+  .survey-card { border-radius:14px; border:0; box-shadow:0 2px 12px rgba(105,108,255,.08); margin-bottom:1.25rem; }
+  .survey-card .card-header { background:#f8f9fa; border-radius:14px 14px 0 0; padding:.85rem 1.25rem; font-weight:700; font-size:.875rem; display:flex; align-items:center; gap:.6rem; border-bottom:1px solid rgba(0,0,0,.06); }
+  .sec-icon { width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:.75rem; font-weight:700; flex-shrink:0; }
+
+  /* Pill radio selectors */
+  .pill-group { display:flex; flex-wrap:wrap; gap:.5rem; }
+  .pill-label { cursor:pointer; }
+  .pill-label input { display:none; }
+  .pill-label span { display:inline-block; padding:.35rem .9rem; border-radius:50px; border:2px solid #d9dde1; font-size:.82rem; font-weight:500; color:#6c757d; transition:all .15s; }
+  .pill-label input:checked + span { border-color:#696cff; background:#696cff; color:#fff; }
+  .pill-label:hover span { border-color:#696cff; color:#696cff; }
+
+  .pill-label.blue input:checked + span  { border-color:#696cff; background:#696cff; }
+  .pill-label.green input:checked + span { border-color:#71dd37; background:#71dd37; color:#283b50; }
+  .pill-label.red input:checked + span   { border-color:#ff3e1d; background:#ff3e1d; }
+
+  /* Sticky section nav */
+  .section-nav { position:sticky; top:0; z-index:50; background:#fff; border-bottom:1px solid #e0e0e0; box-shadow:0 1px 6px rgba(0,0,0,.06); margin:0 -1.5rem 1.25rem; padding:.5rem 1.5rem; overflow-x:auto; display:flex; gap:.35rem; }
+  .section-nav a { white-space:nowrap; padding:.3rem .75rem; border-radius:50px; font-size:.78rem; font-weight:600; color:#6c757d; text-decoration:none; transition:all .15s; }
+  .section-nav a:hover { background:#eef0ff; color:#696cff; }
+
+  /* Camera repeater table */
+  .cam-table-head { display:grid; grid-template-columns:2fr 1fr 1fr .7fr .5fr .5fr .4fr; gap:.5rem; font-size:.72rem; font-weight:700; text-transform:uppercase; color:#adb5bd; padding:0 .5rem .3rem; }
+  .cam-row { display:grid; grid-template-columns:2fr 1fr 1fr .7fr .5fr .5fr .4fr; gap:.5rem; align-items:center; background:#f8f9fa; border-radius:8px; padding:.4rem .5rem; margin-bottom:.4rem; }
+  @media(max-width:640px) {
+    .cam-table-head { display:none; }
+    .cam-row { grid-template-columns:1fr 1fr; }
+  }
+
+  /* Acc row */
+  .acc-row { display:flex; gap:.5rem; align-items:center; margin-bottom:.4rem; }
+
+  /* Photo drop zone */
+  .photo-drop { border:2px dashed #d9dde1; border-radius:12px; padding:2rem; text-align:center; cursor:pointer; transition:border-color .15s; }
+  .photo-drop:hover { border-color:#696cff; }
+
+  /* Live search dropdown */
+  .search-drop { position:absolute; z-index:100; width:100%; background:#fff; border:1px solid #e0e0e0; border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,.1); max-height:200px; overflow-y:auto; margin-top:3px; }
+  .search-drop div { padding:.5rem .85rem; font-size:.875rem; cursor:pointer; border-bottom:1px solid #f4f4f4; }
+  .search-drop div:last-child { border-bottom:0; }
+  .search-drop div:hover { background:#eef0ff; }
+</style>
+@endpush
+
 @section('content')
-<div class="max-w-5xl mx-auto px-4 py-6">
+<div class="container-xxl flex-grow-1 container-p-y">
 
-    {{-- Header --}}
-    <div class="flex items-center gap-3 mb-6">
-        <a href="{{ route('admin.cctv.surveys.index') }}" class="text-gray-400 hover:text-gray-600">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-        </a>
-        <h1 class="text-xl font-bold text-gray-800">New CCTV Survey</h1>
+  {{-- Header --}}
+  <div class="hero-bar">
+    <a href="{{ route('admin.cctv.surveys.index') }}" class="back-btn"><i class="bx bx-arrow-back"></i></a>
+    <div>
+      <h4>New CCTV Survey</h4>
+      <p>Complete a detailed site assessment</p>
+    </div>
+  </div>
+
+  @if($errors->any())
+  <div class="alert alert-danger mb-3">
+    <ul class="mb-0 ps-3">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+  </div>
+  @endif
+
+  <form method="POST" action="{{ route('admin.cctv.surveys.store') }}" enctype="multipart/form-data" id="surveyForm">
+  @csrf
+
+  {{-- ── Survey Type + Mode ── --}}
+  <div class="card survey-card">
+    <div class="card-body">
+      <div class="row g-4">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold small text-uppercase text-muted mb-2">Survey Type</label>
+          <div class="pill-group" id="surveyTypeGroup">
+            @foreach(['New Site','Upgrading','Modification','Service'] as $t)
+            <label class="pill-label blue">
+              <input type="radio" name="survey_type" value="{{ $t }}" {{ old('survey_type','New Site')===$t?'checked':'' }}>
+              <span>{{ $t }}</span>
+            </label>
+            @endforeach
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold small text-uppercase text-muted mb-2">Survey Mode</label>
+          <div class="pill-group" id="surveyModeGroup">
+            @foreach(['Detailed','Simple'] as $m)
+            <label class="pill-label">
+              <input type="radio" name="survey_mode" value="{{ $m }}" {{ old('survey_mode','Detailed')===$m?'checked':'' }}>
+              <span style="padding:.45rem 1.25rem;font-size:.9rem;">{{ $m }}</span>
+            </label>
+            @endforeach
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{-- ── DETAILED SURVEY ── --}}
+  <div id="detailedSurvey" class="{{ old('survey_mode','Detailed')==='Simple'?'d-none':'' }}">
+
+    {{-- Sticky nav --}}
+    <div class="section-nav">
+      @foreach([['s0','Basic'],['s1','Customer'],['s2','Site'],['s3','Purpose'],['s4','Cameras'],['s5','Network'],['s6','Power'],['s7','Install'],['s8','Materials'],['s9','Photos'],['s10','Risks'],['s11','Notes']] as [$id,$lbl])
+      <a href="#{{ $id }}">{{ $lbl }}</a>
+      @endforeach
     </div>
 
-    @if($errors->any())
-    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-        <ul class="list-disc list-inside text-sm text-red-600 space-y-1">
-            @foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach
-        </ul>
-    </div>
-    @endif
-
-    <form method="POST" action="{{ route('admin.cctv.surveys.store') }}" enctype="multipart/form-data" id="surveyForm">
-    @csrf
-
-    {{-- ── SURVEY TYPE + MODE ── --}}
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div>
-                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Survey Type</label>
-                <div class="flex flex-wrap gap-2" id="surveyTypeGroup">
-                    @foreach(['New Site','Upgrading','Modification','Service'] as $t)
-                    <label class="survey-type-btn cursor-pointer">
-                        <input type="radio" name="survey_type" value="{{ $t }}" class="sr-only" {{ old('survey_type','New Site') === $t ? 'checked' : '' }}>
-                        <span class="inline-block px-4 py-2 rounded-full border-2 text-sm font-medium transition-all
-                            {{ old('survey_type','New Site') === $t ? 'border-blue-600 bg-blue-600 text-white' : 'border-gray-300 text-gray-600 hover:border-blue-400' }}">
-                            {{ $t }}
-                        </span>
-                    </label>
-                    @endforeach
-                </div>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Survey Mode</label>
-                <div class="flex gap-3" id="surveyModeGroup">
-                    @foreach(['Detailed','Simple'] as $m)
-                    <label class="survey-mode-btn cursor-pointer">
-                        <input type="radio" name="survey_mode" value="{{ $m }}" class="sr-only" {{ old('survey_mode','Detailed') === $m ? 'checked' : '' }}>
-                        <span class="inline-block px-5 py-2.5 rounded-lg border-2 text-sm font-semibold transition-all
-                            {{ old('survey_mode','Detailed') === $m ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300 text-gray-600 hover:border-indigo-400' }}">
-                            {{ $m }}
-                        </span>
-                    </label>
-                    @endforeach
-                </div>
-            </div>
+    {{-- ── S0: Basic ── --}}
+    <div class="card survey-card" id="s0">
+      <div class="card-header">
+        <span class="sec-icon bg-label-primary">0</span> Basic Information
+      </div>
+      <div class="card-body row g-3">
+        <div class="col-12">
+          <label class="form-label fw-semibold">Customer Name <span class="text-danger">*</span></label>
+          <div class="position-relative">
+            <input type="text" id="customerSearch" autocomplete="off" placeholder="Search or type customer name…"
+              class="form-control" value="{{ old('customer_name', $lead?->customer_name ?? '') }}">
+            <input type="hidden" name="customer_name" id="customerNameHidden" value="{{ old('customer_name', $lead?->customer_name ?? '') }}">
+            <input type="hidden" name="customer_id"   id="customerIdHidden">
+            <input type="hidden" name="lead_id"       id="leadIdHidden" value="{{ old('lead_id', $lead?->id ?? '') }}">
+            <div id="customerDropdown" class="search-drop d-none"></div>
+          </div>
         </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Mobile</label>
+          <input type="text" name="mobile" value="{{ old('mobile', $lead?->mobile ?? '') }}" class="form-control" placeholder="07X XXX XXXX">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Survey Date</label>
+          <input type="date" name="survey_date" value="{{ old('survey_date', now()->toDateString()) }}" class="form-control">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Technician</label>
+          <div class="position-relative">
+            <input type="text" id="techSearch" autocomplete="off" placeholder="Search technician…"
+              class="form-control" value="{{ old('technician_name') }}">
+            <input type="hidden" name="technician_id" id="techIdHidden" value="{{ old('technician_id') }}">
+            <div id="techDropdown" class="search-drop d-none"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    {{-- ── DETAILED SURVEY SECTIONS ── --}}
-    <div id="detailedSurvey" class="{{ old('survey_mode','Detailed') === 'Simple' ? 'hidden' : '' }}">
-
-        {{-- Sticky section nav --}}
-        <div class="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm -mx-4 px-4 py-2 mb-5 overflow-x-auto">
-            <div class="flex gap-1 min-w-max text-xs font-medium">
-                @foreach([
-                    ['s1','Customer'],['s2','Site'],['s3','Purpose'],['s4','Cameras'],
-                    ['s5','Network'],['s6','Power'],['s7','Install'],['s8','Materials'],
-                    ['s9','Photos'],['s10','Risks'],['s11','Notes']
-                ] as [$id,$label])
-                <a href="#{{ $id }}" class="px-3 py-1.5 rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-800 whitespace-nowrap transition-colors">{{ $label }}</a>
-                @endforeach
-            </div>
+    {{-- ── S1: Customer Details ── --}}
+    <div class="card survey-card" id="s1">
+      <div class="card-header">
+        <span class="sec-icon bg-label-primary">1</span> Customer Details
+      </div>
+      <div class="card-body row g-3">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Contact Person</label>
+          <input type="text" name="contact_person" value="{{ old('contact_person') }}" class="form-control" placeholder="Who to contact on-site">
         </div>
-
-        {{-- ──────────────────────────────────────────────── --}}
-        {{-- SECTION 0: Basic Info (always required)         --}}
-        {{-- ──────────────────────────────────────────────── --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-4" id="s0">
-            <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4 flex items-center gap-2">
-                <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs flex items-center justify-center font-bold">0</span>
-                Basic Information
-            </h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {{-- Customer search --}}
-                <div class="sm:col-span-2">
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Customer Name <span class="text-red-500">*</span></label>
-                    <div class="relative">
-                        <input type="text" id="customerSearch" autocomplete="off" placeholder="Search or type customer name…"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            value="{{ old('customer_name', $lead?->customer_name ?? '') }}">
-                        <input type="hidden" name="customer_name" id="customerNameHidden" value="{{ old('customer_name', $lead?->customer_name ?? '') }}">
-                        <input type="hidden" name="customer_id" id="customerIdHidden">
-                        <input type="hidden" name="lead_id" id="leadIdHidden" value="{{ old('lead_id', $lead?->id ?? '') }}">
-                        <div id="customerDropdown" class="hidden absolute z-30 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-52 overflow-y-auto"></div>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Mobile</label>
-                    <input type="text" name="mobile" value="{{ old('mobile', $lead?->mobile ?? '') }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="07X XXX XXXX">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Survey Date</label>
-                    <input type="date" name="survey_date" value="{{ old('survey_date', now()->toDateString()) }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div class="sm:col-span-2">
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Technician</label>
-                    <div class="relative">
-                        <input type="text" id="techSearch" autocomplete="off" placeholder="Search technician…"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            value="{{ old('technician_name') }}">
-                        <input type="hidden" name="technician_id" id="techIdHidden" value="{{ old('technician_id') }}">
-                        <div id="techDropdown" class="hidden absolute z-30 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-52 overflow-y-auto"></div>
-                    </div>
-                </div>
-            </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Alt. Mobile</label>
+          <input type="text" name="alt_mobile" value="{{ old('alt_mobile') }}" class="form-control" placeholder="Alternative number">
         </div>
-
-        {{-- ──────────────────── --}}
-        {{-- SECTION 1: Customer --}}
-        {{-- ──────────────────── --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-4" id="s1">
-            <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4 flex items-center gap-2">
-                <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs flex items-center justify-center font-bold">1</span>
-                Customer Details
-            </h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Contact Person</label>
-                    <input type="text" name="contact_person" value="{{ old('contact_person') }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Who to contact on-site">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Alt. Mobile</label>
-                    <input type="text" name="alt_mobile" value="{{ old('alt_mobile') }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Alternative number">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Email</label>
-                    <input type="email" name="email" value="{{ old('email') }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">GPS Location</label>
-                    <input type="text" name="gps_location" value="{{ old('gps_location') }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Paste Google Maps link or coords">
-                </div>
-                <div class="sm:col-span-2">
-                    <label class="block text-xs font-medium text-gray-600 mb-2">Customer Type</label>
-                    <div class="flex flex-wrap gap-2" id="customerTypeGroup">
-                        @foreach(['House','Shop','Office','Factory','School','Hotel','Government','Other'] as $ct)
-                        <label class="customer-type-btn cursor-pointer">
-                            <input type="radio" name="customer_type" value="{{ $ct }}" class="sr-only" {{ old('customer_type') === $ct ? 'checked' : '' }}>
-                            <span class="inline-block px-3 py-1.5 rounded-full border text-xs font-medium transition-all
-                                {{ old('customer_type') === $ct ? 'border-blue-600 bg-blue-600 text-white' : 'border-gray-300 text-gray-600 hover:border-blue-400' }}">
-                                {{ $ct }}
-                            </span>
-                        </label>
-                        @endforeach
-                    </div>
-                    <div id="customerTypeOtherWrap" class="{{ old('customer_type') === 'Other' ? '' : 'hidden' }} mt-2">
-                        <input type="text" name="customer_type_other" value="{{ old('customer_type_other') }}"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Specify type…">
-                    </div>
-                </div>
-            </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Email</label>
+          <input type="email" name="email" value="{{ old('email') }}" class="form-control">
         </div>
-
-        {{-- ──────────────────── --}}
-        {{-- SECTION 2: Site     --}}
-        {{-- ──────────────────── --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-4" id="s2">
-            <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4 flex items-center gap-2">
-                <span class="w-6 h-6 rounded-full bg-green-100 text-green-700 text-xs flex items-center justify-center font-bold">2</span>
-                Site Information
-            </h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Building Name / Address</label>
-                    <input type="text" name="building_name" value="{{ old('building_name', $lead?->site_address ?? '') }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Building Type</label>
-                    <input type="text" name="building_type" value="{{ old('building_type') }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. 2-storey, Villa…">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Site Size</label>
-                    <input type="text" name="site_size" value="{{ old('site_size') }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. 40×60 perch, 5000 sqft">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Number of Floors</label>
-                    <input type="number" name="num_floors" value="{{ old('num_floors', 1) }}" min="1"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Construction Status</label>
-                    <select name="construction_status" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">— Select —</option>
-                        @foreach(['Existing','Under Construction','New Building'] as $cs)
-                        <option value="{{ $cs }}" {{ old('construction_status') === $cs ? 'selected' : '' }}>{{ $cs }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="flex items-center gap-3 pt-4">
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="existing_security_system" value="1" {{ old('existing_security_system') ? 'checked' : '' }}
-                            class="w-4 h-4 text-blue-600 rounded">
-                        <span class="text-sm text-gray-700">Existing Security System?</span>
-                    </label>
-                </div>
-            </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">GPS Location</label>
+          <input type="text" name="gps_location" value="{{ old('gps_location') }}" class="form-control" placeholder="Google Maps link or coordinates">
         </div>
-
-        {{-- ──────────────────────── --}}
-        {{-- SECTION 3: Purposes     --}}
-        {{-- ──────────────────────── --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-4" id="s3">
-            <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4 flex items-center gap-2">
-                <span class="w-6 h-6 rounded-full bg-yellow-100 text-yellow-700 text-xs flex items-center justify-center font-bold">3</span>
-                Purpose / Requirements
-            </h2>
-            @php
-            $purposeOptions = [
-                'Theft Prevention','Employee Monitoring','Perimeter Security','Visitor Tracking',
-                'Fire/Safety Monitoring','Remote Monitoring','Evidence Recording',
-                'Access Control Integration','Child/Elder Safety','General Surveillance',
-            ];
-            $selectedPurposes = old('purposes', []);
-            @endphp
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                @foreach($purposeOptions as $p)
-                <label class="flex items-center gap-2 cursor-pointer group">
-                    <input type="checkbox" name="purposes[]" value="{{ $p }}" {{ in_array($p, $selectedPurposes) ? 'checked' : '' }}
-                        class="w-4 h-4 text-blue-600 rounded">
-                    <span class="text-sm text-gray-700 group-hover:text-gray-900">{{ $p }}</span>
-                </label>
-                @endforeach
-            </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold d-block mb-2">Customer Type</label>
+          <div class="pill-group" id="customerTypeGroup">
+            @foreach(['House','Shop','Office','Factory','School','Hotel','Government','Other'] as $ct)
+            <label class="pill-label">
+              <input type="radio" name="customer_type" value="{{ $ct }}" {{ old('customer_type')===$ct?'checked':'' }}>
+              <span>{{ $ct }}</span>
+            </label>
+            @endforeach
+          </div>
+          <div id="customerTypeOtherWrap" class="{{ old('customer_type')==='Other'?'':'d-none' }} mt-2">
+            <input type="text" name="customer_type_other" value="{{ old('customer_type_other') }}" class="form-control" placeholder="Specify type…">
+          </div>
         </div>
-
-        {{-- ──────────────────────── --}}
-        {{-- SECTION 4: Camera Locs  --}}
-        {{-- ──────────────────────── --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-4" id="s4">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">
-                    <span class="w-6 h-6 rounded-full bg-purple-100 text-purple-700 text-xs flex items-center justify-center font-bold">4</span>
-                    Camera Locations
-                </h2>
-                <button type="button" id="addCamBtn"
-                    class="text-xs bg-purple-600 text-white px-3 py-1.5 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-1">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    Add Row
-                </button>
-            </div>
-
-            {{-- Table header --}}
-            <div class="hidden sm:grid grid-cols-12 gap-2 text-xs font-semibold text-gray-500 uppercase mb-2 px-1">
-                <div class="col-span-3">Location / Description</div>
-                <div class="col-span-2">Indoor/Outdoor</div>
-                <div class="col-span-2">Camera Type</div>
-                <div class="col-span-1">MP</div>
-                <div class="col-span-1 text-center">Night</div>
-                <div class="col-span-1 text-center">Audio</div>
-                <div class="col-span-2"></div>
-            </div>
-
-            <div id="camRows" class="space-y-2">
-                {{-- Default first row --}}
-                <div class="cam-row grid grid-cols-12 gap-2 items-center bg-gray-50 rounded-lg p-2">
-                    <div class="col-span-12 sm:col-span-3">
-                        <input type="text" name="cam_location[]" placeholder="e.g. Front Gate"
-                            class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400">
-                    </div>
-                    <div class="col-span-6 sm:col-span-2">
-                        <select name="cam_io[]" class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400">
-                            <option>Indoor</option><option>Outdoor</option>
-                        </select>
-                    </div>
-                    <div class="col-span-6 sm:col-span-2">
-                        <input type="text" name="cam_type[]" placeholder="Dome / Bullet…"
-                            class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400">
-                    </div>
-                    <div class="col-span-4 sm:col-span-1">
-                        <input type="text" name="cam_mp[]" placeholder="2MP"
-                            class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400">
-                    </div>
-                    <div class="col-span-2 sm:col-span-1 text-center">
-                        <input type="checkbox" name="cam_nv[]" value="1" class="w-4 h-4 text-purple-600 rounded" title="Night Vision">
-                    </div>
-                    <div class="col-span-2 sm:col-span-1 text-center">
-                        <input type="checkbox" name="cam_audio[]" value="1" class="w-4 h-4 text-purple-600 rounded" title="Audio">
-                    </div>
-                    <div class="col-span-4 sm:col-span-2 flex justify-end">
-                        <button type="button" class="remove-cam-btn text-red-400 hover:text-red-600 p-1 rounded" title="Remove">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <p class="text-xs text-gray-400 mt-3">Each row = one camera position. Night Vision & Audio = checkboxes.</p>
-        </div>
-
-        {{-- ──────────────────── --}}
-        {{-- SECTION 5: Network  --}}
-        {{-- ──────────────────── --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-4" id="s5">
-            <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4 flex items-center gap-2">
-                <span class="w-6 h-6 rounded-full bg-cyan-100 text-cyan-700 text-xs flex items-center justify-center font-bold">5</span>
-                Network / Connectivity
-            </h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Internet Status</label>
-                    <select name="internet_status" id="internetStatusSel" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">— Select —</option>
-                        <option value="Available" {{ old('internet_status') === 'Available' ? 'selected' : '' }}>Available</option>
-                        <option value="Not Available" {{ old('internet_status') === 'Not Available' ? 'selected' : '' }}>Not Available</option>
-                    </select>
-                </div>
-                <div id="ispWrap" class="{{ old('internet_status') === 'Available' ? '' : 'hidden' }}">
-                    <label class="block text-xs font-medium text-gray-600 mb-1">ISP</label>
-                    <select name="isp" id="ispSel" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">— Select —</option>
-                        @foreach(['SLT','Dialog','Starlink','Other'] as $isp)
-                        <option value="{{ $isp }}" {{ old('isp') === $isp ? 'selected' : '' }}>{{ $isp }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div id="ispOtherWrap" class="{{ old('isp') === 'Other' ? '' : 'hidden' }}">
-                    <label class="block text-xs font-medium text-gray-600 mb-1">ISP Name</label>
-                    <input type="text" name="isp_other" value="{{ old('isp_other') }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ISP name…">
-                </div>
-                <div class="flex flex-col gap-3 sm:col-span-2">
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="wifi_coverage" value="1" {{ old('wifi_coverage') ? 'checked' : '' }} class="w-4 h-4 text-blue-600 rounded">
-                        <span class="text-sm text-gray-700">WiFi coverage available at site?</span>
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="lan_available" value="1" {{ old('lan_available') ? 'checked' : '' }} class="w-4 h-4 text-blue-600 rounded">
-                        <span class="text-sm text-gray-700">LAN / Ethernet available?</span>
-                    </label>
-                </div>
-            </div>
-        </div>
-
-        {{-- ──────────────────── --}}
-        {{-- SECTION 6: Power    --}}
-        {{-- ──────────────────── --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-4" id="s6">
-            <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4 flex items-center gap-2">
-                <span class="w-6 h-6 rounded-full bg-orange-100 text-orange-700 text-xs flex items-center justify-center font-bold">6</span>
-                Power Supply
-            </h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Power Availability</label>
-                    <select name="power_availability" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">— Select —</option>
-                        @foreach(['Stable','Moderate','Poor'] as $pa)
-                        <option value="{{ $pa }}" {{ old('power_availability') === $pa ? 'selected' : '' }}>{{ $pa }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="flex flex-col gap-3 justify-center">
-                    @foreach([['ups_required','UPS Required?'],['electrical_work_required','Electrical Work Required?'],['voltage_issues','Voltage Issues Observed?']] as [$fname,$flabel])
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="{{ $fname }}" value="1" {{ old($fname) ? 'checked' : '' }} class="w-4 h-4 text-orange-500 rounded">
-                        <span class="text-sm text-gray-700">{{ $flabel }}</span>
-                    </label>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-
-        {{-- ────────────────────── --}}
-        {{-- SECTION 7: Install    --}}
-        {{-- ────────────────────── --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-4" id="s7">
-            <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4 flex items-center gap-2">
-                <span class="w-6 h-6 rounded-full bg-red-100 text-red-700 text-xs flex items-center justify-center font-bold">7</span>
-                Installation Assessment
-            </h2>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Cable Route</label>
-                    <select name="cable_route" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">— Select —</option>
-                        @foreach(['Easy','Medium','Difficult'] as $cr)
-                        <option value="{{ $cr }}" {{ old('cable_route') === $cr ? 'selected' : '' }}>{{ $cr }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Ceiling Type</label>
-                    <select name="ceiling_type" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">— Select —</option>
-                        @foreach(['Concrete','Gypsum','Metal','Wooden'] as $ct)
-                        <option value="{{ $ct }}" {{ old('ceiling_type') === $ct ? 'selected' : '' }}>{{ $ct }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Wall Type</label>
-                    <select name="wall_type" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">— Select —</option>
-                        @foreach(['Brick','Concrete','Partition'] as $wt)
-                        <option value="{{ $wt }}" {{ old('wall_type') === $wt ? 'selected' : '' }}>{{ $wt }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="sm:col-span-3 flex flex-wrap gap-4">
-                    @foreach([['ladder_required','Ladder Required'],['scaffolding_required','Scaffolding Required']] as [$fname,$flabel])
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="{{ $fname }}" value="1" {{ old($fname) ? 'checked' : '' }} class="w-4 h-4 text-red-500 rounded">
-                        <span class="text-sm text-gray-700">{{ $flabel }}</span>
-                    </label>
-                    @endforeach
-                </div>
-                <div class="sm:col-span-2">
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Height Risk Level: <span id="heightRiskVal">{{ old('height_risk', 0) }}</span>/10</label>
-                    <input type="range" name="height_risk" id="heightRiskRange" min="0" max="10" value="{{ old('height_risk', 0) }}"
-                        class="w-full accent-red-500">
-                    <div class="flex justify-between text-xs text-gray-400 mt-1"><span>0 (Safe)</span><span>5 (Medium)</span><span>10 (Extreme)</span></div>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Special Safety Equipment</label>
-                    <input type="text" name="special_safety_equipment" value="{{ old('special_safety_equipment') }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. Safety harness…">
-                </div>
-            </div>
-        </div>
-
-        {{-- ────────────────────────── --}}
-        {{-- SECTION 8: Materials      --}}
-        {{-- ────────────────────────── --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-4" id="s8">
-            <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4 flex items-center gap-2">
-                <span class="w-6 h-6 rounded-full bg-teal-100 text-teal-700 text-xs flex items-center justify-center font-bold">8</span>
-                Material Estimation
-            </h2>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Total Cameras</label>
-                    <input type="number" name="cameras_qty" id="camerasQty" value="{{ old('cameras_qty', 0) }}" min="0"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">DVR Channels</label>
-                    <input type="number" name="dvr_channels" value="{{ old('dvr_channels', 0) }}" min="0"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">HDD Storage (days)</label>
-                    <input type="number" name="hdd_storage_days" value="{{ old('hdd_storage_days', 30) }}" min="1"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Cable (meters)</label>
-                    <input type="number" name="cable_meters" value="{{ old('cable_meters', 0) }}" min="0"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-            </div>
-
-            {{-- Accessories repeater --}}
-            <div class="flex items-center justify-between mb-2">
-                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Additional Accessories</p>
-                <button type="button" id="addAccBtn"
-                    class="text-xs bg-teal-600 text-white px-3 py-1.5 rounded-lg hover:bg-teal-700 transition-colors flex items-center gap-1">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    Add Item
-                </button>
-            </div>
-            <div id="accRows" class="space-y-2"></div>
-        </div>
-
-        {{-- ─────────────────────── --}}
-        {{-- SECTION 9: Site Photos  --}}
-        {{-- ─────────────────────── --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-4" id="s9">
-            <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4 flex items-center gap-2">
-                <span class="w-6 h-6 rounded-full bg-pink-100 text-pink-700 text-xs flex items-center justify-center font-bold">9</span>
-                Site Photos
-            </h2>
-            <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors cursor-pointer" id="photoDropZone">
-                <svg class="w-10 h-10 mx-auto text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
-                <p class="text-sm text-gray-500 mb-1">Tap to add photos or drag & drop</p>
-                <p class="text-xs text-gray-400">JPG, PNG, HEIC — multiple allowed</p>
-                <input type="file" name="site_photos[]" id="sitePhotosInput" multiple accept="image/*" class="hidden">
-            </div>
-            <div id="photoPreview" class="grid grid-cols-3 sm:grid-cols-5 gap-2 mt-3"></div>
-        </div>
-
-        {{-- ────────────────────── --}}
-        {{-- SECTION 10: Risks     --}}
-        {{-- ────────────────────── --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-4" id="s10">
-            <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4 flex items-center gap-2">
-                <span class="w-6 h-6 rounded-full bg-red-100 text-red-700 text-xs flex items-center justify-center font-bold">10</span>
-                Risk Assessment
-            </h2>
-            @php
-            $riskOptions = [
-                'High-rise installation','Confined space','Electrical hazard','Unstable structure',
-                'Aggressive animals','Flooding risk','Extreme heat','Poor lighting','Traffic exposure',
-                'Customer access restrictions','No signal area','Vandalism risk',
-            ];
-            $selectedRisks = old('risks', []);
-            @endphp
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                @foreach($riskOptions as $r)
-                <label class="flex items-center gap-2 cursor-pointer group">
-                    <input type="checkbox" name="risks[]" value="{{ $r }}" {{ in_array($r, $selectedRisks) ? 'checked' : '' }}
-                        class="w-4 h-4 text-red-500 rounded">
-                    <span class="text-sm text-gray-700 group-hover:text-gray-900">{{ $r }}</span>
-                </label>
-                @endforeach
-            </div>
-        </div>
-
-        {{-- ─────────────────────── --}}
-        {{-- SECTION 11: Notes       --}}
-        {{-- ─────────────────────── --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6" id="s11">
-            <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4 flex items-center gap-2">
-                <span class="w-6 h-6 rounded-full bg-gray-100 text-gray-600 text-xs flex items-center justify-center font-bold">11</span>
-                Special Notes
-            </h2>
-            <textarea name="special_notes" rows="4"
-                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Any additional observations, customer requests, or instructions…">{{ old('special_notes') }}</textarea>
-        </div>
-
-    </div>{{-- end #detailedSurvey --}}
-
-    {{-- ── SIMPLE MODE PLACEHOLDER ── --}}
-    <div id="simpleSurvey" class="{{ old('survey_mode','Detailed') === 'Simple' ? '' : 'hidden' }}">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-10 mb-6 text-center">
-            <svg class="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-            </svg>
-            <p class="text-gray-500 text-sm font-medium">Simple Survey</p>
-            <p class="text-xs text-gray-400 mt-1">Coming soon — use Detailed mode for now.</p>
-        </div>
+      </div>
     </div>
 
-    {{-- Submit --}}
-    <div class="flex justify-end gap-3 pb-8">
-        <a href="{{ route('admin.cctv.surveys.index') }}"
-            class="px-5 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors">Cancel</a>
-        <button type="submit"
-            class="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm">
-            Save Survey
+    {{-- ── S2: Site ── --}}
+    <div class="card survey-card" id="s2">
+      <div class="card-header">
+        <span class="sec-icon bg-label-success">2</span> Site Information
+      </div>
+      <div class="card-body row g-3">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Building Name / Address</label>
+          <input type="text" name="building_name" value="{{ old('building_name', $lead?->site_address ?? '') }}" class="form-control">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Building Type</label>
+          <input type="text" name="building_type" value="{{ old('building_type') }}" class="form-control" placeholder="e.g. 2-storey, Villa…">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Site Size</label>
+          <input type="text" name="site_size" value="{{ old('site_size') }}" class="form-control" placeholder="e.g. 5000 sqft">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Construction Status</label>
+          <select name="construction_status" class="form-select">
+            <option value="">— Select —</option>
+            @foreach(['Existing','Under Construction','New Building'] as $cs)
+            <option value="{{ $cs }}" {{ old('construction_status')===$cs?'selected':'' }}>{{ $cs }}</option>
+            @endforeach
+          </select>
+        </div>
+        <div class="col-md-4 d-flex align-items-end pb-1">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="existing_security_system" id="existingSec" value="1" {{ old('existing_security_system')?'checked':'' }}>
+            <label class="form-check-label fw-semibold" for="existingSec">Existing security system?</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {{-- ── S3: Purpose ── --}}
+    <div class="card survey-card" id="s3">
+      <div class="card-header">
+        <span class="sec-icon bg-label-warning">3</span> Purpose / Requirements
+      </div>
+      <div class="card-body">
+        @php
+        $purposeOptions = ['Theft Prevention','Employee Monitoring','Perimeter Security','Visitor Tracking','Fire/Safety Monitoring','Remote Monitoring','Evidence Recording','Access Control Integration','Child/Elder Safety','General Surveillance'];
+        $selectedPurposes = old('purposes', []);
+        @endphp
+        <div class="row g-2">
+          @foreach($purposeOptions as $p)
+          <div class="col-6 col-md-4">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="purposes[]" value="{{ $p }}" id="pur_{{ $loop->index }}" {{ in_array($p,$selectedPurposes)?'checked':'' }}>
+              <label class="form-check-label" for="pur_{{ $loop->index }}">{{ $p }}</label>
+            </div>
+          </div>
+          @endforeach
+        </div>
+      </div>
+    </div>
+
+    {{-- ── S4: Camera Locations ── --}}
+    <div class="card survey-card" id="s4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="d-flex align-items-center gap-2"><span class="sec-icon bg-label-info">4</span> Camera Locations</span>
+        <button type="button" id="addCamBtn" class="btn btn-sm btn-primary d-flex align-items-center gap-1">
+          <i class="bx bx-plus"></i> Add Row
         </button>
+      </div>
+      <div class="card-body p-0">
+        <div class="px-3 pt-3">
+          <div class="cam-table-head">
+            <div>Location / Description</div>
+            <div>In/Out</div>
+            <div>Camera Type</div>
+            <div>MP</div>
+            <div class="text-center">Night</div>
+            <div class="text-center">Audio</div>
+            <div></div>
+          </div>
+        </div>
+        <div id="camRows" class="px-3 pb-3">
+          <div class="cam-row">
+            <input type="text" name="cam_location[]" placeholder="e.g. Front Gate" class="form-control form-control-sm">
+            <select name="cam_io[]" class="form-select form-select-sm">
+              <option>Indoor</option><option>Outdoor</option>
+            </select>
+            <input type="text" name="cam_type[]" placeholder="Dome/Bullet…" class="form-control form-control-sm">
+            <input type="text" name="cam_mp[]" placeholder="2MP" class="form-control form-control-sm">
+            <div class="text-center"><input type="checkbox" name="cam_nv[]" value="1" class="form-check-input" title="Night Vision"></div>
+            <div class="text-center"><input type="checkbox" name="cam_audio[]" value="1" class="form-check-input" title="Audio"></div>
+            <div class="text-center">
+              <button type="button" class="remove-cam-btn btn btn-sm btn-icon btn-outline-danger" title="Remove">
+                <i class="bx bx-x"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    </form>
+    {{-- ── S5: Network ── --}}
+    <div class="card survey-card" id="s5">
+      <div class="card-header">
+        <span class="sec-icon bg-label-info">5</span> Network / Connectivity
+      </div>
+      <div class="card-body row g-3">
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Internet Status</label>
+          <select name="internet_status" id="internetStatusSel" class="form-select">
+            <option value="">— Select —</option>
+            <option value="Available"     {{ old('internet_status')==='Available'?'selected':'' }}>Available</option>
+            <option value="Not Available" {{ old('internet_status')==='Not Available'?'selected':'' }}>Not Available</option>
+          </select>
+        </div>
+        <div class="col-md-4 {{ old('internet_status')==='Available'?'':'d-none' }}" id="ispWrap">
+          <label class="form-label fw-semibold">ISP</label>
+          <select name="isp" id="ispSel" class="form-select">
+            <option value="">— Select —</option>
+            @foreach(['SLT','Dialog','Starlink','Other'] as $isp)
+            <option value="{{ $isp }}" {{ old('isp')===$isp?'selected':'' }}>{{ $isp }}</option>
+            @endforeach
+          </select>
+        </div>
+        <div class="col-md-4 {{ old('isp')==='Other'?'':'d-none' }}" id="ispOtherWrap">
+          <label class="form-label fw-semibold">ISP Name</label>
+          <input type="text" name="isp_other" value="{{ old('isp_other') }}" class="form-control" placeholder="ISP name…">
+        </div>
+        <div class="col-12 d-flex gap-4 flex-wrap">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="wifi_coverage" id="wifiCov" value="1" {{ old('wifi_coverage')?'checked':'' }}>
+            <label class="form-check-label" for="wifiCov">WiFi coverage at site?</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="lan_available" id="lanAvail" value="1" {{ old('lan_available')?'checked':'' }}>
+            <label class="form-check-label" for="lanAvail">LAN / Ethernet available?</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {{-- ── S6: Power ── --}}
+    <div class="card survey-card" id="s6">
+      <div class="card-header">
+        <span class="sec-icon bg-label-warning">6</span> Power Supply
+      </div>
+      <div class="card-body row g-3">
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Power Availability</label>
+          <select name="power_availability" class="form-select">
+            <option value="">— Select —</option>
+            @foreach(['Stable','Moderate','Poor'] as $pa)
+            <option value="{{ $pa }}" {{ old('power_availability')===$pa?'selected':'' }}>{{ $pa }}</option>
+            @endforeach
+          </select>
+        </div>
+        <div class="col-md-8 d-flex align-items-end gap-4 flex-wrap pb-1">
+          @foreach([['ups_required','UPS Required?'],['electrical_work_required','Electrical Work Required?'],['voltage_issues','Voltage Issues Observed?']] as [$fn,$fl])
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="{{ $fn }}" id="{{ $fn }}" value="1" {{ old($fn)?'checked':'' }}>
+            <label class="form-check-label" for="{{ $fn }}">{{ $fl }}</label>
+          </div>
+          @endforeach
+        </div>
+      </div>
+    </div>
+
+    {{-- ── S7: Installation ── --}}
+    <div class="card survey-card" id="s7">
+      <div class="card-header">
+        <span class="sec-icon bg-label-danger">7</span> Installation Assessment
+      </div>
+      <div class="card-body row g-3">
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Cable Route</label>
+          <select name="cable_route" class="form-select">
+            <option value="">— Select —</option>
+            @foreach(['Easy','Medium','Difficult'] as $cr)
+            <option value="{{ $cr }}" {{ old('cable_route')===$cr?'selected':'' }}>{{ $cr }}</option>
+            @endforeach
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Ceiling Type</label>
+          <select name="ceiling_type" class="form-select">
+            <option value="">— Select —</option>
+            @foreach(['Concrete','Gypsum','Metal','Wooden'] as $ct)
+            <option value="{{ $ct }}" {{ old('ceiling_type')===$ct?'selected':'' }}>{{ $ct }}</option>
+            @endforeach
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Wall Type</label>
+          <select name="wall_type" class="form-select">
+            <option value="">— Select —</option>
+            @foreach(['Brick','Concrete','Partition'] as $wt)
+            <option value="{{ $wt }}" {{ old('wall_type')===$wt?'selected':'' }}>{{ $wt }}</option>
+            @endforeach
+          </select>
+        </div>
+        <div class="col-12 d-flex gap-4 flex-wrap">
+          @foreach([['ladder_required','Ladder Required'],['scaffolding_required','Scaffolding Required']] as [$fn,$fl])
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="{{ $fn }}" id="{{ $fn }}" value="1" {{ old($fn)?'checked':'' }}>
+            <label class="form-check-label" for="{{ $fn }}">{{ $fl }}</label>
+          </div>
+          @endforeach
+        </div>
+        <div class="col-md-8">
+          <label class="form-label fw-semibold">Height Risk Level: <strong id="heightRiskVal">{{ old('height_risk',0) }}</strong> / 10</label>
+          <input type="range" class="form-range" name="height_risk" id="heightRiskRange" min="0" max="10" value="{{ old('height_risk',0) }}">
+          <div class="d-flex justify-content-between" style="font-size:.75rem;color:#adb5bd;margin-top:-4px;">
+            <span>0 (Safe)</span><span>5 (Medium)</span><span>10 (Extreme)</span>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Special Safety Equipment</label>
+          <input type="text" name="special_safety_equipment" value="{{ old('special_safety_equipment') }}" class="form-control" placeholder="e.g. Safety harness…">
+        </div>
+      </div>
+    </div>
+
+    {{-- ── S8: Materials ── --}}
+    <div class="card survey-card" id="s8">
+      <div class="card-header">
+        <span class="sec-icon bg-label-success">8</span> Material Estimation
+      </div>
+      <div class="card-body">
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-md-3">
+            <label class="form-label fw-semibold">Total Cameras</label>
+            <input type="number" name="cameras_qty" id="camerasQty" value="{{ old('cameras_qty',0) }}" min="0" class="form-control">
+          </div>
+          <div class="col-6 col-md-3">
+            <label class="form-label fw-semibold">DVR Channels</label>
+            <input type="number" name="dvr_channels" value="{{ old('dvr_channels',0) }}" min="0" class="form-control">
+          </div>
+          <div class="col-6 col-md-3">
+            <label class="form-label fw-semibold">HDD Storage (days)</label>
+            <input type="number" name="hdd_storage_days" value="{{ old('hdd_storage_days',30) }}" min="1" class="form-control">
+          </div>
+          <div class="col-6 col-md-3">
+            <label class="form-label fw-semibold">Cable (meters)</label>
+            <input type="number" name="cable_meters" value="{{ old('cable_meters',0) }}" min="0" class="form-control">
+          </div>
+        </div>
+
+        {{-- Accessories --}}
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <p class="fw-bold small text-uppercase text-muted mb-0">Additional Accessories</p>
+          <button type="button" id="addAccBtn" class="btn btn-sm btn-success d-flex align-items-center gap-1">
+            <i class="bx bx-plus"></i> Add Item
+          </button>
+        </div>
+        <div id="accRows"></div>
+      </div>
+    </div>
+
+    {{-- ── S9: Photos ── --}}
+    <div class="card survey-card" id="s9">
+      <div class="card-header">
+        <span class="sec-icon bg-label-danger">9</span> Site Photos
+      </div>
+      <div class="card-body">
+        <div class="photo-drop" id="photoDropZone">
+          <i class="bx bx-image-add" style="font-size:2.5rem;color:#d9dde1;"></i>
+          <p class="mb-1 mt-2 fw-semibold text-muted">Tap to add photos or drag & drop</p>
+          <p class="small text-muted mb-0">JPG, PNG, HEIC — multiple allowed</p>
+          <input type="file" name="site_photos[]" id="sitePhotosInput" multiple accept="image/*" class="d-none">
+        </div>
+        <div id="photoPreview" class="d-flex flex-wrap gap-2 mt-3"></div>
+      </div>
+    </div>
+
+    {{-- ── S10: Risks ── --}}
+    <div class="card survey-card" id="s10">
+      <div class="card-header">
+        <span class="sec-icon bg-label-danger">10</span> Risk Assessment
+      </div>
+      <div class="card-body">
+        @php
+        $riskOptions = ['High-rise installation','Confined space','Electrical hazard','Unstable structure','Aggressive animals','Flooding risk','Extreme heat','Poor lighting','Traffic exposure','Customer access restrictions','No signal area','Vandalism risk'];
+        $selectedRisks = old('risks', []);
+        @endphp
+        <div class="row g-2">
+          @foreach($riskOptions as $r)
+          <div class="col-6 col-md-4">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="risks[]" value="{{ $r }}" id="risk_{{ $loop->index }}" {{ in_array($r,$selectedRisks)?'checked':'' }}>
+              <label class="form-check-label" for="risk_{{ $loop->index }}">{{ $r }}</label>
+            </div>
+          </div>
+          @endforeach
+        </div>
+      </div>
+    </div>
+
+    {{-- ── S11: Notes ── --}}
+    <div class="card survey-card" id="s11">
+      <div class="card-header">
+        <span class="sec-icon bg-label-secondary">11</span> Special Notes
+      </div>
+      <div class="card-body">
+        <textarea name="special_notes" class="form-control" rows="4" placeholder="Any additional observations, customer requests, or instructions…">{{ old('special_notes') }}</textarea>
+      </div>
+    </div>
+
+  </div>{{-- /detailedSurvey --}}
+
+  {{-- Simple placeholder --}}
+  <div id="simpleSurvey" class="{{ old('survey_mode','Detailed')==='Simple'?'':'d-none' }}">
+    <div class="card survey-card text-center py-5">
+      <div class="card-body">
+        <i class="bx bx-clipboard" style="font-size:3rem;color:#d9dde1;"></i>
+        <p class="fw-bold mt-2 mb-1">Simple Survey</p>
+        <p class="text-muted small mb-0">Coming soon — use Detailed mode for now.</p>
+      </div>
+    </div>
+  </div>
+
+  {{-- Submit --}}
+  <div class="d-flex justify-content-end gap-2 pb-5">
+    <a href="{{ route('admin.cctv.surveys.index') }}" class="btn btn-outline-secondary">Cancel</a>
+    <button type="submit" class="btn btn-primary px-4">
+      <i class="bx bx-save me-1"></i> Save Survey
+    </button>
+  </div>
+
+  </form>
 </div>
 @endsection
 
@@ -572,49 +527,46 @@ $leadsJson = $leads->map(function($l){ return ['id'=>$l->id,'name'=>$l->customer
 $techJson  = $employees->map(function($e){ return ['id'=>$e->id,'name'=>$e->employee_name]; })->values();
 @endphp
 <script>
-// ─── Leads / Mobile live search ───────────────────────────────────
-const leadsData = @json($leadsJson);
-
-const custSearch    = document.getElementById('customerSearch');
-const custNameHid   = document.getElementById('customerNameHidden');
-const custIdHid     = document.getElementById('customerIdHidden');
-const leadIdHid     = document.getElementById('leadIdHidden');
-const custDrop      = document.getElementById('customerDropdown');
+// ── Customer live search ─────────────────────────────────────────
+const leadsData   = @json($leadsJson);
+const custSearch  = document.getElementById('customerSearch');
+const custNameHid = document.getElementById('customerNameHidden');
+const custIdHid   = document.getElementById('customerIdHidden');
+const leadIdHid   = document.getElementById('leadIdHidden');
+const custDrop    = document.getElementById('customerDropdown');
 
 custSearch.addEventListener('input', function() {
     const q = this.value.trim().toLowerCase();
     custNameHid.value = this.value;
-    custIdHid.value   = '';
-    leadIdHid.value   = '';
-    if (!q) { custDrop.classList.add('hidden'); return; }
-    const hits = leadsData.filter(l => l.name.toLowerCase().includes(q) || (l.mobile && l.mobile.includes(q))).slice(0, 8);
-    if (!hits.length) { custDrop.classList.add('hidden'); return; }
+    custIdHid.value = '';
+    leadIdHid.value = '';
+    if (!q) { custDrop.classList.add('d-none'); return; }
+    const hits = leadsData.filter(l => l.name.toLowerCase().includes(q) || (l.mobile && l.mobile.includes(q))).slice(0,8);
+    if (!hits.length) { custDrop.classList.add('d-none'); return; }
     custDrop.innerHTML = hits.map(l =>
-        `<div class="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm flex justify-between" data-name="${l.name}" data-lead="${l.lead_id}">
-            <span class="font-medium">${l.name}</span>
-            <span class="text-gray-400 text-xs">${l.mobile || ''}</span>
-        </div>`
+        `<div data-name="${l.name}" data-lead="${l.lead_id}" data-mobile="${l.mobile||''}">
+            <span class="fw-semibold">${l.name}</span>
+            <span class="text-muted small float-end">${l.mobile||''}</span>
+         </div>`
     ).join('');
-    custDrop.classList.remove('hidden');
+    custDrop.classList.remove('d-none');
     custDrop.querySelectorAll('[data-name]').forEach(el => {
         el.addEventListener('click', function() {
             custSearch.value  = this.dataset.name;
             custNameHid.value = this.dataset.name;
             leadIdHid.value   = this.dataset.lead;
-            custDrop.classList.add('hidden');
-            // Fill mobile if empty
-            const lead = leadsData.find(l => l.lead_id == this.dataset.lead);
-            if (lead) {
-                const mobileInput = document.querySelector('input[name="mobile"]');
-                if (mobileInput && !mobileInput.value) mobileInput.value = lead.mobile || '';
-            }
+            custDrop.classList.add('d-none');
+            const mob = document.querySelector('input[name="mobile"]');
+            if (mob && !mob.value) mob.value = this.dataset.mobile;
         });
     });
 });
-document.addEventListener('click', e => { if (!custSearch.contains(e.target) && !custDrop.contains(e.target)) custDrop.classList.add('hidden'); });
+document.addEventListener('click', e => {
+    if (!custSearch.contains(e.target) && !custDrop.contains(e.target)) custDrop.classList.add('d-none');
+});
 
-// ─── Technician live search ───────────────────────────────────────
-const techData = @json($techJson);
+// ── Technician live search ───────────────────────────────────────
+const techData   = @json($techJson);
 const techSearch = document.getElementById('techSearch');
 const techIdHid  = document.getElementById('techIdHidden');
 const techDrop   = document.getElementById('techDropdown');
@@ -622,187 +574,124 @@ const techDrop   = document.getElementById('techDropdown');
 techSearch.addEventListener('input', function() {
     const q = this.value.trim().toLowerCase();
     techIdHid.value = '';
-    if (!q) { techDrop.classList.add('hidden'); return; }
-    const hits = techData.filter(e => e.name.toLowerCase().includes(q)).slice(0, 8);
-    if (!hits.length) { techDrop.classList.add('hidden'); return; }
-    techDrop.innerHTML = hits.map(e =>
-        `<div class="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm" data-id="${e.id}" data-name="${e.name}">${e.name}</div>`
-    ).join('');
-    techDrop.classList.remove('hidden');
+    if (!q) { techDrop.classList.add('d-none'); return; }
+    const hits = techData.filter(e => e.name.toLowerCase().includes(q)).slice(0,8);
+    if (!hits.length) { techDrop.classList.add('d-none'); return; }
+    techDrop.innerHTML = hits.map(e => `<div data-id="${e.id}" data-name="${e.name}">${e.name}</div>`).join('');
+    techDrop.classList.remove('d-none');
     techDrop.querySelectorAll('[data-id]').forEach(el => {
         el.addEventListener('click', function() {
             techSearch.value = this.dataset.name;
             techIdHid.value  = this.dataset.id;
-            techDrop.classList.add('hidden');
+            techDrop.classList.add('d-none');
         });
     });
 });
-document.addEventListener('click', e => { if (!techSearch.contains(e.target) && !techDrop.contains(e.target)) techDrop.classList.add('hidden'); });
+document.addEventListener('click', e => {
+    if (!techSearch.contains(e.target) && !techDrop.contains(e.target)) techDrop.classList.add('d-none');
+});
 
-// ─── Survey Type pill selector ────────────────────────────────────
-document.querySelectorAll('.survey-type-btn').forEach(label => {
-    label.querySelector('input').addEventListener('change', function() {
-        document.querySelectorAll('.survey-type-btn span').forEach(s => {
-            s.className = s.className.replace('border-blue-600 bg-blue-600 text-white', 'border-gray-300 text-gray-600 hover:border-blue-400');
-        });
-        label.querySelector('span').className = label.querySelector('span').className.replace('border-gray-300 text-gray-600 hover:border-blue-400', 'border-blue-600 bg-blue-600 text-white');
+// ── Survey Mode toggle ───────────────────────────────────────────
+document.querySelectorAll('input[name="survey_mode"]').forEach(inp => {
+    inp.addEventListener('change', function() {
+        document.getElementById('detailedSurvey').classList.toggle('d-none', this.value !== 'Detailed');
+        document.getElementById('simpleSurvey').classList.toggle('d-none', this.value !== 'Simple');
     });
 });
 
-// ─── Survey Mode toggle ───────────────────────────────────────────
-document.querySelectorAll('.survey-mode-btn').forEach(label => {
-    label.querySelector('input').addEventListener('change', function() {
-        document.querySelectorAll('.survey-mode-btn span').forEach(s => {
-            s.className = s.className.replace('border-indigo-600 bg-indigo-600 text-white', 'border-gray-300 text-gray-600 hover:border-indigo-400');
-        });
-        label.querySelector('span').className = label.querySelector('span').className.replace('border-gray-300 text-gray-600 hover:border-indigo-400', 'border-indigo-600 bg-indigo-600 text-white');
-        const mode = this.value;
-        document.getElementById('detailedSurvey').classList.toggle('hidden', mode !== 'Detailed');
-        document.getElementById('simpleSurvey').classList.toggle('hidden', mode !== 'Simple');
+// ── Customer Type "Other" reveal ─────────────────────────────────
+document.querySelectorAll('input[name="customer_type"]').forEach(inp => {
+    inp.addEventListener('change', function() {
+        document.getElementById('customerTypeOtherWrap').classList.toggle('d-none', this.value !== 'Other');
     });
 });
 
-// ─── Customer Type pill selector ─────────────────────────────────
-document.querySelectorAll('.customer-type-btn').forEach(label => {
-    label.querySelector('input').addEventListener('change', function() {
-        document.querySelectorAll('.customer-type-btn span').forEach(s => {
-            s.className = s.className.replace('border-blue-600 bg-blue-600 text-white', 'border-gray-300 text-gray-600 hover:border-blue-400');
-        });
-        label.querySelector('span').className = label.querySelector('span').className.replace('border-gray-300 text-gray-600 hover:border-blue-400', 'border-blue-600 bg-blue-600 text-white');
-        document.getElementById('customerTypeOtherWrap').classList.toggle('hidden', this.value !== 'Other');
-    });
-});
-
-// ─── Internet / ISP conditional ───────────────────────────────────
+// ── Internet / ISP conditional ───────────────────────────────────
 document.getElementById('internetStatusSel').addEventListener('change', function() {
-    document.getElementById('ispWrap').classList.toggle('hidden', this.value !== 'Available');
-    if (this.value !== 'Available') {
-        document.getElementById('ispOtherWrap').classList.add('hidden');
-    }
+    document.getElementById('ispWrap').classList.toggle('d-none', this.value !== 'Available');
+    if (this.value !== 'Available') document.getElementById('ispOtherWrap').classList.add('d-none');
 });
 document.getElementById('ispSel').addEventListener('change', function() {
-    document.getElementById('ispOtherWrap').classList.toggle('hidden', this.value !== 'Other');
+    document.getElementById('ispOtherWrap').classList.toggle('d-none', this.value !== 'Other');
 });
 
-// ─── Height Risk slider ───────────────────────────────────────────
+// ── Height Risk slider ───────────────────────────────────────────
 document.getElementById('heightRiskRange').addEventListener('input', function() {
     document.getElementById('heightRiskVal').textContent = this.value;
 });
 
-// ─── Camera rows repeater ─────────────────────────────────────────
+// ── Camera rows repeater ─────────────────────────────────────────
 function makeCamRow() {
-    const div = document.createElement('div');
-    div.className = 'cam-row grid grid-cols-12 gap-2 items-center bg-gray-50 rounded-lg p-2';
-    div.innerHTML = `
-        <div class="col-span-12 sm:col-span-3">
-            <input type="text" name="cam_location[]" placeholder="e.g. Back door"
-                class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400">
-        </div>
-        <div class="col-span-6 sm:col-span-2">
-            <select name="cam_io[]" class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400">
-                <option>Indoor</option><option>Outdoor</option>
-            </select>
-        </div>
-        <div class="col-span-6 sm:col-span-2">
-            <input type="text" name="cam_type[]" placeholder="Dome / Bullet…"
-                class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400">
-        </div>
-        <div class="col-span-4 sm:col-span-1">
-            <input type="text" name="cam_mp[]" placeholder="2MP"
-                class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400">
-        </div>
-        <div class="col-span-2 sm:col-span-1 text-center">
-            <input type="checkbox" name="cam_nv[]" value="1" class="w-4 h-4 text-purple-600 rounded" title="Night Vision">
-        </div>
-        <div class="col-span-2 sm:col-span-1 text-center">
-            <input type="checkbox" name="cam_audio[]" value="1" class="w-4 h-4 text-purple-600 rounded" title="Audio">
-        </div>
-        <div class="col-span-4 sm:col-span-2 flex justify-end">
-            <button type="button" class="remove-cam-btn text-red-400 hover:text-red-600 p-1 rounded">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
+    const d = document.createElement('div');
+    d.className = 'cam-row';
+    d.innerHTML = `
+        <input type="text" name="cam_location[]" placeholder="e.g. Back door" class="form-control form-control-sm">
+        <select name="cam_io[]" class="form-select form-select-sm"><option>Indoor</option><option>Outdoor</option></select>
+        <input type="text" name="cam_type[]" placeholder="Dome/Bullet…" class="form-control form-control-sm">
+        <input type="text" name="cam_mp[]" placeholder="2MP" class="form-control form-control-sm">
+        <div class="text-center"><input type="checkbox" name="cam_nv[]" value="1" class="form-check-input" title="Night Vision"></div>
+        <div class="text-center"><input type="checkbox" name="cam_audio[]" value="1" class="form-check-input" title="Audio"></div>
+        <div class="text-center">
+            <button type="button" class="remove-cam-btn btn btn-sm btn-icon btn-outline-danger"><i class="bx bx-x"></i></button>
         </div>`;
-    return div;
+    bindRemoveCam(d.querySelector('.remove-cam-btn'));
+    return d;
 }
-
-document.getElementById('addCamBtn').addEventListener('click', () => {
-    const row = makeCamRow();
-    document.getElementById('camRows').appendChild(row);
-    row.querySelector('input[type="text"]').focus();
-    bindRemoveCam(row.querySelector('.remove-cam-btn'));
-});
-
 function bindRemoveCam(btn) {
     btn.addEventListener('click', function() {
-        const rows = document.querySelectorAll('.cam-row');
-        if (rows.length > 1) this.closest('.cam-row').remove();
+        if (document.querySelectorAll('.cam-row').length > 1) this.closest('.cam-row').remove();
     });
 }
+document.getElementById('addCamBtn').addEventListener('click', () => {
+    const r = makeCamRow();
+    document.getElementById('camRows').appendChild(r);
+    r.querySelector('input[type="text"]').focus();
+});
 document.querySelectorAll('.remove-cam-btn').forEach(bindRemoveCam);
 
-// ─── Accessories repeater ─────────────────────────────────────────
+// ── Accessories repeater ─────────────────────────────────────────
 function makeAccRow() {
-    const div = document.createElement('div');
-    div.className = 'acc-row flex gap-2 items-center';
-    div.innerHTML = `
-        <input type="text" name="acc_name[]" placeholder="Item name (e.g. BNC Connector)" required
-            class="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-teal-400">
-        <input type="number" name="acc_qty[]" placeholder="Qty" min="1" value="1"
-            class="w-20 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-teal-400">
-        <button type="button" class="remove-acc-btn text-red-400 hover:text-red-600 p-1 rounded flex-shrink-0">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>`;
-    div.querySelector('.remove-acc-btn').addEventListener('click', () => div.remove());
-    return div;
+    const d = document.createElement('div');
+    d.className = 'acc-row';
+    d.innerHTML = `
+        <input type="text" name="acc_name[]" placeholder="Item name (e.g. BNC Connector)" class="form-control form-control-sm flex-grow-1" required>
+        <input type="number" name="acc_qty[]" placeholder="Qty" min="1" value="1" class="form-control form-control-sm" style="width:80px">
+        <button type="button" class="remove-acc-btn btn btn-sm btn-icon btn-outline-danger flex-shrink-0"><i class="bx bx-x"></i></button>`;
+    d.querySelector('.remove-acc-btn').addEventListener('click', () => d.remove());
+    return d;
 }
 document.getElementById('addAccBtn').addEventListener('click', () => {
-    const row = makeAccRow();
-    document.getElementById('accRows').appendChild(row);
-    row.querySelector('input[type="text"]').focus();
+    const r = makeAccRow();
+    document.getElementById('accRows').appendChild(r);
+    r.querySelector('input[type="text"]').focus();
 });
 
-// ─── Photo upload preview ─────────────────────────────────────────
-const photoInput   = document.getElementById('sitePhotosInput');
-const photoPreview = document.getElementById('photoPreview');
+// ── Photo upload preview ─────────────────────────────────────────
+const photoInput    = document.getElementById('sitePhotosInput');
+const photoPreview  = document.getElementById('photoPreview');
 const photoDropZone = document.getElementById('photoDropZone');
 
 photoDropZone.addEventListener('click', () => photoInput.click());
-photoDropZone.addEventListener('dragover', e => { e.preventDefault(); photoDropZone.classList.add('border-blue-400'); });
-photoDropZone.addEventListener('dragleave', () => photoDropZone.classList.remove('border-blue-400'));
+photoDropZone.addEventListener('dragover', e => { e.preventDefault(); photoDropZone.style.borderColor='#696cff'; });
+photoDropZone.addEventListener('dragleave', () => photoDropZone.style.borderColor='');
 photoDropZone.addEventListener('drop', e => {
     e.preventDefault();
-    photoDropZone.classList.remove('border-blue-400');
+    photoDropZone.style.borderColor = '';
     handleFiles(e.dataTransfer.files);
 });
 photoInput.addEventListener('change', () => handleFiles(photoInput.files));
 
 function handleFiles(files) {
-    photoPreview.innerHTML = '';
     Array.from(files).forEach(file => {
-        if (!file.type.startsWith('image/')) return;
         const reader = new FileReader();
         reader.onload = e => {
-            const img = document.createElement('div');
-            img.className = 'relative rounded-lg overflow-hidden aspect-square bg-gray-100';
-            img.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.style.cssText = 'width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid #e0e0e0;';
             photoPreview.appendChild(img);
         };
         reader.readAsDataURL(file);
     });
 }
-
-// ─── Form submit guard ────────────────────────────────────────────
-document.getElementById('surveyForm').addEventListener('submit', function(e) {
-    const name = custNameHid.value.trim();
-    if (!name) {
-        e.preventDefault();
-        custSearch.classList.add('ring-2', 'ring-red-400', 'border-red-400');
-        custSearch.focus();
-        custSearch.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        return;
-    }
-    // Sync customer name hidden
-    custNameHid.value = custSearch.value.trim();
-});
 </script>
 @endpush
