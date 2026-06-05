@@ -12,6 +12,18 @@
   .form-card .card-header { background:#f8f9fa; border-radius:14px 14px 0 0; padding:.85rem 1.25rem; font-weight:700; font-size:.875rem; display:flex; align-items:center; gap:.5rem; border-bottom:1px solid rgba(0,0,0,.06); }
   .section-icon { width:28px; height:28px; border-radius:8px; background:#e0f9fc; color:#00a4b8; display:flex; align-items:center; justify-content:center; font-size:.9rem; }
 
+  /* Technician dropdown */
+  .tech-wrap { position:relative; }
+  .tech-dropdown { position:absolute; top:calc(100% + 4px); left:0; right:0; background:#fff; border:1.5px solid #00cfe8; border-radius:10px; box-shadow:0 6px 24px rgba(0,207,232,.15); z-index:999; max-height:240px; overflow-y:auto; display:none; }
+  .tech-dropdown.show { display:block; }
+  .tech-item { padding:9px 14px; cursor:pointer; border-bottom:1px solid #f0f0f0; transition:background .1s; }
+  .tech-item:last-child { border-bottom:0; }
+  .tech-item:hover { background:#e0f9fc; }
+  .tech-item .ti-name { font-weight:600; font-size:.88rem; color:#566a7f; }
+  .tech-item .ti-role { font-size:.75rem; color:#8592a3; }
+  .tech-item.add-btn { background:#f0fffe; color:#00a4b8; font-weight:700; font-size:.85rem; display:flex; align-items:center; gap:6px; border-top:1.5px dashed #b2f0f7; }
+  .tech-item.add-btn:hover { background:#d0f7fc; }
+
   /* Mobile lookup */
   .mobile-wrap { position:relative; }
   .mobile-spinner { position:absolute; right:12px; top:50%; transform:translateY(-50%); display:none; }
@@ -100,7 +112,11 @@
             </div>
             <div class="col-md-4">
               <label class="form-label fw-semibold">Technician</label>
-              <input type="text" name="technician_name" class="form-control" value="{{ old('technician_name') }}">
+              <input type="hidden" id="technicianId" name="technician_id" value="{{ old('technician_id') }}">
+              <div class="tech-wrap">
+                <input type="text" id="technicianInput" class="form-control" placeholder="Search technician…" autocomplete="off" value="{{ old('technician_id') ? optional(\App\Models\Employee::find(old('technician_id')))->employee_name : '' }}">
+                <div class="tech-dropdown" id="techDropdown"></div>
+              </div>
             </div>
             <div class="col-md-4">
               <label class="form-label fw-semibold">No. of Cameras</label>
@@ -245,6 +261,94 @@
       selectedItem = null;
     }
   });
+
+  function escHtml(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+})();
+
+// ── Technician live search ──────────────────────────────────────
+(function () {
+  const techInput  = document.getElementById('technicianInput');
+  const techIdInput= document.getElementById('technicianId');
+  const dropdown   = document.getElementById('techDropdown');
+  let timer = null;
+  let lastQuery = '';
+
+  techInput.addEventListener('focus', () => loadTech(techInput.value));
+  techInput.addEventListener('input', function () {
+    clearTimeout(timer);
+    timer = setTimeout(() => loadTech(this.value), 300);
+  });
+
+  function loadTech(q) {
+    lastQuery = q.trim();
+    fetch(`/ajax/employees?q=${encodeURIComponent(lastQuery)}`)
+      .then(r => r.json())
+      .then(data => renderTech(data, lastQuery));
+  }
+
+  function renderTech(items, q) {
+    dropdown.innerHTML = '';
+    if (items.length === 0 && !q) { hideDropdown(); return; }
+
+    items.forEach(emp => {
+      const div = document.createElement('div');
+      div.className = 'tech-item';
+      div.innerHTML = `<div class="ti-name">${escHtml(emp.employee_name)}</div><div class="ti-role">${escHtml(emp.role || '')}</div>`;
+      div.addEventListener('mousedown', e => {
+        e.preventDefault();
+        techInput.value  = emp.employee_name;
+        techIdInput.value= emp.id;
+        hideDropdown();
+      });
+      dropdown.appendChild(div);
+    });
+
+    // "Add" button always at bottom
+    const addDiv = document.createElement('div');
+    addDiv.className = 'tech-item add-btn';
+    const label = q ? `Add "${q}" as new technician` : 'Add new technician';
+    addDiv.innerHTML = `<i class="bx bx-plus-circle"></i> ${escHtml(label)}`;
+    addDiv.addEventListener('mousedown', e => {
+      e.preventDefault();
+      const name = q || techInput.value.trim();
+      if (!name) { techInput.focus(); return; }
+      quickAddTech(name);
+    });
+    dropdown.appendChild(addDiv);
+    dropdown.classList.add('show');
+  }
+
+  function quickAddTech(name) {
+    fetch('/ajax/employees', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
+      body: JSON.stringify({ employee_name: name, role: 'Technician' })
+    })
+    .then(r => r.json())
+    .then(emp => {
+      techInput.value   = emp.employee_name;
+      techIdInput.value = emp.id;
+      hideDropdown();
+      // Show small success toast
+      showToast(`Technician "${emp.employee_name}" added`);
+    });
+  }
+
+  function hideDropdown() { dropdown.classList.remove('show'); }
+
+  document.addEventListener('click', e => {
+    if (!techInput.contains(e.target) && !dropdown.contains(e.target)) hideDropdown();
+  });
+
+  function showToast(msg) {
+    const t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#28c76f;color:#fff;padding:10px 18px;border-radius:10px;font-size:.85rem;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.15);';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2800);
+  }
 
   function escHtml(str) {
     return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');

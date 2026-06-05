@@ -278,6 +278,8 @@ Route::get('/ajax/brands',            [AjaxController::class, 'brands'])->name('
 Route::get('/ajax/faults',            [AjaxController::class, 'faults'])->name('ajax.faults');
 Route::get('/ajax/accessories',       [AjaxController::class, 'accessories'])->name('ajax.accessories');
 Route::get('/ajax/customer-lookup',   [AjaxController::class, 'customerLookup'])->name('ajax.customer-lookup');
+Route::get('/ajax/employees',         [AjaxController::class, 'employeeSearch'])->name('ajax.employees');
+Route::post('/ajax/employees',        [AjaxController::class, 'employeeQuickAdd'])->name('ajax.employees.add');
 
 // Mobile PWA app - catch all for SPA routing
 Route::get('/mobile', function () {

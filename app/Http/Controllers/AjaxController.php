@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Models\Employee;
 use App\Models\DeviceList;
 use App\Models\DeviceBrand;
 use App\Models\DeviceAccessory;
@@ -134,5 +135,35 @@ class AjaxController extends Controller
         }
 
         return response()->json(['found' => false]);
+    }
+
+    public function employeeSearch(Request $request)
+    {
+        $q = trim($request->get('q', ''));
+        $query = Employee::orderBy('employee_name');
+        if ($q) {
+            $query->where('employee_name', 'like', "%{$q}%");
+        }
+        $employees = $query->limit(10)->get(['id','employee_name','role','phone_no_1']);
+        return response()->json($employees);
+    }
+
+    public function employeeQuickAdd(Request $request)
+    {
+        $request->validate(['employee_name' => 'required|string|max:150']);
+        $employee = Employee::create([
+            'employee_name' => $request->employee_name,
+            'role'          => $request->role ?? 'Technician',
+            'phone_no_1'    => $request->phone ?? '',
+            'status'        => 'active',
+            'shop_id'       => session('shop_id'),
+            'user_id'       => 0,
+        ]);
+        return response()->json([
+            'id'            => $employee->id,
+            'employee_name' => $employee->employee_name,
+            'role'          => $employee->role,
+            'phone_no_1'    => $employee->phone_no_1,
+        ]);
     }
 }
