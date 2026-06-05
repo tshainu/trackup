@@ -115,8 +115,12 @@ class CctvQuotationController extends Controller
 
     public function show(CctvQuotation $quotation)
     {
-        $store = StoreInfo::current();
-        return view('admin.cctv.quotations.show', compact('quotation','store'));
+        $store     = StoreInfo::current();
+        $lead      = $quotation->lead_id ? \App\Models\CctvLead::find($quotation->lead_id) : null;
+        $survey    = $lead ? $lead->surveys()->first() : null;
+        $project   = \App\Models\CctvProject::where('quotation_id',$quotation->id)->first();
+        $invoice   = $project ? $project->invoice : null;
+        return view('admin.cctv.quotations.show', compact('quotation','store','lead','survey','project','invoice'));
     }
 
     public function edit(CctvQuotation $quotation)
@@ -171,8 +175,17 @@ class CctvQuotationController extends Controller
         $quotation->grand_total = $quotation->computeTotal();
         $quotation->save();
 
-        if ($request->status === 'Approved' && $quotation->lead_id) {
-            CctvLead::find($quotation->lead_id)?->update(['status' => 'Approved']);
+        // Sync lead status based on quotation status
+        if ($quotation->lead_id) {
+            $leadStatus = match($request->status) {
+                'Approved'    => 'Approved',
+                'Rejected'    => 'Rejected',
+                'Postponed'   => 'Postponed',
+                'Rescheduled' => 'Rescheduled',
+                'Sent'        => 'Quotation Sent',
+                default       => null,
+            };
+            if ($leadStatus) CctvLead::find($quotation->lead_id)?->update(['status' => $leadStatus]);
         }
 
         return redirect()->route('admin.cctv.quotations.show', $quotation)->with('success', 'Quotation updated.');

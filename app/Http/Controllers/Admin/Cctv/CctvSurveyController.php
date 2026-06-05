@@ -213,9 +213,18 @@ class CctvSurveyController extends Controller
             'existing_cctv'     => $request->boolean('existing_cctv'),
         ], $simpleData));
 
-        // Update lead status
+        // Update lead status based on survey status
         if ($request->lead_id) {
-            CctvLead::find($request->lead_id)?->update(['status' => 'Survey Completed']);
+            $surveyStatus = $request->status ?? ($isSimple ? 'Scheduled' : 'Completed');
+            $leadStatus = match($surveyStatus) {
+                'Completed'      => 'Survey Completed',
+                'Scheduled'      => 'Survey Scheduled',
+                'Postponed'      => 'Postponed',
+                'Rescheduled'    => 'Rescheduled',
+                'Cancelled'      => 'Cancelled',
+                default          => 'Survey Scheduled',
+            };
+            CctvLead::find($request->lead_id)?->update(['status' => $leadStatus]);
         }
 
         return redirect()->route('admin.cctv.surveys.show', $survey)
@@ -225,7 +234,12 @@ class CctvSurveyController extends Controller
     public function show(CctvSurvey $survey)
     {
         $survey->load('technician', 'lead');
-        return view('admin.cctv.surveys.show', compact('survey'));
+        $lead      = $survey->lead;
+        $quotation = $lead ? $lead->quotations()->first() : \App\Models\CctvQuotation::where('lead_id',$survey->lead_id)->first();
+        $project   = $quotation ? \App\Models\CctvProject::where('quotation_id',$quotation->id)->first()
+                                : \App\Models\CctvProject::where('lead_id',$survey->lead_id)->first();
+        $invoice   = $project ? $project->invoice : null;
+        return view('admin.cctv.surveys.show', compact('survey','lead','quotation','project','invoice'));
     }
 
     public function print(CctvSurvey $survey)
@@ -373,6 +387,18 @@ class CctvSurveyController extends Controller
             // Risks
             'risks' => $risks ?: null,
         ], $simpleData));
+
+        // Sync lead status on update
+        if ($survey->lead_id && $request->filled('status')) {
+            $leadStatus = match($request->status) {
+                'Completed'   => 'Survey Completed',
+                'Postponed'   => 'Postponed',
+                'Rescheduled' => 'Rescheduled',
+                'Cancelled'   => 'Cancelled',
+                default       => 'Survey Scheduled',
+            };
+            \App\Models\CctvLead::find($survey->lead_id)?->update(['status' => $leadStatus]);
+        }
 
         return redirect()->route('admin.cctv.surveys.show', $survey)->with('success', 'Survey updated.');
     }

@@ -29,12 +29,46 @@
     <a href="{{ route('admin.cctv.projects.edit', $project) }}" class="btn btn-light btn-sm"><i class="bx bx-edit me-1"></i> Edit</a>
   </div>
 
+  {{-- Pipeline Banner --}}
+  @include('admin.cctv._pipeline_banner', [
+    'lead'      => $lead      ?? null,
+    'survey'    => $survey    ?? null,
+    'quotation' => $quotation ?? null,
+    'project'   => $project,
+    'invoice'   => $invoice   ?? null,
+    'currentStep' => 'project',
+  ])
+
+  @if(session('success'))
+  <div class="alert alert-success alert-dismissible fade show mb-3">
+    <i class="bx bx-check-circle me-1"></i> {{ session('success') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  @endif
+
   <div class="row g-3">
     <div class="col-lg-8">
       <div class="card section-card">
         <div class="card-header"><div class="section-icon"><i class="bx bx-user"></i></div> Customer</div>
         <div class="card-body">
-          <div class="row g-3">
+          {{-- Pipeline Banner --}}
+  @include('admin.cctv._pipeline_banner', [
+    'lead'      => $lead      ?? null,
+    'survey'    => $survey    ?? null,
+    'quotation' => $quotation ?? null,
+    'project'   => $project,
+    'invoice'   => $invoice   ?? null,
+    'currentStep' => 'project',
+  ])
+
+  @if(session('success'))
+  <div class="alert alert-success alert-dismissible fade show mb-3">
+    <i class="bx bx-check-circle me-1"></i> {{ session('success') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  @endif
+
+  <div class="row g-3">
             <div class="col-sm-6"><div class="info-label">Name</div><div class="info-value">{{ $project->customer_name }}</div></div>
             <div class="col-sm-6"><div class="info-label">Mobile</div><div class="info-value font-monospace">{{ $project->mobile }}</div></div>
             <div class="col-12"><div class="info-label">Address</div><div class="info-value">{{ $project->address ?? '—' }}</div></div>
@@ -45,7 +79,24 @@
       <div class="card section-card">
         <div class="card-header"><div class="section-icon"><i class="bx bx-wrench"></i></div> Project Info</div>
         <div class="card-body">
-          <div class="row g-3">
+          {{-- Pipeline Banner --}}
+  @include('admin.cctv._pipeline_banner', [
+    'lead'      => $lead      ?? null,
+    'survey'    => $survey    ?? null,
+    'quotation' => $quotation ?? null,
+    'project'   => $project,
+    'invoice'   => $invoice   ?? null,
+    'currentStep' => 'project',
+  ])
+
+  @if(session('success'))
+  <div class="alert alert-success alert-dismissible fade show mb-3">
+    <i class="bx bx-check-circle me-1"></i> {{ session('success') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  @endif
+
+  <div class="row g-3">
             <div class="col-sm-4"><div class="info-label">Technician</div><div class="info-value">{{ $project->technician_name ?? '—' }}</div></div>
             <div class="col-sm-4"><div class="info-label">Start Date</div><div class="info-value">{{ $project->start_date ? \Carbon\Carbon::parse($project->start_date)->format('d M Y') : '—' }}</div></div>
             <div class="col-sm-4"><div class="info-label">End Date</div><div class="info-value">{{ $project->end_date ? \Carbon\Carbon::parse($project->end_date)->format('d M Y') : '—' }}</div></div>
@@ -81,8 +132,25 @@
           <hr>
           <div class="d-grid gap-2">
             <a href="{{ route('admin.cctv.projects.edit', $project) }}" class="btn btn-primary btn-sm"><i class="bx bx-edit me-1"></i> Edit Project</a>
-            <a href="{{ route('admin.cctv.assets.create', ['project_id'=>$project->id]) }}" class="btn btn-outline-success btn-sm"><i class="bx bx-camera me-1"></i> Register Asset</a>
+            <a href="{{ route('admin.cctv.assets.create', ['project_id'=>$project->id]) }}" class="btn btn-outline-info btn-sm"><i class="bx bx-camera me-1"></i> Register Asset</a>
+            @if(!($invoice ?? null))
+              <a href="{{ route('admin.cctv.invoices.create', ['project_id'=>$project->id]) }}" class="btn btn-success btn-sm"><i class="bx bx-receipt me-1"></i> Generate Invoice</a>
+            @else
+              <a href="{{ route('admin.cctv.invoices.show', $invoice) }}" class="btn btn-outline-success btn-sm"><i class="bx bx-receipt me-1"></i> View Invoice</a>
+            @endif
           </div>
+          <hr>
+          {{-- Status update --}}
+          <form method="POST" action="{{ route('admin.cctv.projects.updateStatus', $project) }}">
+            @csrf @method('PATCH')
+            <div class="info-label mb-1">Update Status</div>
+            <select name="status" class="form-select form-select-sm mb-2">
+              @foreach(['scheduled','in_progress','on_hold','completed','cancelled'] as $st)
+                <option value="{{ $st }}" @selected($project->status === $st)>{{ ucwords(str_replace('_',' ',$st)) }}</option>
+              @endforeach
+            </select>
+            <button class="btn btn-sm btn-outline-warning w-100"><i class="bx bx-check me-1"></i> Save Status</button>
+          </form>
         </div>
       </div>
     </div>

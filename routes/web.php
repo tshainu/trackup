@@ -181,6 +181,7 @@ use App\Http\Controllers\Admin\Cctv\CctvServiceTicketController;
 use App\Http\Controllers\Admin\Cctv\CctvAmcController;
 use App\Http\Controllers\Admin\Cctv\CctvRepairController;
 use App\Http\Controllers\Admin\Cctv\CctvInventoryController;
+use App\Http\Controllers\Admin\Cctv\CctvInvoiceController;
 
 Route::prefix('admin/cctv')->name('admin.cctv.')->middleware(\App\Http\Middleware\AdminAuth::class)->group(function () {
     Route::get('/dashboard', [CctvDashboardController::class, 'index'])->name('dashboard');
@@ -221,8 +222,18 @@ Route::prefix('admin/cctv')->name('admin.cctv.')->middleware(\App\Http\Middlewar
     Route::get('/projects/{project}',        [CctvProjectController::class, 'show'])->name('projects.show');
     Route::get('/projects/{project}/edit',   [CctvProjectController::class, 'edit'])->name('projects.edit');
     Route::put('/projects/{project}',        [CctvProjectController::class, 'update'])->name('projects.update');
-    Route::patch('/projects/{project}/stage',[CctvProjectController::class, 'updateStage'])->name('projects.updateStage');
-    Route::delete('/projects/{project}',     [CctvProjectController::class, 'destroy'])->name('projects.destroy');
+    Route::patch('/projects/{project}/stage', [CctvProjectController::class, 'updateStage'])->name('projects.updateStage');
+    Route::patch('/projects/{project}/status',[CctvProjectController::class, 'updateStatus'])->name('projects.updateStatus');
+    Route::delete('/projects/{project}',      [CctvProjectController::class, 'destroy'])->name('projects.destroy');
+
+    // Invoices
+    Route::get('/invoices',                        [CctvInvoiceController::class, 'index'])->name('invoices.index');
+    Route::get('/invoices/create',                 [CctvInvoiceController::class, 'create'])->name('invoices.create');
+    Route::post('/invoices',                       [CctvInvoiceController::class, 'store'])->name('invoices.store');
+    Route::get('/invoices/{invoice}',              [CctvInvoiceController::class, 'show'])->name('invoices.show');
+    Route::get('/invoices/{invoice}/pdf',          [CctvInvoiceController::class, 'pdf'])->name('invoices.pdf');
+    Route::patch('/invoices/{invoice}/payment',    [CctvInvoiceController::class, 'updatePayment'])->name('invoices.updatePayment');
+    Route::delete('/invoices/{invoice}',           [CctvInvoiceController::class, 'destroy'])->name('invoices.destroy');
 
     // Assets
     Route::get('/assets',                [CctvAssetController::class, 'index'])->name('assets.index');

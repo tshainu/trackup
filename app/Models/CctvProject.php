@@ -12,7 +12,7 @@ class CctvProject extends Model
         'customer_name', 'mobile', 'address', 'installation_date', 'completion_date',
         'team_assigned', 'signature_path', 'stage', 'notes',
         'status', 'start_date', 'end_date', 'technician_name', 'technician_ids',
-        'camera_count', 'contract_amount', 'advance_paid', 'scope', 'equipment_list',
+        'camera_count', 'contract_amount', 'advance_paid', 'scope', 'equipment_list', 'invoice_id',
     ];
     protected $casts = [
         'team_assigned'     => 'array',
@@ -43,5 +43,6 @@ class CctvProject extends Model
     public function quotation() { return $this->belongsTo(CctvQuotation::class, 'quotation_id'); }
     public function customer()  { return $this->belongsTo(Customer::class); }
     public function assets()    { return $this->hasMany(CctvAsset::class, 'project_id'); }
+    public function invoice()  { return $this->belongsTo(CctvInvoice::class, 'invoice_id'); }
     public function amcContracts() { return $this->hasMany(CctvAmcContract::class, 'project_id'); }
 }

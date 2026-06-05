@@ -36,12 +36,46 @@
     </div>
   </div>
 
+  {{-- Pipeline Banner --}}
+  @include('admin.cctv._pipeline_banner', [
+    'lead'      => $lead      ?? null,
+    'survey'    => $survey    ?? null,
+    'quotation' => $quotation,
+    'project'   => $project   ?? null,
+    'invoice'   => $invoice   ?? null,
+    'currentStep' => 'quotation',
+  ])
+
+  @if(session('success'))
+  <div class="alert alert-success alert-dismissible fade show mb-3">
+    <i class="bx bx-check-circle me-1"></i> {{ session('success') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  @endif
+
   <div class="row g-3">
     <div class="col-lg-8">
       <div class="card section-card">
         <div class="card-header"><div class="section-icon"><i class="bx bx-user"></i></div> Customer</div>
         <div class="card-body">
-          <div class="row g-3">
+          {{-- Pipeline Banner --}}
+  @include('admin.cctv._pipeline_banner', [
+    'lead'      => $lead      ?? null,
+    'survey'    => $survey    ?? null,
+    'quotation' => $quotation,
+    'project'   => $project   ?? null,
+    'invoice'   => $invoice   ?? null,
+    'currentStep' => 'quotation',
+  ])
+
+  @if(session('success'))
+  <div class="alert alert-success alert-dismissible fade show mb-3">
+    <i class="bx bx-check-circle me-1"></i> {{ session('success') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  @endif
+
+  <div class="row g-3">
             <div class="col-sm-6"><div class="info-label">Name</div><div class="info-value">{{ $quotation->customer_name }}</div></div>
             <div class="col-sm-6"><div class="info-label">Mobile</div><div class="info-value font-monospace">{{ $quotation->mobile }}</div></div>
             <div class="col-sm-6"><div class="info-label">Email</div><div class="info-value">{{ $quotation->email ?? '—' }}</div></div>
@@ -105,8 +139,27 @@
           <div class="d-grid gap-2">
             <a href="{{ route('admin.cctv.quotations.pdf', $quotation) }}" target="_blank" class="btn btn-danger btn-sm"><i class="bx bx-file-pdf me-1"></i> Download PDF</a>
             <a href="{{ route('admin.cctv.quotations.edit', $quotation) }}" class="btn btn-primary btn-sm"><i class="bx bx-edit me-1"></i> Edit</a>
-            <a href="{{ route('admin.cctv.projects.create', ['quotation_id'=>$quotation->id]) }}" class="btn btn-outline-success btn-sm"><i class="bx bx-wrench me-1"></i> Create Project</a>
+            @if(!($project ?? null))
+              <a href="{{ route('admin.cctv.projects.create', array_filter(['quotation_id'=>$quotation->id,'lead_id'=>$quotation->lead_id])) }}" class="btn btn-success btn-sm"><i class="bx bx-wrench me-1"></i> Create Project</a>
+            @else
+              <a href="{{ route('admin.cctv.projects.show', $project) }}" class="btn btn-outline-success btn-sm"><i class="bx bx-wrench me-1"></i> View Project</a>
+            @endif
           </div>
+          <hr>
+          {{-- Quick status update --}}
+          <form method="POST" action="{{ route('admin.cctv.quotations.update', $quotation) }}" class="mt-2">
+            @csrf @method('PUT')
+            <input type="hidden" name="customer_name" value="{{ $quotation->customer_name }}">
+            <input type="hidden" name="mobile"        value="{{ $quotation->mobile }}">
+            <input type="hidden" name="items"         value="{{ json_encode(is_array($quotation->items) ? $quotation->items : json_decode($quotation->items ?? '[]', true)) }}">
+            <div class="info-label mb-1">Update Status</div>
+            <select name="status" class="form-select form-select-sm mb-2">
+              @foreach(['draft','sent','approved','rejected','expired','Postponed','Rescheduled'] as $st)
+                <option value="{{ $st }}" @selected($quotation->status === $st)>{{ ucfirst($st) }}</option>
+              @endforeach
+            </select>
+            <button class="btn btn-sm btn-outline-warning w-100"><i class="bx bx-check me-1"></i> Save Status</button>
+          </form>
         </div>
       </div>
     </div>

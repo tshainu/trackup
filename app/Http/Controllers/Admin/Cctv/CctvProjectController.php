@@ -107,15 +107,24 @@ class CctvProjectController extends Controller
             'notes'           => $request->notes,
         ]);
 
+        // Update lead → Installation, quotation stays Approved
+        if ($project->lead_id) {
+            \App\Models\CctvLead::find($project->lead_id)?->update(['status' => 'Installation']);
+        }
+
         return redirect()->route('admin.cctv.projects.show', $project)
             ->with('success', "Project {$project->project_no} created.");
     }
 
     public function show(CctvProject $project)
     {
-        $project->load(['assets','amcContracts']);
+        $project->load(['assets','amcContracts','invoice']);
         $employees = Employee::where('status','active')->orderBy('employee_name')->get();
-        return view('admin.cctv.projects.show', compact('project','employees'));
+        $lead      = $project->lead_id ? \App\Models\CctvLead::find($project->lead_id) : null;
+        $quotation = $project->quotation_id ? \App\Models\CctvQuotation::find($project->quotation_id) : null;
+        $survey    = $lead ? $lead->surveys()->first() : null;
+        $invoice   = $project->invoice;
+        return view('admin.cctv.projects.show', compact('project','employees','lead','quotation','survey','invoice'));
     }
 
     public function edit(CctvProject $project)
@@ -142,8 +151,32 @@ class CctvProjectController extends Controller
     public function updateStage(Request $request, CctvProject $project)
     {
         $request->validate(['stage' => 'required|in:Survey Complete,Materials Ready,Installation Started,Configuration,Testing,Customer Handover,Warranty Activated']);
-        $project->update(['stage' => $request->stage]);
+        $data = ['stage' => $request->stage];
+        if ($request->stage === 'Warranty Activated') {
+            $data['status'] = 'completed';
+            if ($project->lead_id) \App\Models\CctvLead::find($project->lead_id)?->update(['status' => 'Completed']);
+        }
+        $project->update($data);
         return back()->with('success', "Stage updated to: {$request->stage}");
+    }
+
+    public function updateStatus(Request $request, CctvProject $project)
+    {
+        $request->validate(['status' => 'required|in:scheduled,in_progress,completed,cancelled,postponed,rescheduled']);
+        $data = ['status' => $request->status];
+        $leadStatus = match($request->status) {
+            'completed'   => 'Completed',
+            'cancelled'   => 'Cancelled',
+            'postponed'   => 'Postponed',
+            'rescheduled' => 'Rescheduled',
+            'in_progress' => 'Installation',
+            default       => null,
+        };
+        if ($leadStatus && $project->lead_id) {
+            \App\Models\CctvLead::find($project->lead_id)?->update(['status' => $leadStatus]);
+        }
+        $project->update($data);
+        return back()->with('success', 'Status updated.');
     }
 
     public function destroy(CctvProject $project)

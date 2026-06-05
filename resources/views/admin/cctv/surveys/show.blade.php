@@ -50,6 +50,16 @@
     </a>
   </div>
 
+  {{-- Pipeline Banner --}}
+  @include('admin.cctv._pipeline_banner', [
+    'lead'      => $lead      ?? null,
+    'survey'    => $survey,
+    'quotation' => $quotation ?? null,
+    'project'   => $project   ?? null,
+    'invoice'   => $invoice   ?? null,
+    'currentStep' => 'survey',
+  ])
+
   @if(session('success'))
   <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
     <i class="bx bx-check-circle me-1"></i> {{ session('success') }}
@@ -356,6 +366,15 @@
             <a href="{{ route('admin.cctv.surveys.edit', $survey) }}" class="btn btn-primary btn-sm">
               <i class="bx bx-edit me-1"></i> Edit Survey
             </a>
+            @if(!($quotation ?? null))
+              <a href="{{ route('admin.cctv.quotations.create', array_filter(['lead_id'=>$survey->lead_id])) }}" class="btn btn-success btn-sm">
+                <i class="bx bx-file-blank me-1"></i> Create Quotation
+              </a>
+            @else
+              <a href="{{ route('admin.cctv.quotations.show', $quotation) }}" class="btn btn-outline-success btn-sm">
+                <i class="bx bx-file-blank me-1"></i> View Quotation
+              </a>
+            @endif
             <a href="{{ route('admin.cctv.surveys.print', $survey) }}" target="_blank" class="btn btn-outline-secondary btn-sm">
               <i class="bx bx-printer me-1"></i> Print / PDF
             </a>

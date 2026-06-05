@@ -91,7 +91,12 @@ class CctvLeadController extends Controller
     public function show(CctvLead $lead)
     {
         $lead->load(['surveys','quotations']);
-        return view('admin.cctv.leads.show', compact('lead'));
+        $survey    = $lead->surveys->first();
+        $quotation = $lead->quotations->first();
+        $project   = $quotation ? \App\Models\CctvProject::where('quotation_id',$quotation->id)->first()
+                                : \App\Models\CctvProject::where('lead_id',$lead->id)->first();
+        $invoice   = $project ? $project->invoice : null;
+        return view('admin.cctv.leads.show', compact('lead','survey','quotation','project','invoice'));
     }
 
     public function edit(CctvLead $lead)
