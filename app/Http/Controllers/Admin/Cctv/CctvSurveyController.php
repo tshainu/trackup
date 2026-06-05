@@ -39,10 +39,21 @@ class CctvSurveyController extends Controller
     public function create(Request $request)
     {
         $employees = Employee::where('status', 'active')->orderBy('employee_name')->get();
-        $leads     = CctvLead::whereIn('status', ['New Lead', 'Survey Scheduled'])->orderBy('customer_name')->get();
-        $leadId    = $request->get('lead_id');
-        $lead      = $leadId ? CctvLead::find($leadId) : null;
-        return view('admin.cctv.surveys.create', compact('employees', 'leads', 'lead'));
+
+        // All leads (any status) for live search
+        $leads = CctvLead::orderBy('customer_name')->get();
+
+        // Also pull unique customers from past surveys for phone search
+        $pastCustomers = CctvSurvey::select('customer_name', 'mobile')
+            ->whereNotNull('mobile')
+            ->where('mobile', '!=', '')
+            ->orderBy('customer_name')
+            ->get()
+            ->unique('mobile');
+
+        $leadId = $request->get('lead_id');
+        $lead   = $leadId ? CctvLead::find($leadId) : null;
+        return view('admin.cctv.surveys.create', compact('employees', 'leads', 'lead', 'pastCustomers'));
     }
 
     public function store(Request $request)
@@ -226,9 +237,12 @@ class CctvSurveyController extends Controller
 
     public function edit(CctvSurvey $survey)
     {
-        $employees = Employee::where('status', 'active')->orderBy('employee_name')->get();
-        $leads     = CctvLead::orderBy('customer_name')->get();
-        return view('admin.cctv.surveys.edit', compact('survey', 'employees', 'leads'));
+        $employees     = Employee::where('status', 'active')->orderBy('employee_name')->get();
+        $leads         = CctvLead::orderBy('customer_name')->get();
+        $pastCustomers = CctvSurvey::select('customer_name', 'mobile')
+            ->whereNotNull('mobile')->where('mobile', '!=', '')
+            ->orderBy('customer_name')->get()->unique('mobile');
+        return view('admin.cctv.surveys.edit', compact('survey', 'employees', 'leads', 'pastCustomers'));
     }
 
     public function update(Request $request, CctvSurvey $survey)

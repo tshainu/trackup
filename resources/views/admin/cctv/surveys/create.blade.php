@@ -696,12 +696,22 @@
 
 @push('scripts')
 @php
-$leadsJson = $leads->map(function($l){ return ['id'=>$l->id,'name'=>$l->customer_name,'mobile'=>$l->mobile,'lead_id'=>$l->id]; })->values();
+$leadsJson = $leads->map(function($l){ return ['name'=>$l->customer_name,'mobile'=>$l->mobile,'lead_id'=>$l->id]; })->values();
+$pastJson  = $pastCustomers->map(function($s){ return ['name'=>$s->customer_name,'mobile'=>$s->mobile,'lead_id'=>null]; })->values();
 $techJson  = $employees->map(function($e){ return ['id'=>$e->id,'name'=>$e->employee_name]; })->values();
 @endphp
 <script>
 // ── Live search helpers ──────────────────────────────────────────
-const leadsData   = @json($leadsJson);
+// Merge leads + past survey customers, dedupe by mobile
+const _leads = @json($leadsJson);
+const _past  = @json($pastJson);
+const _seen  = new Set();
+const leadsData = [..._leads, ..._past].filter(l => {
+    if (!l.mobile) return false;
+    if (_seen.has(l.mobile)) return false;
+    _seen.add(l.mobile);
+    return true;
+});
 const custNameHid = document.getElementById('customerNameHidden');
 const custIdHid   = document.getElementById('customerIdHidden');
 const leadIdHid   = document.getElementById('leadIdHidden');
