@@ -55,6 +55,7 @@ class CctvSurveyController extends Controller
             'survey_type'   => 'required|in:New Site,Upgrading,Modification,Service',
             'survey_mode'   => 'required|in:Detailed,Simple',
             'email'         => 'nullable|email|max:150',
+            'status'        => 'nullable|in:Scheduled,Completed,Cancelled,Need More Time',
         ]);
 
         // Handle site photos upload
@@ -102,11 +103,31 @@ class CctvSurveyController extends Controller
         $purposes = $request->input('purposes', []);
         $risks    = $request->input('risks', []);
 
-        $survey = CctvSurvey::create([
+        $isSimple = $request->survey_mode === 'Simple';
+
+        // ── Simple survey data ──────────────────────────────────────────────
+        $simpleData = [];
+        if ($isSimple) {
+            $simpleData = [
+                'simple_num_cameras'      => (int)($request->simple_num_cameras ?? 0),
+                'simple_dvr_nvr'          => $request->simple_dvr_nvr,
+                'simple_dvr_channels'     => $request->simple_dvr_channels ? (int)$request->simple_dvr_channels : null,
+                'simple_internet_available' => $request->boolean('simple_internet_available'),
+                'simple_isp'              => $request->simple_isp,
+                'simple_cabling_ease'     => max(1, min(10, (int)($request->simple_cabling_ease ?? 5))),
+                'simple_risk_level'       => max(1, min(10, (int)($request->simple_risk_level ?? 5))),
+                'simple_num_technicians'  => (int)($request->simple_num_technicians ?? 1),
+                'simple_estimated_days'   => (int)($request->simple_estimated_days ?? 1),
+                'simple_gps_location'     => $request->simple_gps_location,
+                'simple_remark'           => $request->simple_remark,
+            ];
+        }
+
+        $survey = CctvSurvey::create(array_merge([
             'survey_no'   => CctvSurvey::nextSurveyNo(),
             'lead_id'     => $request->lead_id,
             'customer_id' => $request->customer_id,
-            'status'      => 'Completed',
+            'status'      => $request->status ?? ($isSimple ? 'Scheduled' : 'Completed'),
             'survey_type' => $request->survey_type,
             'survey_mode' => $request->survey_mode,
 
@@ -179,7 +200,7 @@ class CctvSurveyController extends Controller
             'outdoor_cameras'   => $request->outdoor_cameras ?? 0,
             'internet_available'=> $request->boolean('internet_available'),
             'existing_cctv'     => $request->boolean('existing_cctv'),
-        ]);
+        ], $simpleData));
 
         // Update lead status
         if ($request->lead_id) {

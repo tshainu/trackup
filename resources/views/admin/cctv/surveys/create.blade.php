@@ -511,16 +511,187 @@
 
   </div>{{-- /detailedSurvey --}}
 
-  {{-- Simple placeholder --}}
+  {{-- ══════════════════════════════════════════════════════════
+       SIMPLE SURVEY
+  ══════════════════════════════════════════════════════════ --}}
   <div id="simpleSurvey" class="{{ old('survey_mode','Detailed')==='Simple'?'':'d-none' }}">
-    <div class="card survey-card text-center py-5">
+
+    {{-- Row 1: Camera & DVR --}}
+    <div class="card survey-card">
+      <div class="card-header">
+        <span class="sec-icon bg-primary bg-opacity-10 text-primary"><i class="bx bx-camera"></i></span>
+        Camera & Recorder
+      </div>
       <div class="card-body">
-        <i class="bx bx-clipboard" style="font-size:3rem;color:#d9dde1;"></i>
-        <p class="fw-bold mt-2 mb-1">Simple Survey</p>
-        <p class="text-muted small mb-0">Coming soon — use Detailed mode for now.</p>
+        <div class="row g-3">
+          <div class="col-md-3 col-6">
+            <label class="form-label fw-semibold small">No. of Cameras</label>
+            <input type="number" name="simple_num_cameras" class="form-control"
+                   value="{{ old('simple_num_cameras', 0) }}" min="0" max="999">
+          </div>
+          <div class="col-md-3 col-6">
+            <label class="form-label fw-semibold small">DVR / NVR</label>
+            <select name="simple_dvr_nvr" class="form-select">
+              <option value="">-- Select --</option>
+              @foreach(['DVR','NVR'] as $d)
+              <option value="{{ $d }}" {{ old('simple_dvr_nvr')===$d?'selected':'' }}>{{ $d }}</option>
+              @endforeach
+            </select>
+          </div>
+          <div class="col-md-3 col-6">
+            <label class="form-label fw-semibold small">Channels</label>
+            <select name="simple_dvr_channels" class="form-select">
+              <option value="">-- Select --</option>
+              @foreach([4,8,16,32,64] as $ch)
+              <option value="{{ $ch }}" {{ old('simple_dvr_channels')==$ch?'selected':'' }}>{{ $ch }} CH</option>
+              @endforeach
+            </select>
+          </div>
+          <div class="col-md-3 col-6">
+            <label class="form-label fw-semibold small">No. of Technicians</label>
+            <input type="number" name="simple_num_technicians" class="form-control"
+                   value="{{ old('simple_num_technicians', 1) }}" min="1" max="20">
+          </div>
+          <div class="col-md-3 col-6">
+            <label class="form-label fw-semibold small">Estimated Days</label>
+            <input type="number" name="simple_estimated_days" class="form-control"
+                   value="{{ old('simple_estimated_days', 1) }}" min="1" max="365">
+          </div>
+        </div>
       </div>
     </div>
-  </div>
+
+    {{-- Row 2: Internet --}}
+    <div class="card survey-card">
+      <div class="card-header">
+        <span class="sec-icon bg-info bg-opacity-10 text-info"><i class="bx bx-wifi"></i></span>
+        Internet
+      </div>
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-4 col-12">
+            <label class="form-label fw-semibold small">Internet Available?</label>
+            <div class="d-flex gap-3 mt-1">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="simple_internet_available"
+                       id="siYes" value="1" {{ old('simple_internet_available')=='1'?'checked':'' }}>
+                <label class="form-check-label" for="siYes">Yes</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="simple_internet_available"
+                       id="siNo" value="0" {{ old('simple_internet_available','0')=='0'?'checked':'' }}>
+                <label class="form-check-label" for="siNo">No</label>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 col-12">
+            <label class="form-label fw-semibold small">ISP</label>
+            <select name="simple_isp" class="form-select" id="simpleIspSelect">
+              <option value="">-- Select ISP --</option>
+              @foreach(['SLT','Dialog','Starlink','Other','None'] as $isp)
+              <option value="{{ $isp }}" {{ old('simple_isp')===$isp?'selected':'' }}>{{ $isp }}</option>
+              @endforeach
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {{-- Row 3: Sliders --}}
+    <div class="card survey-card">
+      <div class="card-header">
+        <span class="sec-icon bg-warning bg-opacity-10 text-warning"><i class="bx bx-slider"></i></span>
+        Site Assessment
+      </div>
+      <div class="card-body">
+        <div class="row g-4">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small d-flex justify-content-between">
+              Cabling Easiness
+              <span class="badge bg-primary" id="cablingVal">{{ old('simple_cabling_ease', 5) }}</span>
+            </label>
+            <input type="range" name="simple_cabling_ease" class="form-range" min="1" max="10" step="1"
+                   value="{{ old('simple_cabling_ease', 5) }}" id="cablingSlider">
+            <div class="d-flex justify-content-between text-muted" style="font-size:.72rem;margin-top:2px;">
+              <span>1 (Very Difficult)</span><span>10 (Very Easy)</span>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small d-flex justify-content-between">
+              Risk Level
+              <span class="badge bg-danger" id="riskVal">{{ old('simple_risk_level', 5) }}</span>
+            </label>
+            <input type="range" name="simple_risk_level" class="form-range" min="1" max="10" step="1"
+                   value="{{ old('simple_risk_level', 5) }}" id="riskSlider">
+            <div class="d-flex justify-content-between text-muted" style="font-size:.72rem;margin-top:2px;">
+              <span>1 (Low Risk)</span><span>10 (High Risk)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {{-- Row 4: GPS --}}
+    <div class="card survey-card">
+      <div class="card-header">
+        <span class="sec-icon bg-success bg-opacity-10 text-success"><i class="bx bx-map-pin"></i></span>
+        Location
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label fw-semibold small">GPS Location</label>
+            <div class="input-group">
+              <input type="text" name="simple_gps_location" id="simpleGps" class="form-control"
+                     placeholder="lat, lng — or tap Fetch"
+                     value="{{ old('simple_gps_location') }}">
+              <button type="button" class="btn btn-outline-secondary" id="simpleGpsBtn">
+                <i class="bx bx-current-location me-1"></i>Fetch
+              </button>
+            </div>
+            <div id="simpleGpsStatus" class="form-text text-muted" style="min-height:1.2em;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {{-- Row 5: Status, Remark, Survey By --}}
+    <div class="card survey-card">
+      <div class="card-header">
+        <span class="sec-icon bg-secondary bg-opacity-10 text-secondary"><i class="bx bx-info-circle"></i></span>
+        Outcome
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label fw-semibold small">Status</label>
+            <select name="status" class="form-select" id="simpleStatusSelect">
+              @foreach(['Scheduled','Completed','Need More Time','Cancelled'] as $s)
+              <option value="{{ $s }}" {{ old('status','Scheduled')===$s?'selected':'' }}>{{ $s }}</option>
+              @endforeach
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold small">Survey By</label>
+            <select name="technician_id" class="form-select" id="simpleTechSelect">
+              <option value="">-- Select Technician --</option>
+              @foreach($employees as $emp)
+              <option value="{{ $emp->id }}" {{ old('technician_id')==$emp->id?'selected':'' }}>
+                {{ $emp->employee_name }}
+              </option>
+              @endforeach
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold small">Remark</label>
+            <textarea name="simple_remark" class="form-control" rows="3"
+                      placeholder="Any notes, observations or follow-up actions…">{{ old('simple_remark') }}</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>{{-- /simpleSurvey --}}
 
   {{-- Submit --}}
   <div class="d-flex justify-content-end gap-2 pb-5">
@@ -794,5 +965,53 @@ document.getElementById('gpsBtn').addEventListener('click', function() {
         { enableHighAccuracy: true, timeout: 10000 }
     );
 });
+
+// ── Simple survey: slider live labels ──────────────────────────
+const cablingSlider = document.getElementById('cablingSlider');
+const riskSlider    = document.getElementById('riskSlider');
+if (cablingSlider) {
+    cablingSlider.addEventListener('input', () => {
+        document.getElementById('cablingVal').textContent = cablingSlider.value;
+    });
+}
+if (riskSlider) {
+    riskSlider.addEventListener('input', () => {
+        document.getElementById('riskVal').textContent = riskSlider.value;
+    });
+}
+
+// ── Simple survey: GPS fetch ────────────────────────────────────
+const simpleGpsBtn = document.getElementById('simpleGpsBtn');
+if (simpleGpsBtn) {
+    simpleGpsBtn.addEventListener('click', function() {
+        const input  = document.getElementById('simpleGps');
+        const status = document.getElementById('simpleGpsStatus');
+        if (!navigator.geolocation) {
+            status.textContent = 'Geolocation not supported.';
+            return;
+        }
+        simpleGpsBtn.disabled = true;
+        simpleGpsBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Fetching…';
+        status.textContent = '';
+        navigator.geolocation.getCurrentPosition(
+            pos => {
+                const lat = pos.coords.latitude.toFixed(6);
+                const lng = pos.coords.longitude.toFixed(6);
+                input.value = lat + ', ' + lng;
+                status.innerHTML = `<a href="https://maps.google.com/?q=${lat},${lng}" target="_blank" class="text-primary">View on Google Maps ↗</a>`;
+                simpleGpsBtn.disabled = false;
+                simpleGpsBtn.innerHTML = '<i class="bx bx-current-location me-1"></i>Fetch';
+            },
+            err => {
+                const msgs = {1:'Permission denied.',2:'Position unavailable.',3:'Timed out.'};
+                status.textContent = msgs[err.code] || 'Failed.';
+                status.className = 'form-text text-danger';
+                simpleGpsBtn.disabled = false;
+                simpleGpsBtn.innerHTML = '<i class="bx bx-current-location me-1"></i>Fetch';
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    });
+}
 </script>
 @endpush

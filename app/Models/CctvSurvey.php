@@ -33,6 +33,12 @@ class CctvSurvey extends Model
         'cameras_qty', 'dvr_channels', 'hdd_storage_days', 'cable_meters', 'accessories',
         // Section 10 – Risks
         'risks',
+        // Simple survey fields
+        'simple_num_cameras', 'simple_dvr_nvr', 'simple_dvr_channels',
+        'simple_internet_available', 'simple_isp',
+        'simple_cabling_ease', 'simple_risk_level',
+        'simple_num_technicians', 'simple_estimated_days',
+        'simple_gps_location', 'simple_remark',
     ];
 
     protected $casts = [
@@ -52,6 +58,7 @@ class CctvSurvey extends Model
         'accessories'               => 'array',
         'risks'                     => 'array',
         'survey_date'               => 'date',
+        'simple_internet_available' => 'boolean',
     ];
 
     public static function nextSurveyNo(): string
